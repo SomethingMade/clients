@@ -525,6 +525,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 const SUPPORT_EMAIL = "support@silo.storage";
+const CURRENCY_SYMBOL = "R";
 
 // ---------- Plans (mirrors the admin console) ----------
 const GB = 1024 ** 3;
@@ -1104,7 +1105,7 @@ function usagePageHtml(c) {
         ${Object.entries(PLANS).map(([key, p]) => `
           <div class="detail-row">
             <span class="detail-row-label">${p.label}${key === c.plan ? ' <span style="color:var(--accent-text); font-weight:600;">(current)</span>' : ''}</span>
-            <span class="detail-row-value">${p.quotaBytes ? formatBytes(p.quotaBytes) : 'Custom'} · $${p.pricePerGb.toFixed(2)}/GB</span>
+            <span class="detail-row-value">${p.quotaBytes ? formatBytes(p.quotaBytes) : 'Custom'} · ${CURRENCY_SYMBOL}${p.pricePerGb.toFixed(2)}/GB</span>
           </div>`).join('')}
       </div>
     </div>`;
@@ -1135,12 +1136,12 @@ function billingPageHtml(c) {
       <div class="detail-section">
         <div class="detail-section-title">Current plan</div>
         <div class="detail-row"><span class="detail-row-label">Plan</span><span class="detail-row-value">${plan.label}</span></div>
-        <div class="detail-row"><span class="detail-row-label">Rate</span><span class="detail-row-value">$${plan.pricePerGb.toFixed(2)} / GB</span></div>
+        <div class="detail-row"><span class="detail-row-label">Rate</span><span class="detail-row-value">${CURRENCY_SYMBOL}${plan.pricePerGb.toFixed(2)} / GB</span></div>
         <div class="detail-row"><span class="detail-row-label">Storage used</span><span class="detail-row-value">${formatBytes(c.usedBytes)}</span></div>
       </div>
       <div class="detail-section" style="margin-bottom:0;">
         <div class="detail-section-title">Estimated cost this cycle</div>
-        <div class="stat-value" style="font-size:26px; margin-bottom:6px;">$${estimate.toFixed(2)}</div>
+        <div class="stat-value" style="font-size:26px; margin-bottom:6px;">${CURRENCY_SYMBOL}${estimate.toFixed(2)}</div>
         <div class="gated-card-sub" style="margin-bottom:14px;">Based on current usage at the ${plan.label} rate — your actual invoice may vary.</div>
         <button class="btn btn-ghost btn-sm" onclick="requestSupport()">Contact billing</button>
       </div>
