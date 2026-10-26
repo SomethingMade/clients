@@ -31,6 +31,8 @@
   .hold { background:#232b42; color:var(--mute); }
   .actions { display:flex; gap:8px; margin-top:12px; }
   .actions button { flex:1; }
+  .h { border-top:1px solid var(--line); padding:8px 0; font-size:13px; }
+  .pos { color:var(--green); } .neg { color:var(--red); }
   [hidden] { display:none !important; }
 </style>
 </head>
@@ -66,6 +68,12 @@
   <section class="card">
     <button id="ask" class="full">Ask Grok</button>
     <div id="adv"></div>
+  </section>
+
+  <section class="card">
+    <h2>Suggestion log</h2>
+    <div id="sum" class="mute">No suggestions yet</div>
+    <div id="hist"></div>
   </section>
 
   <p id="msg" class="err"></p>
@@ -129,7 +137,8 @@ async function loadTicker() {
 async function refresh() {
   await Promise.all([
     loadBalance().catch((e) => { $("bal").textContent = explain(e); }),
-    loadTicker().catch((e) => { $("tick").textContent = explain(e); })
+    loadTicker().catch((e) => { $("tick").textContent = explain(e); }),
+    loadHistory().catch(() => { $("sum").textContent = "Log unavailable until history.js is deployed"; })
   ]);
 }
 
@@ -178,6 +187,36 @@ function setMode(m) {
   $("mode").className = "pill" + (m === "live" ? " live" : "");
 }
 
+async function loadHistory() {
+  const { data } = await call("tradeHistory")();
+  const items = data.items || [];
+  let n = 0, win = 0, sum = 0;
+  const rows = items.map((i) => {
+    const ch = i.now ? ((i.now - i.price) / i.price) * 100 : null;
+    const res = ch === null ? null : (i.action === "sell" ? -ch : ch);
+    if (i.action !== "hold" && res !== null) { n++; if (res > 0) win++; sum += res; }
+    const d = document.createElement("div");
+    d.className = "h";
+    const t = new Date(i.ts).toLocaleString("en-ZA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    const top = line(t + " · " + i.pair, i.action.toUpperCase() + (i.action === "hold" ? "" : " R" + fmt(i.amountZAR)));
+    const sub = document.createElement("div");
+    sub.className = "mute";
+    if (ch === null) sub.textContent = "R " + fmt(i.price);
+    else {
+      const shown = i.action === "hold" ? ch : res;
+      sub.textContent = "R " + fmt(i.price) + " → R " + fmt(i.now) + " · " +
+        (i.action === "hold" ? "price moved " : "result ") + (shown >= 0 ? "+" : "") + shown.toFixed(2) + "%";
+      if (i.action !== "hold") sub.className = "mute " + (res > 0 ? "pos" : "neg");
+    }
+    d.append(top, sub);
+    return d;
+  });
+  $("hist").replaceChildren(...rows);
+  $("sum").textContent = items.length === 0 ? "No suggestions yet"
+    : n === 0 ? "Only hold suggestions so far"
+    : win + " of " + n + " buy/sell suggestions are up since. Average " + (sum / n >= 0 ? "+" : "") + (sum / n).toFixed(2) + "% before fees.";
+}
+
 $("loginBtn").onclick = async () => {
   $("loginErr").textContent = "";
   try { await signInWithEmailAndPassword(auth, $("email").value.trim(), $("pw").value); }
@@ -191,6 +230,7 @@ $("ask").onclick = (e) => run(e.target, async () => {
   try {
     const { data } = await call("tradeAdvise")({ pair: $("pair").value });
     renderAdvice(data);
+    call("tradeLogSave")(data).then(loadHistory).catch(() => {});
   } catch (err) { $("adv").replaceChildren(); throw err; }
 });
 
