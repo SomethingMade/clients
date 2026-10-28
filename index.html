@@ -1,244 +1,821 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Trader</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Haba Ads Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Michroma&family=Google+Sans+Flex:wght@100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#0b0f1a; --card:#141a2b; --line:#232b42; --text:#e8ecf5; --mute:#8b95b0; --blue:#2f5bff; --green:#1fbf75; --red:#ef4a5a; }
-  * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; padding-bottom:40px; }
-  main { max-width:520px; margin:0 auto; padding:12px; }
-  header { display:flex; align-items:center; gap:8px; padding:6px 2px 10px; }
-  header b { font-size:18px; flex:1; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px; }
-  h1,h2 { margin:0 0 10px; font-size:16px; }
-  .row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0; }
-  input,select { width:100%; padding:12px; margin-bottom:10px; border-radius:10px; border:1px solid var(--line); background:#0f1424; color:var(--text); font-size:15px; }
-  select { width:auto; margin:0; }
-  button { border:0; border-radius:10px; padding:12px 16px; font-size:15px; font-weight:600; color:#fff; background:var(--blue); cursor:pointer; }
-  button.ghost { background:transparent; border:1px solid var(--line); color:var(--text); padding:8px 12px; }
-  button.full { width:100%; }
-  button:disabled { opacity:.5; }
-  .pill { font-size:12px; padding:3px 9px; border-radius:99px; background:#232b42; color:var(--mute); }
-  .pill.live { background:#3a1620; color:var(--red); }
-  .big { font-size:24px; font-weight:700; }
-  .mute { color:var(--mute); font-size:13px; }
-  .err { color:var(--red); font-size:13px; min-height:18px; }
-  .badge { display:inline-block; padding:3px 12px; border-radius:99px; font-weight:700; text-transform:uppercase; font-size:13px; }
-  .buy { background:rgba(31,191,117,.18); color:var(--green); }
-  .sell { background:rgba(239,74,90,.18); color:var(--red); }
-  .hold { background:#232b42; color:var(--mute); }
-  .actions { display:flex; gap:8px; margin-top:12px; }
-  .actions button { flex:1; }
-  .h { border-top:1px solid var(--line); padding:8px 0; font-size:13px; }
-  .pos { color:var(--green); } .neg { color:var(--red); }
-  [hidden] { display:none !important; }
+:root {
+  --bg: #09090b;
+  --card: #121215;
+  --card-hover: #1a1a1f;
+  --text: #f4f4f5;
+  --sub: #a1a1aa;
+  --line: #27272a;
+  --accent: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.25);
+  --btn: #f4f4f5;
+  --btn-t: #09090b;
+  --err: #ef4444;
+  --radius: 14px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --card-hover: #f1f5f9;
+    --text: #0f172a;
+    --sub: #64748b;
+    --line: #e2e8f0;
+    --btn: #0f172a;
+    --btn-t: #ffffff;
+    --err: #dc2626;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 'Google Sans Flex', -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: max(16px, env(safe-area-inset-top)) 16px 40px;
+}
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.brand-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+h1 {
+  font-family: 'Michroma', sans-serif;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  margin: 0;
+  background: linear-gradient(135deg, var(--text) 30%, var(--sub));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.sub {
+  color: var(--sub);
+  font-size: 14px;
+  margin: 0 0 20px;
+}
+
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sub);
+  margin: 14px 0 6px;
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+}
+.row > div { flex: 1; }
+
+button {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--btn);
+  color: var(--btn-t);
+  font: 700 15px 'Google Sans Flex', sans-serif;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.2s, background-color 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+button:hover { opacity: 0.92; }
+button:active { transform: scale(0.98); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+button.ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text);
+  margin-top: 8px;
+  padding: 10px;
+  font-size: 13px;
+  box-shadow: none;
+}
+button.ghost:hover { background: var(--card-hover); }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-top: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+.card h3 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--sub);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.sc {
+  margin: 10px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--line);
+}
+.sc:last-child { border-bottom: none; }
+.sc b { display: block; color: var(--accent); font-size: 13px; }
+
+#msg {
+  margin-top: 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--sub);
+}
+#msg.err { color: var(--err); }
+
+video, canvas {
+  width: 100%;
+  border-radius: var(--radius);
+  background: #000;
+  margin-top: 8px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+}
+
+.hide { display: none !important; }
+
+.logo-preview-box {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.logo-preview-box img {
+  height: 48px;
+  max-width: 120px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  padding: 6px;
+}
 </style>
 </head>
 <body>
-<main id="login" class="card" style="margin-top:24px">
-  <h1>AI Trader</h1>
-  <input id="email" type="email" placeholder="Email" autocomplete="username">
-  <input id="pw" type="password" placeholder="Password" autocomplete="current-password">
-  <button id="loginBtn" class="full">Sign in</button>
-  <p id="loginErr" class="err"></p>
-</main>
+<main>
+  <div class="brand-header">
+    <h1>Haba Ads Studio</h1>
+    <button id="out" class="ghost hide" style="width:auto;margin:0;">Sign out</button>
+  </div>
+  
+  <p class="sub">Create high-converting promotional ads with realistic mobile phone mockups, live typing animations, and kinetic pop-up text.</p>
 
-<main id="app" hidden>
-  <header>
-    <b>AI Trader</b>
-    <span id="mode" class="pill">no orders yet</span>
-    <button id="out" class="ghost">Sign out</button>
-  </header>
-
-  <section class="card">
-    <h2>Balance</h2>
-    <div id="bal" class="mute">Loading…</div>
-  </section>
-
-  <section class="card">
-    <div class="row">
-      <select id="pair"><option>XBTZAR</option><option>ETHZAR</option></select>
-      <button id="refresh" class="ghost">Refresh</button>
+  <!-- Login Section -->
+  <section id="login" class="hide">
+    <div class="card">
+      <h3>Authentication</h3>
+      <label>Email</label>
+      <input id="em" type="email" placeholder="you@example.com" autocomplete="email">
+      <label>Password</label>
+      <input id="pw" type="password" autocomplete="current-password">
+      <button id="signin">Sign in</button>
+      <button id="google" class="ghost">Continue with Google</button>
     </div>
-    <div id="tick" class="mute">Loading…</div>
   </section>
 
-  <section class="card">
-    <button id="ask" class="full">Ask Grok</button>
-    <div id="adv"></div>
+  <!-- Main Generator Form -->
+  <section id="app" class="hide">
+    <label>Feature to spotlight</label>
+    <select id="focus">
+      <option value="overall">Haba Overall Platform</option>
+      <option value="stories">Stories & Visual Feed</option>
+      <option value="chats">Chats, Calls & Group Mesh</option>
+      <option value="live">Live Streams & Gifts</option>
+      <option value="shop">Social Shop & Commerce</option>
+      <option value="jobs">Job Network & Freelance</option>
+      <option value="verified">Verified Creator Badges</option>
+      <option value="privacy">End-to-End Privacy</option>
+      <option value="creators">Creator Monetization</option>
+    </select>
+
+    <label>Extra angle or context (optional)</label>
+    <textarea id="details" maxlength="600" placeholder="e.g. Highlight mobile app chat speeds, creator earnings, or instant connected tabs."></textarea>
+
+    <label>Target audience (optional)</label>
+    <input id="audience" maxlength="200" placeholder="e.g. South African creators, devs, and small businesses">
+
+    <div class="row">
+      <div>
+        <label>Tone</label>
+        <select id="tone">
+          <option value="energetic">Energetic</option>
+          <option value="premium">Premium</option>
+          <option value="funny">Funny</option>
+          <option value="emotional">Emotional</option>
+          <option value="friendly">Friendly</option>
+        </select>
+      </div>
+      <div>
+        <label>Platform</label>
+        <select id="platform">
+          <option value="tiktok">TikTok (9:16)</option>
+          <option value="reels">Reels (9:16)</option>
+          <option value="facebook">Facebook (1:1)</option>
+          <option value="youtube">YouTube (16:9)</option>
+        </select>
+      </div>
+      <div>
+        <label>Duration (s)</label>
+        <select id="duration">
+          <option value="5">5s</option>
+          <option value="8" selected>8s</option>
+          <option value="12">12s</option>
+          <option value="15">15s</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Rendering Mode</label>
+    <select id="mode">
+      <option value="motion">Mobile Mockup + Kinetic Typing & Pop-ups</option>
+      <option value="ai">AI Cinematic Video (Cloud Generator)</option>
+    </select>
+
+    <label>Voiceover</label>
+    <select id="voice">
+      <option value="eve">Voiceover: Eve</option>
+      <option value="ara">Voiceover: Ara</option>
+      <option value="none">No Voiceover</option>
+    </select>
+
+    <label>Background Music</label>
+    <select id="music">
+      <option value="upbeat">Upbeat Rhythm</option>
+      <option value="chill">Chill Lo-Fi</option>
+      <option value="none">No Music</option>
+    </select>
+
+    <label>Brand Logo (optional)</label>
+    <div class="logo-preview-box">
+      <img id="logoPrev" class="hide" alt="Brand Logo">
+      <input id="logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+      <button id="logoX" type="button" class="ghost hide" style="width:auto;margin:0;white-space:nowrap;">Remove</button>
+    </div>
+
+    <button id="go">Generate High-Impact Ad</button>
   </section>
 
-  <section class="card">
-    <h2>Suggestion log</h2>
-    <div id="sum" class="mute">No suggestions yet</div>
-    <div id="hist"></div>
-  </section>
+  <div id="msg"></div>
 
-  <p id="msg" class="err"></p>
-  <p class="mute">Your UID (for OWNER_UID): <span id="uid"></span></p>
-  <p class="mute">AI suggestions are not financial advice. Crypto can lose value fast.</p>
+  <div id="result" class="hide">
+    <div class="card">
+      <h3>Video Preview</h3>
+      <div id="vwrap" class="sub">Preparing dynamic mockup engine and rendering video...</div>
+    </div>
+    <div class="card">
+      <h3>Concept Hook</h3>
+      <div id="hook"></div>
+    </div>
+    <div class="card">
+      <h3>Ad Storyboard</h3>
+      <div id="script"></div>
+    </div>
+    <div class="card">
+      <h3>Social Caption & Hashtags</h3>
+      <div id="caption"></div>
+      <button class="ghost" id="copy">Copy Caption Text</button>
+    </div>
+  </div>
 </main>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 
+// Firebase Setup
 const app = initializeApp({
-  apiKey: "AIzaSyBQSPwpVbGrdCuOoyitAeWQHIeipj2MgIY",
-  authDomain: "newstart-64c43.firebaseapp.com",
-  databaseURL: "https://newstart-64c43-default-rtdb.firebaseio.com",
-  projectId: "newstart-64c43",
-  storageBucket: "newstart-64c43.firebasestorage.app",
-  messagingSenderId: "941619830061",
+  apiKey: "AIzaSyBQSPwpVbGrdCuOoyitAeWQHIeipj2MgIY", authDomain: "newstart-64c43.firebaseapp.com",
+  databaseURL: "https://newstart-64c43-default-rtdb.firebaseio.com", projectId: "newstart-64c43",
+  storageBucket: "newstart-64c43.firebasestorage.app", messagingSenderId: "941619830061",
   appId: "1:941619830061:web:de9e0f791eb8f6eacf87a4"
 });
-const auth = getAuth(app);
-const fns = getFunctions(app);
-const call = (name) => httpsCallable(fns, name, { timeout: 120000 });
+const auth = getAuth(app), fns = getFunctions(app);
+const start = httpsCallable(fns, "habaAdStart", { timeout: 130000 });
+const status = httpsCallable(fns, "habaAdStatus");
+const imgFn = httpsCallable(fns, "habaAdImage", { timeout: 90000 });
+const voiceFn = httpsCallable(fns, "habaAdVoice", { timeout: 90000 });
+
 const $ = (id) => document.getElementById(id);
-const fmt = (n, d = 2) => Number(n).toLocaleString("en-ZA", { maximumFractionDigits: d });
+const say = (t, err) => { $("msg").textContent = t || ""; $("msg").className = err ? "err" : ""; };
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+let copyText = "";
 
-function line(a, b) {
-  const d = document.createElement("div");
-  d.className = "row";
-  const x = document.createElement("span"); x.textContent = a;
-  const y = document.createElement("b"); y.textContent = b;
-  d.append(x, y);
-  return d;
-}
-const setMsg = (t) => { $("msg").textContent = t || ""; };
-function explain(e) {
-  if (e.code === "functions/permission-denied") return "Not authorised. Set OWNER_UID in trading.js to your UID below, then redeploy.";
-  return e.message || "Something went wrong";
-}
-async function run(btn, fn) {
-  btn.disabled = true; setMsg("");
-  try { await fn(); } catch (e) { setMsg(explain(e)); } finally { btn.disabled = false; }
-}
+onAuthStateChanged(auth, (u) => {
+  $("login").classList.toggle("hide", !!u);
+  $("app").classList.toggle("hide", !u);
+  $("out").classList.toggle("hide", !u);
+});
 
-async function loadBalance() {
-  const { data } = await call("lunoBalance")();
-  const rows = (data.balance || []).filter((b) => Number(b.balance) > 0);
-  $("bal").replaceChildren(...(rows.length
-    ? rows.map((b) => line(b.asset, fmt(b.balance, 8)))
-    : [document.createTextNode("No funds yet")]));
-}
-async function loadTicker() {
-  const { data } = await call("lunoTicker")({ pair: $("pair").value });
-  $("tick").replaceChildren(
-    line("Last", "R " + fmt(data.last_trade)),
-    line("Bid / Ask", fmt(data.bid) + " / " + fmt(data.ask)),
-    line("24h volume", fmt(data.rolling_24_hour_volume, 4))
-  );
-}
-async function refresh() {
-  await Promise.all([
-    loadBalance().catch((e) => { $("bal").textContent = explain(e); }),
-    loadTicker().catch((e) => { $("tick").textContent = explain(e); }),
-    loadHistory().catch(() => { $("sum").textContent = "Log unavailable until history.js is deployed"; })
-  ]);
-}
-
-function renderAdvice(a) {
-  setMode(a.mode);
-  const box = $("adv");
-  const top = document.createElement("div");
-  top.className = "row";
-  top.style.marginTop = "12px";
-  const badge = document.createElement("span");
-  badge.className = "badge " + a.action;
-  badge.textContent = a.action;
-  const amt = document.createElement("span");
-  amt.className = "big";
-  amt.textContent = a.action === "hold" ? "No trade" : "R " + fmt(a.amountZAR);
-  top.append(badge, amt);
-  const why = document.createElement("p");
-  why.textContent = a.reason || "No reason given.";
-  const conf = document.createElement("p");
-  conf.className = "mute";
-  conf.textContent = "Confidence " + Math.round(a.confidence * 100) + "%";
-  box.replaceChildren(top, why, conf);
-
-  if (a.action !== "hold") {
-    const wrap = document.createElement("div");
-    wrap.className = "actions";
-    const ok = document.createElement("button");
-    ok.textContent = a.mode === "live" ? "Confirm real order" : "Confirm (dry-run)";
-    const no = document.createElement("button");
-    no.className = "ghost";
-    no.textContent = "Dismiss";
-    no.onclick = () => box.replaceChildren();
-    ok.onclick = () => run(ok, async () => {
-      const { data } = await call("lunoPlaceOrder")({ pair: a.pair, side: a.action, amountZAR: a.amountZAR });
-      box.replaceChildren(document.createTextNode(
-        data.dryRun ? "Dry-run logged. No real order was placed."
-                    : "Order placed. ID: " + data.order_id));
-      await refresh();
-    });
-    wrap.append(ok, no);
-    box.append(wrap);
-  }
-}
-function setMode(m) {
-  $("mode").textContent = m;
-  $("mode").className = "pill" + (m === "live" ? " live" : "");
-}
-
-async function loadHistory() {
-  const { data } = await call("tradeHistory")();
-  const items = data.items || [];
-  let n = 0, win = 0, sum = 0;
-  const rows = items.map((i) => {
-    const ch = i.now ? ((i.now - i.price) / i.price) * 100 : null;
-    const res = ch === null ? null : (i.action === "sell" ? -ch : ch);
-    if (i.action !== "hold" && res !== null) { n++; if (res > 0) win++; sum += res; }
-    const d = document.createElement("div");
-    d.className = "h";
-    const t = new Date(i.ts).toLocaleString("en-ZA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-    const top = line(t + " · " + i.pair, i.action.toUpperCase() + (i.action === "hold" ? "" : " R" + fmt(i.amountZAR)));
-    const sub = document.createElement("div");
-    sub.className = "mute";
-    if (ch === null) sub.textContent = "R " + fmt(i.price);
-    else {
-      const shown = i.action === "hold" ? ch : res;
-      sub.textContent = "R " + fmt(i.price) + " → R " + fmt(i.now) + " · " +
-        (i.action === "hold" ? "price moved " : "result ") + (shown >= 0 ? "+" : "") + shown.toFixed(2) + "%";
-      if (i.action !== "hold") sub.className = "mute " + (res > 0 ? "pos" : "neg");
-    }
-    d.append(top, sub);
-    return d;
-  });
-  $("hist").replaceChildren(...rows);
-  $("sum").textContent = items.length === 0 ? "No suggestions yet"
-    : n === 0 ? "Only hold suggestions so far"
-    : win + " of " + n + " buy/sell suggestions are up since. Average " + (sum / n >= 0 ? "+" : "") + (sum / n).toFixed(2) + "% before fees.";
-}
-
-$("loginBtn").onclick = async () => {
-  $("loginErr").textContent = "";
-  try { await signInWithEmailAndPassword(auth, $("email").value.trim(), $("pw").value); }
-  catch (e) { $("loginErr").textContent = "Sign-in failed. Check email and password."; }
+$("signin").onclick = async () => {
+  try { say(""); await signInWithEmailAndPassword(auth, $("em").value.trim(), $("pw").value); }
+  catch (e) { say("Could not sign in. Check your credentials.", true); }
+};
+$("google").onclick = async () => {
+  try { say(""); await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch (e) { say("Google sign-in was cancelled.", true); }
 };
 $("out").onclick = () => signOut(auth);
-$("refresh").onclick = (e) => run(e.target, refresh);
-$("pair").onchange = () => loadTicker().catch((e) => setMsg(explain(e)));
-$("ask").onclick = (e) => run(e.target, async () => {
-  $("adv").textContent = "Grok is thinking…";
+
+$("copy").onclick = async () => {
   try {
-    const { data } = await call("tradeAdvise")({ pair: $("pair").value });
-    renderAdvice(data);
-    call("tradeLogSave")(data).then(loadHistory).catch(() => {});
-  } catch (err) { $("adv").replaceChildren(); throw err; }
+    const el = document.createElement('textarea');
+    el.value = copyText;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    say("Caption copied to clipboard!");
+  } catch (e) { say("Copy failed. Please copy manually.", true); }
+};
+
+function showPlan(p) {
+  $("hook").textContent = p.hook || "";
+  $("script").innerHTML = (p.script || []).map((s, i) => 
+    `<div class="sc"><b>Scene ${i + 1}</b>${esc(s.scene)}<br><span class="sub">"${esc(s.voiceover)}"</span></div>`
+  ).join("");
+  const tags = (p.hashtags || []).join(" ");
+  $("caption").textContent = (p.caption || "") + (tags ? "\n\n" + tags : "");
+  $("caption").style.whiteSpace = "pre-wrap";
+  copyText = $("caption").textContent;
+}
+
+// ==========================================
+// MOBILE MOCKUP & KINETIC TYPING ENGINE
+// ==========================================
+const BRAND = "Michroma, sans-serif";
+const TEXT = '"Google Sans Flex", -apple-system, BlinkMacSystemFont, sans-serif';
+const MONO = '"JetBrains Mono", monospace';
+
+const clamp = (v) => Math.max(0, Math.min(1, v));
+const outC = (t) => 1 - Math.pow(1 - t, 3);
+const backE = (t) => { const s = 1.70158; return 1 + (s + 1) * Math.pow(t - 1, 3) + s * Math.pow(t - 1, 2); };
+const rr = (c, x, y, w, h, r) => {
+  c.beginPath(); c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+};
+
+const ICON_SRC = {
+  chat: ["M7.9 20A9 9 0 1 0 4 16.1L2 22Z"],
+  camera: ["M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z", "M15 13a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"],
+  video: ["m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5", "M4 6h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"],
+  shop: ["M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z", "M3 6h18", "M16 10a4 4 0 0 1-8 0"],
+  heart: ["M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"],
+  zap: ["M13 2 3 14h9l-1 8 10-12h-9l1-8z"],
+  check: ["M20 6L9 17l-5-5"],
+  spark: ["M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"]
+};
+const ICON = {}; for (const k in ICON_SRC) ICON[k] = ICON_SRC[k].map((d) => new Path2D(d));
+
+const PALETTES = [
+  ["#0066ff", "#3b82f6", "#60a5fa"],
+  ["#0f172a", "#2563eb", "#38bdf8"],
+  ["#18181b", "#8b5cf6", "#ec4899"],
+  ["#022c22", "#10b981", "#34d399"]
+];
+
+const HIGHLIGHT_WORDS = ["connect", "build", "grow", "discover", "haba", "create", "fast", "instant", "future", "live", "chat", "tabs", "thoughts", "power"];
+
+// DYNAMIC BACKGROUND COLOR PALETTES & GRADIENTS
+const COLOR_THEMES = [
+  { bg: ["#090d16", "#1e1b4b", "#311042"], accent: "#38bdf8", secondary: "#c084fc", blob: "rgba(56, 189, 248, 0.25)" }, // Electric Indigo / Cyan
+  { bg: ["#180413", "#4c0519", "#701a75"], accent: "#f43f5e", secondary: "#f472b6", blob: "rgba(244, 63, 94, 0.25)" },  // Vibrant Magenta / Rose
+  { bg: ["#022c22", "#064e3b", "#0f172a"], accent: "#34d399", secondary: "#38bdf8", blob: "rgba(52, 211, 153, 0.25)" }, // Emerald / Mint Mesh
+  { bg: ["#1c1917", "#451a03", "#78350f"], accent: "#fbbf24", secondary: "#f97316", blob: "rgba(251, 191, 36, 0.25)" }  // Solar Amber / Flame
+];
+
+const APPS = { gmail:"EA4335", slack:"4A154B", whatsapp:"25D366", instagram:"E4405F", tiktok:"000000", facebook:"0866FF", youtube:"FF0000", telegram:"26A5E4" };
+async function loadIcons() {
+  const out = {};
+  await Promise.all(Object.entries(APPS).map(async ([n, h]) => {
+    try {
+      const t = await (await fetch(`https://cdn.jsdelivr.net/npm/simple-icons@11.14.0/icons/${n}.svg`)).text();
+      const im = new Image();
+      await new Promise((ok, no) => { im.onload = ok; im.onerror = no; im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(t.replace("<svg", `<svg fill="#${h}" width="128" height="128"`)); });
+      out[n] = im;
+    } catch (e) {}
+  }));
+  return out;
+}
+
+function makeMotion(c, W, H, segs, logo, sfxFn, icons, hero) {
+  const SEG = 2.4, END = 2.6, total = segs.length * SEG + END, u = Math.min(W, H), wide = W > H;
+  const OR = "#ee6c3a", TE = "#4f9da6", HL = new Set(HIGHLIGHT_WORDS);
+  const played = new Set(); let now = 0;
+  const sfx = (k, type) => { if (!played.has(k)) { played.add(k); if (sfxFn) sfxFn(type, now); } };
+  const blob = (x, y, r, col) => { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col); g.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = g; c.fillRect(0, 0, W, H); };
+
+  const bg = (t, dark) => {
+    c.fillStyle = dark ? "#0a0a0c" : "#f3efec"; c.fillRect(0, 0, W, H);
+    if (!dark) {
+      blob(W * (0.1 + 0.08 * Math.sin(t * 0.7)), H * (0.1 + 0.05 * Math.cos(t * 0.5)), u * 1.1, "rgba(238,108,58,.7)");
+      blob(W * (0.95 + 0.04 * Math.cos(t * 0.6)), H * 0.92, u, "rgba(79,157,166,.6)");
+      return;
+    }
+    if (hero) {
+      const k = Math.max(W / hero.naturalWidth, H / hero.naturalHeight) * (1.05 + t * 0.02), w = hero.naturalWidth * k, h = hero.naturalHeight * k;
+      c.globalAlpha = 0.55; c.drawImage(hero, (W - w) / 2, (H - h) / 2, w, h); c.globalAlpha = 1;
+    }
+    c.strokeStyle = "rgba(255,255,255,.07)"; c.lineWidth = 1; const r = u * 0.06;
+    for (let row = 0; row * r * 1.5 < H + r; row++) for (let col = 0; col * r * 1.732 < W + r; col++) {
+      const x = col * r * 1.732 + (row % 2) * r * 0.866, y = row * r * 1.5;
+      c.beginPath(); for (let a = 0; a < 6; a++) { const an = Math.PI / 3 * a + Math.PI / 6; c.lineTo(x + r * Math.cos(an), y + r * Math.sin(an)); }
+      c.closePath(); c.stroke();
+    }
+  };
+
+  // Real app icons in a floating pill, with notification badges + ding
+  const stack = (t, idx) => {
+    const names = ["gmail", "slack", "whatsapp", "instagram"], s = u * 0.12, gap = s * 1.35;
+    const cx = wide ? W * 0.86 : W * 0.5, cy = wide ? H * 0.5 : H * 0.2;
+    const pw = wide ? s * 1.5 : gap * 4 + s * 0.3, ph = wide ? gap * 4 + s * 0.3 : s * 1.5;
+    c.save(); c.globalAlpha = outC(clamp(t / 0.4));
+    c.shadowColor = "rgba(0,0,0,.18)"; c.shadowBlur = 30; c.fillStyle = "#fff"; rr(c, cx - pw / 2, cy - ph / 2, pw, ph, s * 0.5); c.fill(); c.shadowBlur = 0;
+    names.forEach((n, i) => {
+      const p = backE(clamp((t - 0.3 - i * 0.22) / 0.4)); if (p <= 0) return;
+      sfx(`ic${idx}_${i}`, "ding");
+      const x = wide ? cx : cx + (i - 1.5) * gap, y = wide ? cy + (i - 1.5) * gap : cy;
+      c.save(); c.translate(x, y); c.scale(p, p);
+      c.fillStyle = "#f6f6f7"; rr(c, -s / 2, -s / 2, s, s, s * 0.24); c.fill();
+      if (icons && icons[n]) c.drawImage(icons[n], -s * 0.32, -s * 0.32, s * 0.64, s * 0.64);
+      c.fillStyle = "#ef4444"; c.beginPath(); c.arc(s * 0.4, -s * 0.4, s * 0.19, 0, 7); c.fill();
+      c.fillStyle = "#fff"; c.font = `700 ${s * 0.2}px ${TEXT}`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(String(3 + i * 4), s * 0.4, -s * 0.4);
+      c.restore();
+    });
+    c.restore();
+  };
+
+  // Kinetic words: blur-in, stagger, highlights, tick/pop sound per word
+  const words = (txt, t, mode, idx) => {
+    c.save(); c.textAlign = "left"; c.textBaseline = "middle";
+    const size = u * (wide ? 0.085 : 0.09); c.font = `800 ${size}px ${TEXT}`;
+    const sp = c.measureText(" ").width, maxW = W * 0.84, lines = []; let cur = [], cw = 0;
+    txt.split(/\s+/).forEach((w) => { const ww = c.measureText(w).width; if (cw + ww > maxW && cur.length) { lines.push({ cur, cw }); cur = []; cw = 0; } cur.push({ w, ww }); cw += ww + sp; });
+    lines.push({ cur, cw });
+    const lh = size * 1.25, y0 = H * 0.5 - (lines.length - 1) * lh / 2, out = clamp((SEG - t) / 0.3);
+    if (mode === "bar") {
+      const bh = lines.length * lh + size * 0.6, g = c.createLinearGradient(0, 0, W, 0); g.addColorStop(0, OR); g.addColorStop(1, TE);
+      c.globalAlpha = out; c.fillStyle = g; c.fillRect(0, H / 2 - bh / 2, W * outC(clamp(t / 0.35)), bh); c.globalAlpha = 1;
+    }
+    let k = 0;
+    lines.forEach((L, li) => {
+      let x = (W - (L.cw - sp)) / 2;
+      L.cur.forEach((o) => {
+        const p = clamp((t - 0.15 - k * 0.16) / 0.45), hl = HL.has(o.w.toLowerCase().replace(/[^a-z]/g, "")); k++;
+        if (p > 0) {
+          sfx(`w${idx}_${k}`, hl ? "pop" : "type");
+          const y = y0 + li * lh + (1 - outC(p)) * size * 0.4;
+          c.globalAlpha = p * out; c.filter = `blur(${(1 - p) * 14}px)`;
+          if (hl && mode === "dark") { const g = c.createLinearGradient(x, 0, x + o.ww, 0); g.addColorStop(0, OR); g.addColorStop(1, TE); c.fillStyle = g; rr(c, x - 10, y - size * 0.62, o.ww + 20, size * 1.2, 12); c.fill(); }
+          c.fillStyle = mode === "light" ? (hl ? OR : "#111") : "#fff";
+          c.fillText(o.w, x, y); c.filter = "none";
+        }
+        x += o.ww + sp;
+      });
+    });
+    c.restore();
+  };
+
+  const endCard = (t) => {
+    bg(t, false); sfx("end", "hit");
+    const s = backE(clamp(t / 0.6)), a = clamp((t - 0.4) / 0.4);
+    c.save(); c.translate(W / 2, H * 0.42); c.scale(s, s); c.textAlign = "center"; c.textBaseline = "middle";
+    if (logo) { const k = Math.min(u * 0.5 / (logo.naturalWidth || 512), u * 0.25 / (logo.naturalHeight || 512)); c.drawImage(logo, -(logo.naturalWidth || 512) * k / 2, -(logo.naturalHeight || 512) * k / 2, (logo.naturalWidth || 512) * k, (logo.naturalHeight || 512) * k); }
+    else { c.fillStyle = "#111"; c.font = `900 ${u * 0.16}px ${BRAND}`; c.fillText("Haba.", 0, 0); }
+    c.restore();
+    c.save(); c.globalAlpha = a; c.textAlign = "center"; c.fillStyle = OR; c.font = `700 ${u * 0.048}px ${TEXT}`; c.fillText("habaapp.co.za", W / 2, H * 0.6);
+    c.fillStyle = "#555"; c.font = `500 ${u * 0.035}px ${TEXT}`; c.fillText("Connect. Create. Discover. Grow.", W / 2, H * 0.66); c.restore();
+  };
+
+  return {
+    total, SEG,
+    draw(t) {
+      now = t; const idx = Math.floor(t / SEG);
+      if (idx >= segs.length) return endCard(t - segs.length * SEG);
+      const lt = t - idx * SEG, kind = idx % 4, mode = ["light", "light", "dark", "bar"][kind];
+      bg(lt, mode === "dark"); sfx("s" + idx, "whoosh");
+      if (kind === 1) stack(lt, idx);
+      words(segs[idx], lt, mode, idx);
+    }
+  };
+}
+
+// Synthesized SFX: type, pop, ding, whoosh, hit — all scheduled at time t
+function playSfx(ctx, dest, type, t) {
+  const osc = (f0, f1, len, v, ty = "sine", at = t) => {
+    const o = ctx.createOscillator(), e = ctx.createGain(); o.type = ty;
+    o.frequency.setValueAtTime(f0, at); o.frequency.exponentialRampToValueAtTime(f1, at + len);
+    e.gain.setValueAtTime(v, at); e.gain.exponentialRampToValueAtTime(0.0001, at + len);
+    o.connect(e); e.connect(dest); o.start(at); o.stop(at + len + 0.02);
+  };
+  const noise = (len, v, f0, f1) => {
+    const b = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * len), ctx.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), e = ctx.createGain();
+    s.buffer = b; f.type = "bandpass"; f.Q.value = 1.2;
+    f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + len * 0.6);
+    e.gain.setValueAtTime(0.0001, t); e.gain.linearRampToValueAtTime(v, t + len * 0.4); e.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    s.connect(f); f.connect(e); e.connect(dest); s.start(t);
+  };
+  if (type === "type") osc(1800, 600, 0.03, 0.05, "square");
+  else if (type === "pop") osc(300, 950, 0.09, 0.16);
+  else if (type === "ding") { osc(1318, 1318, 0.35, 0.1); osc(1760, 1760, 0.4, 0.08, "sine", t + 0.09); }
+  else if (type === "whoosh") noise(0.55, 0.35, 300, 4000);
+  else if (type === "hit") { osc(140, 35, 0.5, 0.6); noise(0.3, 0.2, 2000, 500); }
+}
+
+// Procedural Synth Music Engine
+function scheduleMusic(ctx, dest, t0, dur, style) {
+  const chill = style === "chill";
+  const bpm = chill ? 90 : 124, spb = 60 / bpm, step = spb / 4, BASE = 0.35;
+  const duck = ctx.createGain(), fade = ctx.createGain();
+  duck.connect(fade); fade.connect(dest);
+  fade.gain.setValueAtTime(0, t0);
+  fade.gain.linearRampToValueAtTime(BASE, t0 + 0.5);
+  fade.gain.setValueAtTime(BASE, Math.max(t0 + 0.5, t0 + dur - 1.0));
+  fade.gain.linearRampToValueAtTime(0, t0 + dur);
+
+  const nb = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate), nd = nb.getChannelData(0);
+  for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+  const hz = (n) => 440 * Math.pow(2, (n - 69) / 12);
+  const env = (g, t, len, v) => { g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(v, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + len); };
+
+  const kick = (t, v) => {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.12);
+    env(g, t, 0.25, v); o.connect(g); g.connect(duck); o.start(t); o.stop(t + 0.3);
+  };
+
+  const noise = (t, len, freq, v) => {
+    const sr = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    sr.buffer = nb; f.type = "highpass"; f.frequency.value = freq;
+    env(g, t, len, v); sr.connect(f); f.connect(g); g.connect(duck); sr.start(t, Math.random() * 0.5, len + 0.05);
+  };
+
+  const tone = (n, t, len, v) => {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = "triangle"; o.frequency.value = hz(n);
+    env(g, t, len, v); o.connect(g); g.connect(duck); o.start(t); o.stop(t + len + 0.05);
+  };
+
+  const bars = Math.ceil(dur / (spb * 4));
+  for (let b = 0; b < bars; b++) {
+    for (let s = 0; s < 16; s++) {
+      const t = t0 + (b * 16 + s) * step;
+      if (t > t0 + dur - 0.1) return duck;
+      if (s % 4 === 0) kick(t, 0.8);
+      if (s === 4 || s === 12) noise(t, 0.12, 2000, 0.3);
+      if (s % 2 === 0) tone(57 + (s % 4), t, step * 1.5, 0.15);
+    }
+  }
+  return duck;
+}
+
+// WebCodecs MP4 Exporter with Offline Audio Processing
+async function renderMotion(lines, platform, clips, music) {
+  const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.0/+esm");
+  const [W, H] = platform === "youtube" ? [1280, 720] : platform === "facebook" ? [720, 720] : [720, 1280];
+  const FPS = 30, SR = 44100;
+  
+  const wrap = $("vwrap");
+  wrap.className = "";
+  wrap.innerHTML = '<canvas id="cv" style="width:100%;max-height:70vh;object-fit:contain;border-radius:12px;background:#000"></canvas>';
+  const cv = $("cv"); cv.width = W; cv.height = H;
+
+  try {
+    await Promise.all([
+      document.fonts.load("700 40px Michroma"),
+      document.fonts.load('800 40px "Google Sans Flex"'),
+      document.fonts.load('500 40px "JetBrains Mono"')
+    ]);
+  } catch (e) {}
+
+  const segs = (lines || []).slice(0, 7).map(String);
+  
+  const icons = await loadIcons();
+  const m = makeMotion(cv.getContext("2d"), W, H, segs, LOGO, null, icons, HERO);
+
+  let vcodec = "avc1.640028";
+  const wantMusic = music && music !== "none", hasVoice = clips && clips.length;
+  let dur = m.total;
+
+  // Offline Audio Context Setup (Includes Voice, Music & Sound Effects in exported MP4)
+  let audioBuf = null;
+  if (window.OfflineAudioContext) {
+    let bufs = [];
+    if (hasVoice) {
+      try {
+        const dctx = new OfflineAudioContext(2, SR, SR);
+        bufs = await Promise.all(clips.map((b64) => dctx.decodeAudioData(Uint8Array.from(atob(b64), ch => ch.charCodeAt(0)).buffer)));
+      } catch (e) { bufs = []; }
+    }
+
+    const starts = bufs.map((_, i) => (i < segs.length ? i * m.SEG + 0.1 : segs.length * m.SEG + 0.4));
+    if (bufs.length) dur = Math.max(m.total, ...bufs.map((b, i) => starts[i] + b.duration + 0.3));
+
+    const octx = new OfflineAudioContext(2, Math.ceil(dur * SR), SR);
+    const duck = wantMusic ? scheduleMusic(octx, octx.destination, 0, dur, music) : null;
+
+    // Offline Sound Effects Trigger
+    const offlineSfxTrigger = (type, at) => playSfx(octx, octx.destination, type, at);
+
+    bufs.forEach((b, i) => {
+      const src = octx.createBufferSource();
+      src.buffer = b;
+      src.connect(octx.destination);
+      src.start(starts[i]);
+      if (duck) {
+        duck.gain.setTargetAtTime(0.2, Math.max(0, starts[i] - 0.05), 0.06);
+        duck.gain.setTargetAtTime(1, starts[i] + b.duration + 0.1, 0.3);
+      }
+    });
+
+    // Re-run motion draw timeline onto offline audio context to bake typing & pop SFX into video file
+    const offlineMotion = makeMotion(cv.getContext("2d"), W, H, segs, LOGO, offlineSfxTrigger, icons, HERO);
+    const totalFrames = Math.ceil(dur * FPS);
+    for (let f = 0; f < totalFrames; f += 2) {
+      offlineMotion.draw(f / FPS);
+    }
+
+    audioBuf = await octx.startRendering();
+  }
+
+  const muxer = new Muxer({
+    target: new ArrayBufferTarget(),
+    video: { codec: "avc", width: W, height: H, frameRate: FPS },
+    ...(audioBuf ? { audio: { codec: "aac", numberOfChannels: 2, sampleRate: SR } } : {}),
+    fastStart: "in-memory"
+  });
+
+  let encErr = null;
+
+  // Encode AAC Audio
+  if (audioBuf && window.AudioEncoder) {
+    const aenc = new AudioEncoder({ output: (c, meta) => muxer.addAudioChunk(c, meta), error: (e) => (encErr = e) });
+    aenc.configure({ codec: "mp4a.40.2", sampleRate: SR, numberOfChannels: 2, bitrate: 128000 });
+    const L = audioBuf.getChannelData(0), R = audioBuf.getChannelData(1), CH = 4096;
+    for (let o = 0; o < L.length; o += CH) {
+      const n = Math.min(CH, L.length - o), data = new Float32Array(n * 2);
+      data.set(L.subarray(o, o + n), 0); data.set(R.subarray(o, o + n), n);
+      const ad = new AudioData({ format: "f32-planar", sampleRate: SR, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round((o / SR) * 1e6), data });
+      aenc.encode(ad); ad.close();
+    }
+    await aenc.flush(); aenc.close();
+  }
+
+  // Encode H.264 Video
+  const venc = new VideoEncoder({ output: (c, meta) => muxer.addVideoChunk(c, meta), error: (e) => (encErr = e) });
+  venc.configure({ codec: vcodec, width: W, height: H, bitrate: 4e6, framerate: FPS });
+
+  const N = Math.ceil(dur * FPS);
+  for (let i = 0; i < N; i++) {
+    m.draw(Math.min(i / FPS, m.total - 0.01));
+    const f = new VideoFrame(cv, { timestamp: Math.round((i * 1e6) / FPS), duration: Math.round(1e6 / FPS) });
+    venc.encode(f, { keyFrame: i % FPS === 0 });
+    f.close();
+    if (i % 6 === 0) {
+      say(`Rendering your video ad... ${Math.round((i / N) * 100)}%`);
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+  await venc.flush(); venc.close();
+  muxer.finalize();
+
+  const blob = new Blob([muxer.target.buffer], { type: "video/mp4" });
+  const url = URL.createObjectURL(blob);
+  wrap.innerHTML = `<video src="${url}" controls playsinline loop autoplay style="max-height:70vh"></video><a href="${url}" download="haba-ad.mp4" style="display:block;margin-top:10px;color:var(--accent);font-weight:600;">Download Video (.mp4)</a>`;
+}
+
+// Logo Handling
+let LOGO = null, HERO = null;
+const setLogo = (dataUrl) => new Promise((ok) => {
+  if (!dataUrl) { LOGO = null; $("logoPrev").classList.add("hide"); $("logoX").classList.add("hide"); return ok(true); }
+  const im = new Image();
+  im.onload = () => { LOGO = im; $("logoPrev").src = dataUrl; $("logoPrev").classList.remove("hide"); $("logoX").classList.remove("hide"); ok(true); };
+  im.onerror = () => { LOGO = null; ok(false); };
+  im.src = dataUrl;
 });
 
-onAuthStateChanged(auth, (user) => {
-  $("login").hidden = !!user;
-  $("app").hidden = !user;
-  if (user) { $("uid").textContent = user.uid; refresh(); }
-});
+$("logo").onchange = () => {
+  const f = $("logo").files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => setLogo(r.result);
+  r.readAsDataURL(f);
+};
+$("logoX").onclick = () => { setLogo(null); $("logo").value = ""; };
+
+// Generate Button Handler
+$("go").onclick = async () => {
+  const btn = $("go"); btn.disabled = true; $("result").classList.add("hide");
+  say("Generating script and setting up mobile mockup...");
+  try {
+    const r = await start({
+      focus: $("focus").value,
+      details: $("details").value,
+      audience: $("audience").value,
+      tone: $("tone").value,
+      platform: $("platform").value,
+      duration: $("duration").value,
+      mode: $("mode").value
+    });
+
+    showPlan(r.data.plan);
+    $("result").classList.remove("hide");
+
+    if ($("mode").value === "motion") {
+      let clips = null;
+      if ($("voice").value !== "none") {
+        say("Generating voiceover audio...");
+        try {
+          const spoken = r.data.plan.lines.slice(0, 7).map(String);
+          clips = (await voiceFn({ lines: [...spoken, "Connect. Create. Discover. Grow."], voice: $("voice").value })).data.clips;
+        } catch (e) { say("Voiceover failed, rendering without voice...", true); }
+      }
+      HERO = null; say("Generating ad imagery...");
+      try {
+        const ir = await imgFn({ prompt: r.data.plan.imagePrompt || `Cinematic abstract ${$("focus").value} social app promo, dark moody lighting, no text` });
+        const im = new Image();
+        await new Promise((ok, no) => { im.onload = ok; im.onerror = no; im.src = "data:image/png;base64," + ir.data.image; });
+        HERO = im;
+      } catch (e) {}
+      say("Rendering video...");
+      await renderMotion(r.data.plan.lines, $("platform").value, clips, $("music").value);
+      say("Video generated successfully!");
+      btn.disabled = false;
+      return;
+    }
+
+    // AI Cloud Fallback Status Loop
+    for (let i = 0; i < 60; i++) {
+      await new Promise(r => setTimeout(r, 4000));
+      const s = (await status({ requestId: r.data.requestId })).data;
+      if (s.status === "done" && s.url) {
+        $("vwrap").innerHTML = `<video src="${esc(s.url)}" controls playsinline></video><a href="${esc(s.url)}" target="_blank">Download AI Video</a>`;
+        say("AI Video Ready!"); btn.disabled = false; return;
+      }
+    }
+  } catch (e) {
+    say("Generation error. Please check your options and try again.", true);
+    btn.disabled = false;
+  }
+};
 </script>
 </body>
 </html>
