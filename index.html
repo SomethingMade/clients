@@ -297,6 +297,9 @@ video, canvas {
       <option value="none">No Music</option>
     </select>
 
+    <label>Graphics Direction (optional)</label>
+    <textarea id="graphics" maxlength="500" placeholder="Tell the AI what to show, e.g. 'Dark scene with a glowing phone showing the stories feed, a creator going live, then a shop storefront opening. Black and white, bold and minimal.'"></textarea>
+
     <label>Brand Logo (optional)</label>
     <div class="logo-preview-box">
       <img id="logoPrev" class="hide" alt="Brand Logo">
@@ -770,6 +773,7 @@ $("go").onclick = async () => {
     const r = await start({
       focus: $("focus").value,
       details: $("details").value,
+      graphics: $("graphics").value,
       audience: $("audience").value,
       tone: $("tone").value,
       platform: $("platform").value,
@@ -791,7 +795,8 @@ $("go").onclick = async () => {
       }
       HERO = null; say("Generating ad imagery...");
       try {
-        const ir = await imgFn({ prompt: r.data.plan.imagePrompt || `Cinematic abstract ${$("focus").value} social app promo, dark moody lighting, no text` });
+        const gdir = $("graphics").value.trim();
+        const ir = await imgFn({ prompt: (gdir ? gdir + ". Style: black and white, cinematic, no text. " : "") + (r.data.plan.imagePrompt || `Cinematic abstract ${$("focus").value} social app promo, dark moody lighting, no text`) });
         const im = new Image();
         await new Promise((ok, no) => { im.onload = ok; im.onerror = no; im.src = "data:image/png;base64," + ir.data.image; });
         HERO = im;
