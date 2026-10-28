@@ -422,6 +422,18 @@ const ICON_SRC = {
   heart: ["M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"],
   zap: ["M13 2 3 14h9l-1 8 10-12h-9l1-8z"],
   check: ["M20 6L9 17l-5-5"],
+  badge: ["M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z", "m9 12 2 2 4-4"],
+  users: ["M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2", "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z", "M22 21v-2a4 4 0 0 0-3-3.87", "M16 3.13a4 4 0 0 1 0 7.75"],
+  trend: ["M22 7 13.5 15.5 8.5 10.5 2 17", "M16 7h6v6"],
+  star: ["M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"],
+  gift: ["M20 12v10H4V12", "M2 7h20v5H2z", "M12 22V7", "M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z", "M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"],
+  pin: ["M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z", "M15 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"],
+  wallet: ["M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1", "M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"],
+  bell: ["M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9", "M10.3 21a1.94 1.94 0 0 0 3.4 0"],
+  globe: ["M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z", "M2 12h20", "M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"],
+  crown: ["M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z", "M5 20h14"],
+  music: ["M9 18V5l12-2v13", "M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0z", "M21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"],
+  shield: ["M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"],
   spark: ["M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"]
 };
 const ICON = {}; for (const k in ICON_SRC) ICON[k] = ICON_SRC[k].map((d) => new Path2D(d));
@@ -457,7 +469,7 @@ async function loadIcons() {
   return out;
 }
 
-function makeMotion(c, W, H, segs, logo, sfxFn, icons, hero) {
+function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero) {
   const SEG = 2.4, END = 2.6, total = segs.length * SEG + END, u = Math.min(W, H), wide = W > H;
   const OR = "#ee6c3a", TE = "#4f9da6", HL = new Set(HIGHLIGHT_WORDS);
   const played = new Set(); let now = 0;
@@ -479,24 +491,37 @@ function makeMotion(c, W, H, segs, logo, sfxFn, icons, hero) {
     }
   };
 
-  // Real app icons in a floating pill, with notification badges + ding
-  const stack = (t, idx) => {
-    const names = ["chat", "camera", "video", "shop"], s = u * 0.12, gap = s * 1.35;
-    const cx = wide ? W * 0.86 : W * 0.5, cy = wide ? H * 0.5 : H * 0.2;
-    const pw = wide ? s * 1.5 : gap * 4 + s * 0.3, ph = wide ? gap * 4 + s * 0.3 : s * 1.5;
-    c.save(); c.globalAlpha = outC(clamp(t / 0.4));
-    c.shadowColor = "rgba(0,0,0,.18)"; c.shadowBlur = 30; c.fillStyle = "#fff"; rr(c, cx - pw / 2, cy - ph / 2, pw, ph, s * 0.5); c.fill(); c.shadowBlur = 0;
-    names.forEach((n, i) => {
-      const p = backE(clamp((t - 0.3 - i * 0.22) / 0.4)); if (p <= 0) return;
-      sfx(`ic${idx}_${i}`, "ding");
-      const x = wide ? cx : cx + (i - 1.5) * gap, y = wide ? cy + (i - 1.5) * gap : cy;
-      c.save(); c.translate(x, y); c.scale(p, p);
-      c.fillStyle = "#000"; rr(c, -s / 2, -s / 2, s, s, s * 0.24); c.fill();
-      c.save(); c.scale(s * 0.5 / 24, s * 0.5 / 24); c.translate(-12, -12); c.strokeStyle = "#fff"; c.lineWidth = 2; c.lineCap = c.lineJoin = "round"; ICON[n].forEach((d) => c.stroke(d)); c.restore();
-      c.fillStyle = "#ef4444"; c.beginPath(); c.arc(s * 0.4, -s * 0.4, s * 0.19, 0, 7); c.fill();
-      c.fillStyle = "#fff"; c.font = `700 ${s * 0.2}px ${TEXT}`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(String(3 + i * 4), s * 0.4, -s * 0.4);
-      c.restore();
-    });
+  // AI-directed visuals: each scene gets its own layout + icons (from plan.visuals, else derived from the line's meaning)
+  const KEYS = { badge: ["badge", "verif", "blue", "trust"], chat: ["chat", "message", "talk", "reply", "connect"], camera: ["photo", "story", "stories", "snap"], video: ["video", "live", "stream", "watch"], shop: ["shop", "sell", "store", "business", "buy"], heart: ["love", "like", "follow", "fan"], zap: ["fast", "instant", "speed", "power", "boost"], users: ["friends", "community", "people", "audience", "together"], trend: ["grow", "rank", "earn", "top", "reach"], star: ["star", "best", "creator", "featured"], gift: ["gift", "reward", "win", "free"], pin: ["near", "local", "city", "johannesburg", "africa"], wallet: ["pay", "money", "wallet", "income"], bell: ["notif", "alert", "never miss"], globe: ["world", "global", "discover", "everywhere"], crown: ["gold", "premium", "vip"], music: ["music", "song", "beat", "sound"], shield: ["safe", "secure", "real", "privacy"], spark: ["new", "magic", "create", "idea"] };
+  const hash = (str) => { let h = 2166136261; for (const ch of str) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+  const LAYOUTS = ["orbit", "row", "big", "burst", "corners", "none"];
+  const spec = (idx) => {
+    const ai = visuals && visuals[idx], txt = segs[idx].toLowerCase(), pick = [];
+    if (ai && Array.isArray(ai.icons)) ai.icons.forEach((n) => ICON[n] && !pick.includes(n) && pick.push(n));
+    if (!pick.length) for (const k in KEYS) if (ICON[k] && KEYS[k].some((w) => txt.includes(w))) pick.push(k);
+    const all = Object.keys(ICON); let h = hash(txt + idx);
+    while (pick.length < 3) { const n = all[h % all.length]; h = (Math.imul(h, 1103515245) + 12345) >>> 0; if (!pick.includes(n)) pick.push(n); }
+    const layout = ai && LAYOUTS.includes(ai.layout) ? ai.layout : LAYOUTS[(hash(txt) + idx) % LAYOUTS.length];
+    return { layout, icons: pick.slice(0, 4) };
+  };
+  const tile = (n, x, y, s, dk, p, rot) => {
+    if (p <= 0) return;
+    c.save(); c.translate(x, y); c.rotate(rot || 0); c.scale(p, p);
+    c.shadowColor = "rgba(128,128,128,.35)"; c.shadowBlur = s * 0.25; c.fillStyle = dk ? "#fff" : "#000"; rr(c, -s / 2, -s / 2, s, s, s * 0.3); c.fill(); c.shadowBlur = 0;
+    c.scale(s * 0.5 / 24, s * 0.5 / 24); c.translate(-12, -12); c.strokeStyle = dk ? "#000" : "#fff"; c.lineWidth = 2; c.lineCap = c.lineJoin = "round"; ICON[n].forEach((d) => c.stroke(d));
+    c.restore();
+  };
+  // Visuals stay in the top/bottom bands so they never cover the words
+  const vis = (t, idx, dk) => {
+    const v = spec(idx); if (v.layout === "none") return;
+    const ic = v.icons, n = ic.length, s = u * 0.13, topY = H * 0.2, botY = H * 0.8, out = clamp((SEG - t) / 0.3);
+    c.save(); c.globalAlpha = out;
+    const tt = (i, x, y, sz, rot) => { const p = backE(clamp((t - 0.25 - i * 0.18) / 0.4)); if (p > 0) sfx(`v${idx}_${i}`, i ? "pop" : "ding"); tile(ic[i % n], x, y, sz, dk, p, rot); };
+    if (v.layout === "row") { const y = idx % 2 ? botY : topY; ic.forEach((_, i) => tt(i, W / 2 + (i - (n - 1) / 2) * s * 1.4, y + Math.sin(t * 2 + i) * u * 0.01, s)); }
+    else if (v.layout === "orbit") { const y = idx % 2 ? botY : topY; ic.forEach((_, i) => { const a = t * 0.9 + i * Math.PI * 2 / n; tt(i, W / 2 + Math.cos(a) * W * 0.3, y + Math.sin(a) * s * 0.45, s * (0.8 + 0.25 * Math.sin(a)), 0); }); }
+    else if (v.layout === "big") tt(0, W / 2, idx % 2 ? botY : topY, u * 0.26, Math.sin(t * 1.5) * 0.08);
+    else if (v.layout === "burst") ic.forEach((_, i) => tt(i, W * (i % 2 ? 0.14 : 0.86), H * (0.14 + i * 0.22) + Math.sin(t * 2 + i) * u * 0.012, s * 0.9, (i % 2 ? -1 : 1) * 0.15));
+    else if (v.layout === "corners") ic.forEach((_, i) => tt(i, W * (i % 2 ? 0.84 : 0.16), i < 2 ? topY : botY, s, (i % 2 ? 1 : -1) * 0.12));
     c.restore();
   };
 
@@ -554,7 +579,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, icons, hero) {
       if (idx >= segs.length) return endCard(t - segs.length * SEG);
       const lt = t - idx * SEG, kind = idx % 4, mode = idx % 2 ? "dark" : "light";
       bg(lt, mode === "dark"); sfx("s" + idx, "whoosh");
-      if (kind === 1) stack(lt, idx);
+      vis(lt, idx, mode === "dark");
       words(segs[idx], lt, mode, idx);
     }
   };
@@ -652,7 +677,7 @@ async function renderMotion(lines, platform, clips, music) {
 
   const segs = (lines || []).slice(0, 7).map(String);
   
-  const icons = null;
+  const icons = VISUALS;
   const m = makeMotion(cv.getContext("2d"), W, H, segs, LOGO, null, icons, HERO);
 
   let vcodec = "avc1.640028";
@@ -747,7 +772,7 @@ async function renderMotion(lines, platform, clips, music) {
 }
 
 // Logo Handling
-let LOGO = null, HERO = null;
+let LOGO = null, HERO = null, VISUALS = null;
 const setLogo = (dataUrl) => new Promise((ok) => {
   if (!dataUrl) { LOGO = null; $("logoPrev").classList.add("hide"); $("logoX").classList.add("hide"); return ok(true); }
   const im = new Image();
@@ -774,6 +799,8 @@ $("go").onclick = async () => {
       focus: $("focus").value,
       details: $("details").value,
       graphics: $("graphics").value,
+      iconNames: Object.keys(ICON),
+      visualsHint: "Also return plan.visuals: one object per line, {layout: orbit|row|big|burst|corners|none, icons: [up to 4 iconNames]}. Be creative, vary layouts, match each line.",
       audience: $("audience").value,
       tone: $("tone").value,
       platform: $("platform").value,
@@ -781,6 +808,7 @@ $("go").onclick = async () => {
       mode: $("mode").value
     });
 
+    VISUALS = Array.isArray(r.data.plan.visuals) ? r.data.plan.visuals : null;
     showPlan(r.data.plan);
     $("result").classList.remove("hide");
 
