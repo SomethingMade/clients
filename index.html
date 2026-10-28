@@ -462,12 +462,8 @@ function makeMotion(c, W, H, segs, logo, sfxFn, icons, hero) {
   const blob = (x, y, r, col) => { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col); g.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = g; c.fillRect(0, 0, W, H); };
 
   const bg = (t, dark) => {
-    c.fillStyle = dark ? "#0a0a0c" : "#f3efec"; c.fillRect(0, 0, W, H);
-    if (!dark) {
-      blob(W * (0.1 + 0.08 * Math.sin(t * 0.7)), H * (0.1 + 0.05 * Math.cos(t * 0.5)), u * 1.1, "rgba(238,108,58,.7)");
-      blob(W * (0.95 + 0.04 * Math.cos(t * 0.6)), H * 0.92, u, "rgba(79,157,166,.6)");
-      return;
-    }
+    c.fillStyle = dark ? "#000" : "#fff"; c.fillRect(0, 0, W, H);
+    if (!dark) return;
     if (hero) {
       const k = Math.max(W / hero.naturalWidth, H / hero.naturalHeight) * (1.05 + t * 0.02), w = hero.naturalWidth * k, h = hero.naturalHeight * k;
       c.globalAlpha = 0.55; c.drawImage(hero, (W - w) / 2, (H - h) / 2, w, h); c.globalAlpha = 1;
@@ -482,7 +478,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, icons, hero) {
 
   // Real app icons in a floating pill, with notification badges + ding
   const stack = (t, idx) => {
-    const names = ["gmail", "slack", "whatsapp", "instagram"], s = u * 0.12, gap = s * 1.35;
+    const names = ["chat", "camera", "video", "shop"], s = u * 0.12, gap = s * 1.35;
     const cx = wide ? W * 0.86 : W * 0.5, cy = wide ? H * 0.5 : H * 0.2;
     const pw = wide ? s * 1.5 : gap * 4 + s * 0.3, ph = wide ? gap * 4 + s * 0.3 : s * 1.5;
     c.save(); c.globalAlpha = outC(clamp(t / 0.4));
@@ -492,8 +488,8 @@ function makeMotion(c, W, H, segs, logo, sfxFn, icons, hero) {
       sfx(`ic${idx}_${i}`, "ding");
       const x = wide ? cx : cx + (i - 1.5) * gap, y = wide ? cy + (i - 1.5) * gap : cy;
       c.save(); c.translate(x, y); c.scale(p, p);
-      c.fillStyle = "#f6f6f7"; rr(c, -s / 2, -s / 2, s, s, s * 0.24); c.fill();
-      if (icons && icons[n]) c.drawImage(icons[n], -s * 0.32, -s * 0.32, s * 0.64, s * 0.64);
+      c.fillStyle = "#000"; rr(c, -s / 2, -s / 2, s, s, s * 0.24); c.fill();
+      c.save(); c.scale(s * 0.5 / 24, s * 0.5 / 24); c.translate(-12, -12); c.strokeStyle = "#fff"; c.lineWidth = 2; c.lineCap = c.lineJoin = "round"; ICON[n].forEach((d) => c.stroke(d)); c.restore();
       c.fillStyle = "#ef4444"; c.beginPath(); c.arc(s * 0.4, -s * 0.4, s * 0.19, 0, 7); c.fill();
       c.fillStyle = "#fff"; c.font = `700 ${s * 0.2}px ${TEXT}`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(String(3 + i * 4), s * 0.4, -s * 0.4);
       c.restore();
@@ -522,8 +518,9 @@ function makeMotion(c, W, H, segs, logo, sfxFn, icons, hero) {
           sfx(`w${idx}_${k}`, hl ? "pop" : "type");
           const y = y0 + li * lh + (1 - outC(p)) * size * 0.4;
           c.globalAlpha = p * out; c.filter = `blur(${(1 - p) * 14}px)`;
-          if (hl && mode === "dark") { const g = c.createLinearGradient(x, 0, x + o.ww, 0); g.addColorStop(0, OR); g.addColorStop(1, TE); c.fillStyle = g; rr(c, x - 10, y - size * 0.62, o.ww + 20, size * 1.2, 12); c.fill(); }
-          c.fillStyle = mode === "light" ? (hl ? OR : "#111") : "#fff";
+          const dk = mode === "dark";
+          if (hl) { c.fillStyle = dk ? "#fff" : "#000"; rr(c, x - 10, y - size * 0.62, o.ww + 20, size * 1.2, 14); c.fill(); }
+          c.fillStyle = hl ? (dk ? "#000" : "#fff") : (dk ? "#fff" : "#000");
           c.fillText(o.w, x, y); c.filter = "none";
         }
         x += o.ww + sp;
@@ -532,15 +529,19 @@ function makeMotion(c, W, H, segs, logo, sfxFn, icons, hero) {
     c.restore();
   };
 
+  let endDark = false;
+  if (logo) { try { const k = document.createElement("canvas"); k.width = k.height = 16; const x = k.getContext("2d"); x.drawImage(logo, 0, 0, 16, 16); const d = x.getImageData(0, 0, 16, 16).data; let l = 0, n = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 40) { l += (d[i] + d[i + 1] + d[i + 2]) / 3; n++; } endDark = n > 0 && l / n > 140; } catch (e) {} }
   const endCard = (t) => {
-    bg(t, false); sfx("end", "hit");
-    const s = backE(clamp(t / 0.6)), a = clamp((t - 0.4) / 0.4);
+    bg(t, endDark); sfx("end", "hit");
+    const s = backE(clamp(t / 0.6)), a = clamp((t - 0.4) / 0.4), fg = endDark ? "#fff" : "#000";
     c.save(); c.translate(W / 2, H * 0.42); c.scale(s, s); c.textAlign = "center"; c.textBaseline = "middle";
-    if (logo) { const k = Math.min(u * 0.5 / (logo.naturalWidth || 512), u * 0.25 / (logo.naturalHeight || 512)); c.drawImage(logo, -(logo.naturalWidth || 512) * k / 2, -(logo.naturalHeight || 512) * k / 2, (logo.naturalWidth || 512) * k, (logo.naturalHeight || 512) * k); }
-    else { c.fillStyle = "#111"; c.font = `900 ${u * 0.16}px ${BRAND}`; c.fillText("Haba.", 0, 0); }
+    if (logo) {
+      const iw = logo.naturalWidth || 512, ih = logo.naturalHeight || 512, k = Math.min(u * 0.4 / iw, u * 0.4 / ih), w = iw * k, h = ih * k;
+      c.save(); rr(c, -w / 2, -h / 2, w, h, Math.min(w, h) * 0.24); c.clip(); c.drawImage(logo, -w / 2, -h / 2, w, h); c.restore();
+    } else { c.fillStyle = fg; c.font = `900 ${u * 0.16}px ${BRAND}`; c.fillText("Haba.", 0, 0); }
     c.restore();
-    c.save(); c.globalAlpha = a; c.textAlign = "center"; c.fillStyle = OR; c.font = `700 ${u * 0.048}px ${TEXT}`; c.fillText("habaapp.co.za", W / 2, H * 0.6);
-    c.fillStyle = "#555"; c.font = `500 ${u * 0.035}px ${TEXT}`; c.fillText("Connect. Create. Discover. Grow.", W / 2, H * 0.66); c.restore();
+    c.save(); c.globalAlpha = a; c.textAlign = "center"; c.fillStyle = fg; c.font = `700 ${u * 0.048}px ${TEXT}`; c.fillText("habaapp.co.za", W / 2, H * 0.64);
+    c.fillStyle = endDark ? "#a1a1aa" : "#555"; c.font = `500 ${u * 0.035}px ${TEXT}`; c.fillText("Connect. Create. Discover. Grow.", W / 2, H * 0.7); c.restore();
   };
 
   return {
@@ -548,7 +549,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, icons, hero) {
     draw(t) {
       now = t; const idx = Math.floor(t / SEG);
       if (idx >= segs.length) return endCard(t - segs.length * SEG);
-      const lt = t - idx * SEG, kind = idx % 4, mode = ["light", "light", "dark", "bar"][kind];
+      const lt = t - idx * SEG, kind = idx % 4, mode = idx % 2 ? "dark" : "light";
       bg(lt, mode === "dark"); sfx("s" + idx, "whoosh");
       if (kind === 1) stack(lt, idx);
       words(segs[idx], lt, mode, idx);
@@ -648,7 +649,7 @@ async function renderMotion(lines, platform, clips, music) {
 
   const segs = (lines || []).slice(0, 7).map(String);
   
-  const icons = await loadIcons();
+  const icons = null;
   const m = makeMotion(cv.getContext("2d"), W, H, segs, LOGO, null, icons, HERO);
 
   let vcodec = "avc1.640028";
