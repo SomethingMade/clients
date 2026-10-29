@@ -494,26 +494,28 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero) {
   // AI-directed visuals: each scene gets its own layout + icons (from plan.visuals, else derived from the line's meaning)
   const KEYS = { badge: ["badge", "verif", "blue", "trust"], chat: ["chat", "message", "talk", "reply", "connect"], camera: ["photo", "story", "stories", "snap"], video: ["video", "live", "stream", "watch"], shop: ["shop", "sell", "store", "business", "buy"], heart: ["love", "like", "follow", "fan"], zap: ["fast", "instant", "speed", "power", "boost"], users: ["friends", "community", "people", "audience", "together"], trend: ["grow", "rank", "earn", "top", "reach"], star: ["star", "best", "creator", "featured"], gift: ["gift", "reward", "win", "free"], pin: ["near", "local", "city", "johannesburg", "africa"], wallet: ["pay", "money", "wallet", "income"], bell: ["notif", "alert", "never miss"], globe: ["world", "global", "discover", "everywhere"], crown: ["gold", "premium", "vip"], music: ["music", "song", "beat", "sound"], shield: ["safe", "secure", "real", "privacy"], spark: ["new", "magic", "create", "idea"] };
   const hash = (str) => { let h = 2166136261; for (const ch of str) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
-  const LAYOUTS = ["orbit", "row", "big", "burst", "corners", "none"];
+  const LAYOUTS = ["orbit", "row", "big", "burst", "corners", "none", "phone"];
+  const FALLBACK = ["phone", "none", "orbit", "none", "row", "phone", "none", "big", "corners", "none", "burst"];
   const spec = (idx) => {
     const ai = visuals && visuals[idx], txt = segs[idx].toLowerCase(), pick = [];
     if (ai && Array.isArray(ai.icons)) ai.icons.forEach((n) => ICON[n] && !pick.includes(n) && pick.push(n));
     if (!pick.length) for (const k in KEYS) if (ICON[k] && KEYS[k].some((w) => txt.includes(w))) pick.push(k);
     const all = Object.keys(ICON); let h = hash(txt + idx);
     while (pick.length < 3) { const n = all[h % all.length]; h = (Math.imul(h, 1103515245) + 12345) >>> 0; if (!pick.includes(n)) pick.push(n); }
-    const layout = ai && LAYOUTS.includes(ai.layout) ? ai.layout : LAYOUTS[(hash(txt) + idx) % LAYOUTS.length];
+    const layout = ai && LAYOUTS.includes(ai.layout) ? ai.layout : FALLBACK[(hash(txt) + idx) % FALLBACK.length];
     return { layout, icons: pick.slice(0, 4) };
   };
+  const ICOL = { chat: ["#25a0ff", "#3b5bff"], camera: ["#ff5f9e", "#ff8a3d"], video: ["#ff3b3b", "#ff7a18"], shop: ["#22c55e", "#10b981"], heart: ["#ff2d6f", "#ff6b9a"], zap: ["#facc15", "#f59e0b"], users: ["#8b5cf6", "#6366f1"], trend: ["#10b981", "#06b6d4"], star: ["#fbbf24", "#f97316"], gift: ["#ec4899", "#f43f5e"], pin: ["#ef4444", "#f97316"], wallet: ["#14b8a6", "#0ea5e9"], bell: ["#f59e0b", "#ef4444"], globe: ["#0ea5e9", "#2563eb"], crown: ["#f59e0b", "#eab308"], music: ["#a855f7", "#ec4899"], shield: ["#3b82f6", "#6366f1"], badge: ["#1d9bf0", "#38bdf8"], spark: ["#a855f7", "#f472b6"] };
   const tile = (n, x, y, s, dk, p, rot) => {
     if (p <= 0) return;
     c.save(); c.translate(x, y); c.rotate(rot || 0); c.scale(p, p);
-    c.shadowColor = "rgba(128,128,128,.35)"; c.shadowBlur = s * 0.25; c.fillStyle = dk ? "#fff" : "#000"; rr(c, -s / 2, -s / 2, s, s, s * 0.3); c.fill(); c.shadowBlur = 0;
-    c.scale(s * 0.5 / 24, s * 0.5 / 24); c.translate(-12, -12); c.strokeStyle = dk ? "#000" : "#fff"; c.lineWidth = 2; c.lineCap = c.lineJoin = "round"; ICON[n].forEach((d) => c.stroke(d));
+    c.shadowColor = "rgba(128,128,128,.35)"; c.shadowBlur = s * 0.25; { const [a, b] = ICOL[n] || ["#6366f1", "#8b5cf6"]; c.fillStyle = grad(-s / 2, -s / 2, s / 2, s / 2, a, b); } rr(c, -s / 2, -s / 2, s, s, s * 0.3); c.fill(); c.shadowBlur = 0;
+    c.scale(s * 0.5 / 24, s * 0.5 / 24); c.translate(-12, -12); c.strokeStyle = "#fff"; c.lineWidth = 2; c.lineCap = c.lineJoin = "round"; ICON[n].forEach((d) => c.stroke(d));
     c.restore();
   };
   // Visuals stay in the top/bottom bands so they never cover the words
   const vis = (t, idx, dk) => {
-    const v = spec(idx); if (v.layout === "none") return;
+    const v = spec(idx); if (v.layout === "none" || v.layout === "phone") return;
     const ic = v.icons, n = ic.length, s = u * 0.13, topY = H * 0.2, botY = H * 0.8, out = clamp((SEG - t) / 0.3);
     c.save(); c.globalAlpha = out;
     const tt = (i, x, y, sz, rot) => { const p = backE(clamp((t - 0.25 - i * 0.18) / 0.4)); if (p > 0) sfx(`v${idx}_${i}`, i ? "pop" : "ding"); tile(ic[i % n], x, y, sz, dk, p, rot); };
@@ -525,21 +527,76 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero) {
     c.restore();
   };
 
+  // Animated phone mockup: the screen content depends on what the ad is about
+  const SCREENK = { badge: ["badge", "verif", "blue", "gold"], chat: ["chat", "message", "dm", "talk"], stories: ["story", "stories", "moment"], live: ["live", "gift", "stream"], shop: ["shop", "sell", "store", "buy", "business"], jobs: ["job", "hire", "cv", "work", "career"], lock: ["privacy", "private", "secure", "encrypt", "lock", "safe"] };
+  const screenFor = (idx) => {
+    const ai = visuals && visuals[idx]; if (ai && SCREENK[ai.screen] || ai && ai.screen === "feed") return ai.screen;
+    for (const src of [segs[idx], segs.join(" ")]) for (const k in SCREENK) if (SCREENK[k].some((w) => src.toLowerCase().includes(w))) return k;
+    return "feed";
+  };
+  const grad = (x0, y0, x1, y1, a, b) => { const g = c.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, a); g.addColorStop(1, b); return g; };
+  const R = (x, y, w, h, r, f) => { c.fillStyle = f; rr(c, x, y, w, h, r); c.fill(); };
+  const circ = (x, y, r, f) => { c.fillStyle = f; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); };
+  const heart = (x, y, s, f) => { c.save(); c.translate(x, y); c.fillStyle = f; c.beginPath(); c.moveTo(0, s * 0.35); c.bezierCurveTo(-s * 1.1, -s * 0.4, -s * 0.3, -s * 1, 0, -s * 0.35); c.bezierCurveTo(s * 0.3, -s, s * 1.1, -s * 0.4, 0, s * 0.35); c.fill(); c.restore(); };
+  const PAL = [["#ff5f9e", "#ff8a3d"], ["#25a0ff", "#6366f1"], ["#22c55e", "#10b981"], ["#a855f7", "#ec4899"], ["#facc15", "#f97316"], ["#06b6d4", "#3b82f6"]];
+  const screen = (kind, t, sw, sh) => {
+    if (kind === "chat") {
+      R(0, 0, sw, sh * 0.1, 0, "#f4f4f5"); circ(sw * 0.1, sh * 0.05, sw * 0.05, grad(0, 0, sw, sh, "#25a0ff", "#6366f1")); R(sw * 0.19, sh * 0.04, sw * 0.3, sh * 0.02, 6, "#d4d4d8");
+      for (let i = 0; i < 5; i++) { const p = backE(clamp((t - 0.5 - i * 0.32) / 0.3)); if (p <= 0) continue; const side = i % 2, bw = sw * (0.4 + 0.1 * ((i * 7) % 3)), bh = sh * 0.09, x = side ? sw - bw - 12 : 12, y = sh * 0.14 + i * sh * 0.15; c.save(); c.translate(side ? x + bw : x, y + bh / 2); c.scale(p, p); R(side ? -bw : 0, -bh / 2, bw, bh, bh / 2, side ? grad(0, 0, bw, 0, "#25a0ff", "#6366f1") : "#e5e7eb"); c.restore(); }
+    } else if (kind === "stories") {
+      for (let i = 0; i < 4; i++) { const x = sw * (0.14 + i * 0.24), y = sh * 0.09; circ(x, y, sw * 0.095, grad(x - 20, y - 20, x + 20, y + 20, ...PAL[i][0] ? PAL[i] : PAL[0])); circ(x, y, sw * 0.075, "#fff"); circ(x, y, sw * 0.062, grad(x - 10, y - 10, x + 10, y + 10, ...PAL[(i + 2) % 6])); }
+      R(10, sh * 0.19, sw - 20, sh * 0.55, 18, grad(0, 0, sw, sh, ...PAL[Math.floor(t * 1.2) % 6])); circ(sw * 0.65, sh * 0.35, sw * 0.12, "rgba(255,255,255,.6)");
+      heart(sw * 0.2, sh * 0.8, sw * 0.07 * (1 + 0.25 * Math.sin(t * 6)), "#ff2d6f"); R(sw * 0.34, sh * 0.78, sw * 0.5, sh * 0.03, 8, "#e5e7eb");
+    } else if (kind === "live") {
+      R(0, 0, sw, sh, 0, grad(0, 0, sw, sh, "#4c1d95", "#ec4899")); circ(sw * 0.5, sh * 0.38, sw * 0.2, "rgba(255,255,255,.25)"); R(sw * 0.06, sh * 0.05, sw * 0.2, sh * 0.04, 8, "#ef4444"); circ(sw * 0.1, sh * 0.07, 4 + 2 * Math.sin(t * 8), "#fff");
+      for (let i = 0; i < 7; i++) { const ph = (t * 0.55 + i * 0.15) % 1; heart(sw * (0.75 + 0.14 * Math.sin(i * 2 + t * 3)), sh * 0.9 - ph * sh * 0.7, sw * (0.04 + 0.02 * (i % 3)), `rgba(255,${80 + i * 15},150,${1 - ph})`); }
+      for (let i = 0; i < 3; i++) R(sw * 0.06, sh * (0.72 + i * 0.07), sw * (0.4 + 0.1 * i), sh * 0.04, 10, "rgba(255,255,255,.35)");
+    } else if (kind === "shop") {
+      R(0, 0, sw, sh * 0.08, 0, "#f4f4f5");
+      for (let i = 0; i < 8; i++) { const col = i % 2, row = i >> 1, x = 10 + col * (sw / 2 - 5), y = sh * 0.11 + row * sh * 0.3 - t * sh * 0.12, cw = sw / 2 - 15; R(x, y, cw, sh * 0.22, 14, grad(x, y, x + cw, y + sh * 0.22, ...PAL[i % 6])); R(x, y + sh * 0.235, cw * 0.7, sh * 0.02, 6, "#d4d4d8"); R(x, y + sh * 0.265, cw * 0.4, sh * 0.02, 6, "#22c55e"); }
+    } else if (kind === "jobs") {
+      R(0, 0, sw, sh * 0.08, 0, "#f4f4f5");
+      for (let i = 0; i < 6; i++) { const y = sh * 0.11 + i * sh * 0.16 - t * sh * 0.04; R(10, y, sw - 20, sh * 0.13, 14, "#f4f4f5"); circ(sw * 0.17, y + sh * 0.065, sw * 0.07, grad(0, y, sw, y + 50, ...PAL[i % 6])); R(sw * 0.3, y + sh * 0.04, sw * 0.45, sh * 0.02, 6, "#a1a1aa"); R(sw * 0.3, y + sh * 0.075, sw * 0.28, sh * 0.02, 6, "#d4d4d8"); if (i === 1) { const p = backE(clamp((t - 0.8) / 0.3)); c.save(); c.translate(sw * 0.84, y + sh * 0.065); c.scale(p, p); circ(0, 0, sw * 0.06, "#22c55e"); c.strokeStyle = "#fff"; c.lineWidth = 3; c.lineCap = "round"; c.beginPath(); c.moveTo(-sw * 0.025, 0); c.lineTo(-sw * 0.005, sw * 0.02); c.lineTo(sw * 0.03, -sw * 0.02); c.stroke(); c.restore(); } }
+    } else if (kind === "badge") {
+      const ax = sw / 2, ay = sh * 0.28, ar = sw * 0.2; circ(ax, ay, ar, grad(ax - ar, ay - ar, ax + ar, ay + ar, "#f472b6", "#6366f1")); R(sw * 0.3, sh * 0.5, sw * 0.4, sh * 0.03, 8, "#a1a1aa"); R(sw * 0.36, sh * 0.56, sw * 0.28, sh * 0.02, 6, "#d4d4d8");
+      const p = backE(clamp((t - 0.5) / 0.4)), bx = ax + ar * 0.75, by = ay + ar * 0.75; if (p > 0) { sfx(`bd${idx0}`, "ding"); c.strokeStyle = `rgba(29,155,240,${1 - ((t * 1.2) % 1)})`; c.lineWidth = 4; c.beginPath(); c.arc(bx, by, ar * 0.4 * (1 + (t * 1.2) % 1), 0, 7); c.stroke(); c.save(); c.translate(bx, by); c.scale(p * ar * 0.07, p * ar * 0.07); c.translate(-12, -12); c.fillStyle = "#1d9bf0"; c.fill(ICON.badge[0]); c.strokeStyle = "#fff"; c.lineWidth = 2.2; c.lineCap = c.lineJoin = "round"; c.stroke(ICON.badge[1]); c.restore(); }
+      for (let i = 0; i < 2; i++) R(10, sh * (0.68 + i * 0.13), sw - 20, sh * 0.1, 14, "#f4f4f5");
+    } else if (kind === "lock") {
+      R(0, 0, sw, sh, 0, grad(0, 0, sw, sh, "#0f172a", "#1e3a8a"));
+      for (let i = 0; i < 3; i++) { const ph = (t * 0.7 + i / 3) % 1; c.strokeStyle = `rgba(96,165,250,${0.6 - ph * 0.6})`; c.lineWidth = 3; c.beginPath(); c.arc(sw / 2, sh * 0.38, sw * (0.15 + ph * 0.3), 0, 7); c.stroke(); }
+      c.save(); c.translate(sw / 2, sh * 0.38); c.scale(sw * 0.011, sw * 0.011); c.translate(-12, -12); c.strokeStyle = "#fff"; c.lineWidth = 2; c.lineCap = c.lineJoin = "round"; ICON.shield.forEach((d) => c.stroke(d)); c.restore();
+      for (let i = 0; i < 3; i++) R(sw * (i % 2 ? 0.4 : 0.1), sh * (0.65 + i * 0.09), sw * 0.5, sh * 0.06, 12, "rgba(255,255,255,.18)");
+    } else {
+      for (let i = 0; i < 4; i++) { const y = sh * 0.04 + i * sh * 0.36 - ((t * sh * 0.1) % (sh * 0.36)); circ(sw * 0.1, y + sh * 0.03, sw * 0.05, grad(0, y, sw, y + 40, ...PAL[i % 6])); R(sw * 0.2, y + sh * 0.02, sw * 0.35, sh * 0.02, 6, "#a1a1aa"); R(10, y + sh * 0.08, sw - 20, sh * 0.22, 16, grad(0, y, sw, y + sh * 0.3, ...PAL[(i + 1) % 6])); heart(sw * 0.12, y + sh * 0.33, sw * 0.04, "#ff2d6f"); }
+    }
+  };
+  let idx0 = 0;
+  const phone = (t, idx, dk) => {
+    idx0 = idx; const w = u * (wide ? 0.34 : 0.42), h = w * 2.05, cx = wide ? W * 0.76 : W * 0.5, cy = wide ? H * 0.52 : H * 0.7;
+    const p = outC(clamp(t / 0.7)), out = clamp((SEG - t) / 0.3), m = w * 0.035, sw = w - 2 * m, sh = h - 2 * m;
+    sfx(`ph${idx}`, "whoosh");
+    c.save(); c.globalAlpha = out; c.translate(cx, cy + (1 - p) * H * 0.45 + Math.sin(t * 1.6) * u * 0.012); c.rotate(Math.sin(t * 1.1) * 0.045 + (1 - p) * 0.2);
+    c.shadowColor = "rgba(128,128,128,.4)"; c.shadowBlur = 40; c.fillStyle = "#111"; rr(c, -w / 2, -h / 2, w, h, w * 0.14); c.fill(); c.shadowBlur = 0;
+    if (dk) { c.strokeStyle = "#fff"; c.lineWidth = 3; c.stroke(); }
+    c.save(); rr(c, -sw / 2, -sh / 2, sw, sh, w * 0.11); c.clip(); c.fillStyle = "#fff"; c.fillRect(-sw / 2, -sh / 2, sw, sh); c.translate(-sw / 2, -sh / 2); screen(screenFor(idx), t, sw, sh); c.restore();
+    c.fillStyle = "#111"; rr(c, -w * 0.14, -h / 2 + m * 1.2, w * 0.28, m * 1.7, m); c.fill(); c.restore();
+  };
+
   // Kinetic words: blur-in, stagger, highlights, tick/pop sound per word
-  const words = (txt, t, mode, idx) => {
+  const words = (txt, t, mode, idx, box) => {
     c.save(); c.textAlign = "left"; c.textBaseline = "middle";
-    const size = u * (wide ? 0.085 : 0.09); c.font = `800 ${size}px ${TEXT}`;
-    const sp = c.measureText(" ").width, maxW = W * 0.84, lines = []; let cur = [], cw = 0;
+    const size = u * (wide ? 0.085 : 0.09) * box.sc; c.font = `800 ${size}px ${TEXT}`;
+    const sp = c.measureText(" ").width, maxW = box.mw, lines = []; let cur = [], cw = 0;
     txt.split(/\s+/).forEach((w) => { const ww = c.measureText(w).width; if (cw + ww > maxW && cur.length) { lines.push({ cur, cw }); cur = []; cw = 0; } cur.push({ w, ww }); cw += ww + sp; });
     lines.push({ cur, cw });
-    const lh = size * 1.25, y0 = H * 0.5 - (lines.length - 1) * lh / 2, out = clamp((SEG - t) / 0.3);
+    const lh = size * 1.25, y0 = box.cy - (lines.length - 1) * lh / 2, out = clamp((SEG - t) / 0.3);
     if (mode === "bar") {
       const bh = lines.length * lh + size * 0.6, g = c.createLinearGradient(0, 0, W, 0); g.addColorStop(0, OR); g.addColorStop(1, TE);
       c.globalAlpha = out; c.fillStyle = g; c.fillRect(0, H / 2 - bh / 2, W * outC(clamp(t / 0.35)), bh); c.globalAlpha = 1;
     }
     let k = 0;
     lines.forEach((L, li) => {
-      let x = (W - (L.cw - sp)) / 2;
+      let x = box.cx - (L.cw - sp) / 2;
       L.cur.forEach((o) => {
         const p = clamp((t - 0.15 - k * 0.16) / 0.45), hl = HL.has(o.w.toLowerCase().replace(/[^a-z]/g, "")); k++;
         if (p > 0) {
@@ -579,8 +636,9 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero) {
       if (idx >= segs.length) return endCard(t - segs.length * SEG);
       const lt = t - idx * SEG, kind = idx % 4, mode = idx % 2 ? "dark" : "light";
       bg(lt, mode === "dark"); sfx("s" + idx, "whoosh");
-      vis(lt, idx, mode === "dark");
-      words(segs[idx], lt, mode, idx);
+      const ph = spec(idx).layout === "phone";
+      if (ph) phone(lt, idx, mode === "dark"); else vis(lt, idx, mode === "dark");
+      words(segs[idx], lt, mode, idx, ph ? (wide ? { cx: W * 0.3, cy: H * 0.5, mw: W * 0.46, sc: 0.9 } : { cx: W / 2, cy: H * 0.21, mw: W * 0.84, sc: 0.8 }) : { cx: W / 2, cy: H * 0.5, mw: W * 0.84, sc: 1 });
     }
   };
 }
@@ -800,7 +858,7 @@ $("go").onclick = async () => {
       details: $("details").value,
       graphics: $("graphics").value,
       iconNames: Object.keys(ICON),
-      visualsHint: "Also return plan.visuals: one object per line, {layout: orbit|row|big|burst|corners|none, icons: [up to 4 iconNames]}. Be creative, vary layouts, match each line.",
+      visualsHint: "Also return plan.visuals: one object per line, {layout: phone|orbit|row|big|burst|corners|none, screen: chat|stories|live|shop|jobs|badge|lock|feed (only for phone), icons: [up to 4 iconNames]}. Show the phone for roughly a third of the lines, matching the feature being advertised, and use none for several lines. Be creative, vary layouts, match each line.",
       audience: $("audience").value,
       tone: $("tone").value,
       platform: $("platform").value,
