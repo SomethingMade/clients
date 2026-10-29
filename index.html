@@ -614,15 +614,15 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero) {
   if (logo) { try { const k = document.createElement("canvas"); k.width = k.height = 16; const x = k.getContext("2d"); x.drawImage(logo, 0, 0, 16, 16); const d = x.getImageData(0, 0, 16, 16).data; let l = 0, n = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 40) { l += (d[i] + d[i + 1] + d[i + 2]) / 3; n++; } endDark = n > 0 && l / n > 140; } catch (e) {} }
   const endCard = (t) => {
     bg(t, endDark); sfx("end", "hit");
-    const s = backE(clamp(t / 0.6)), a = clamp((t - 0.4) / 0.4), fg = endDark ? "#fff" : "#000";
-    c.save(); c.translate(W / 2, H * 0.42); c.scale(s, s); c.textAlign = "center"; c.textBaseline = "middle";
+    const s = backE(clamp(t / 0.6)), a = clamp((t - 0.4) / 0.4), fg = endDark ? "#fff" : "#000", lsz = u * 0.3, lcy = H * (wide ? 0.36 : 0.4), uy = lcy + lsz / 2 + u * 0.1;
+    c.save(); c.translate(W / 2, lcy); c.scale(s, s); c.textAlign = "center"; c.textBaseline = "middle";
     if (logo) {
-      const iw = logo.naturalWidth || 512, ih = logo.naturalHeight || 512, k = Math.min(u * 0.4 / iw, u * 0.4 / ih), w = iw * k, h = ih * k;
+      const iw = logo.naturalWidth || 512, ih = logo.naturalHeight || 512, k = Math.min(lsz / iw, lsz / ih), w = iw * k, h = ih * k;
       c.save(); rr(c, -w / 2, -h / 2, w, h, Math.min(w, h) * 0.24); c.clip(); c.drawImage(logo, -w / 2, -h / 2, w, h); c.restore();
     } else { c.fillStyle = fg; c.font = `900 ${u * 0.16}px ${BRAND}`; c.fillText("Haba.", 0, 0); }
     c.restore();
-    c.save(); c.globalAlpha = a; c.textAlign = "center"; c.fillStyle = fg; c.font = `700 ${u * 0.048}px ${TEXT}`; c.fillText("habaapp.co.za", W / 2, H * 0.64);
-    c.fillStyle = endDark ? "#a1a1aa" : "#555"; c.font = `500 ${u * 0.035}px ${TEXT}`; c.fillText("Connect. Create. Discover. Grow.", W / 2, H * 0.7); c.restore();
+    c.save(); c.globalAlpha = a; c.textAlign = "center"; c.fillStyle = fg; c.font = `700 ${u * 0.048}px ${TEXT}`; c.fillText("habaapp.co.za", W / 2, uy);
+    c.fillStyle = endDark ? "#a1a1aa" : "#555"; c.font = `500 ${u * 0.035}px ${TEXT}`; c.fillText("Connect. Create. Discover. Grow.", W / 2, uy + u * 0.07); c.restore();
   };
 
   return {
