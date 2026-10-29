@@ -187,6 +187,25 @@ video, canvas {
 
 .hide { display: none !important; }
 
+.vcard {
+  background: linear-gradient(160deg, rgba(29,155,240,.14), rgba(56,189,248,.04));
+  border: 1px solid rgba(29,155,240,.45);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-top: 16px;
+}
+.vhead { display: flex; align-items: center; gap: 12px; }
+.vhead svg { width: 40px; height: 40px; flex: none; }
+.vhead b { display: block; font-size: 16px; }
+.vhead span { color: var(--sub); font-size: 13px; }
+.vprice { margin-left: auto; text-align: right; font: 700 22px 'Michroma', sans-serif; color: #1d9bf0; white-space: nowrap; }
+.vprice small { display: block; font: 500 11px 'Google Sans Flex', sans-serif; color: var(--sub); }
+.vlist { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 10px; }
+.vlist li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
+.vlist li svg { width: 18px; height: 18px; flex: none; margin-top: 2px; }
+.vlist li b { display: block; font-size: 14px; }
+.vlist li span { color: var(--sub); font-size: 13px; }
+
 .logo-preview-box {
   display: flex;
   gap: 12px;
@@ -235,10 +254,12 @@ video, canvas {
       <option value="live">Live Streams & Gifts</option>
       <option value="shop">Social Shop & Commerce</option>
       <option value="jobs">Job Network & Freelance</option>
-      <option value="verified">Verified Creator Badges</option>
+      <option value="verified">Verified Badge · R4.99 (Secure &amp; Trusted)</option>
       <option value="privacy">End-to-End Privacy</option>
       <option value="creators">Creator Monetization</option>
     </select>
+
+    <div id="vpanel" class="hide"></div>
 
     <label>Extra angle or context (optional)</label>
     <textarea id="details" maxlength="600" placeholder="e.g. Highlight mobile app chat speeds, creator earnings, or instant connected tabs."></textarea>
@@ -317,6 +338,7 @@ video, canvas {
       <h3>Video Preview</h3>
       <div id="vwrap" class="sub">Preparing dynamic mockup engine and rendering video...</div>
     </div>
+    <div id="offer" class="hide"></div>
     <div class="card">
       <h3>Concept Hook</h3>
       <div id="hook"></div>
@@ -355,6 +377,33 @@ const $ = (id) => document.getElementById(id);
 const say = (t, err) => { $("msg").textContent = t || ""; $("msg").className = err ? "err" : ""; };
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 let copyText = "";
+
+// ==========================================
+// VERIFIED BADGE OFFER (edit price / benefits here)
+// ==========================================
+const VERIFIED_PRICE = "R4.99";
+const VERIFIED_BENEFITS = [
+  ["Blue verified badge", "Shown next to your name on your profile, chats, posts, stories and live streams."],
+  ["Be trusted instantly", "People know you are the real you, so fake and impersonator accounts stand out."],
+  ["Secure your account", "Identity-checked profile with extra protection against takeovers and cloning."],
+  ["Get seen more", "Verified accounts get priority in search, suggestions and the feed."],
+  ["Sell and earn with confidence", "Buyers trust verified shops, gifts and freelance profiles, so you convert more."],
+  ["Priority support", "Faster help if something goes wrong with your account."]
+];
+const BADGE_SVG = '<svg viewBox="0 0 24 24" fill="#1d9bf0"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const TICK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+const verifiedHTML = (title) => `<div class="vcard">
+  <div class="vhead">${BADGE_SVG}<div><b>${esc(title)}</b><span>Secure your account and be trusted</span></div>
+  <div class="vprice">${VERIFIED_PRICE}<small>one-time</small></div></div>
+  <ul class="vlist">${VERIFIED_BENEFITS.map(([h, d]) => `<li>${TICK_SVG}<div><b>${esc(h)}</b><span>${esc(d)}</span></div></li>`).join("")}</ul>
+</div>`;
+const isVerified = () => $("focus").value === "verified";
+const syncVerified = () => {
+  $("vpanel").innerHTML = isVerified() ? verifiedHTML("Haba Verified Badge") : "";
+  $("vpanel").classList.toggle("hide", !isVerified());
+};
+$("focus").onchange = syncVerified;
+syncVerified();
 
 onAuthStateChanged(auth, (u) => {
   $("login").classList.toggle("hide", !!u);
@@ -622,7 +671,17 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero) {
     } else { c.fillStyle = fg; c.font = `900 ${u * 0.16}px ${BRAND}`; c.fillText("Haba.", 0, 0); }
     c.restore();
     c.save(); c.globalAlpha = a; c.textAlign = "center"; c.fillStyle = fg; c.font = `700 ${u * 0.048}px ${TEXT}`; c.fillText("habaapp.co.za", W / 2, uy);
-    c.fillStyle = endDark ? "#a1a1aa" : "#555"; c.font = `500 ${u * 0.035}px ${TEXT}`; c.fillText("Connect. Create. Discover. Grow.", W / 2, uy + u * 0.07);
+    if (VERIFIED_AD) {
+      const label = "Get Verified · " + VERIFIED_PRICE, fs = u * 0.04;
+      c.font = `700 ${fs}px ${TEXT}`;
+      const tw = c.measureText(label).width, ph = u * 0.075, ic = ph * 0.6, pw = tw + ic + ph * 0.9, px = W / 2 - pw / 2, py = uy + u * 0.035;
+      const g = c.createLinearGradient(px, py, px + pw, py); g.addColorStop(0, "#1d9bf0"); g.addColorStop(1, "#38bdf8");
+      c.fillStyle = g; rr(c, px, py, pw, ph, ph / 2); c.fill();
+      c.save(); c.translate(px + ph * 0.3, py + (ph - ic) / 2); c.scale(ic / 24, ic / 24); c.fillStyle = "#fff"; c.fill(ICON.badge[0]); c.strokeStyle = "#1d9bf0"; c.lineWidth = 2.2; c.lineCap = c.lineJoin = "round"; c.stroke(ICON.badge[1]); c.restore();
+      c.fillStyle = "#fff"; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText(label, px + ph * 0.3 + ic + ph * 0.2, py + ph / 2 + fs * 0.04); c.textAlign = "center"; c.textBaseline = "alphabetic";
+    } else {
+      c.fillStyle = endDark ? "#a1a1aa" : "#555"; c.font = `500 ${u * 0.035}px ${TEXT}`; c.fillText("Connect. Create. Discover. Grow.", W / 2, uy + u * 0.07);
+    }
     // Google Play badge so viewers know where to download the app
     const bw = u * 0.44, bh = u * 0.125, bx = W / 2 - bw / 2, by = uy + u * 0.07 + u * 0.075, ts = bh * 0.52, tx = bx + bh * 0.28, ty = by + (bh - ts) / 2;
     sfx("play", "ding");
@@ -837,7 +896,7 @@ async function renderMotion(lines, platform, clips, music) {
 }
 
 // Logo Handling
-let LOGO = null, HERO = null, VISUALS = null;
+let LOGO = null, HERO = null, VISUALS = null, VERIFIED_AD = false;
 const setLogo = (dataUrl) => new Promise((ok) => {
   if (!dataUrl) { LOGO = null; $("logoPrev").classList.add("hide"); $("logoX").classList.add("hide"); return ok(true); }
   const im = new Image();
@@ -860,9 +919,15 @@ $("go").onclick = async () => {
   const btn = $("go"); btn.disabled = true; $("result").classList.add("hide");
   say("Generating script and setting up mobile mockup...");
   try {
+    VERIFIED_AD = isVerified();
+    const vBrief = VERIFIED_AD
+      ? `Advertise the Haba Verified Badge, sold for ${VERIFIED_PRICE} (South African rand, one-time) to secure your account and be trusted. Clearly state the price ${VERIFIED_PRICE} and the call to action "Get Verified". Cover these benefits: ` + VERIFIED_BENEFITS.map(([h, d]) => h + " (" + d + ")").join("; ") + ". Show the blue verified tick on a phone profile screen (screen: badge)."
+      : "";
+    $("offer").innerHTML = VERIFIED_AD ? verifiedHTML("Verified Badge Offer") : "";
+    $("offer").classList.toggle("hide", !VERIFIED_AD);
     const r = await start({
       focus: $("focus").value,
-      details: $("details").value,
+      details: [vBrief, $("details").value].filter(Boolean).join(" "),
       graphics: $("graphics").value,
       iconNames: Object.keys(ICON),
       visualsHint: "Also return plan.visuals: one object per line, {layout: phone|orbit|row|big|burst|corners|none, screen: chat|stories|live|shop|jobs|badge|lock|feed (only for phone), icons: [up to 4 iconNames]}. Show the phone for roughly a third of the lines, matching the feature being advertised, and use none for several lines. Be creative, vary layouts, match each line.",
