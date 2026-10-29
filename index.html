@@ -479,10 +479,6 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero) {
   const bg = (t, dark) => {
     c.fillStyle = dark ? "#000" : "#fff"; c.fillRect(0, 0, W, H);
     if (!dark) return;
-    if (hero) {
-      const k = Math.max(W / hero.naturalWidth, H / hero.naturalHeight) * (1.05 + t * 0.02), w = hero.naturalWidth * k, h = hero.naturalHeight * k;
-      c.globalAlpha = 0.55; c.drawImage(hero, (W - w) / 2, (H - h) / 2, w, h); c.globalAlpha = 1;
-    }
     c.strokeStyle = "rgba(255,255,255,.07)"; c.lineWidth = 1; const r = u * 0.06;
     for (let row = 0; row * r * 1.5 < H + r; row++) for (let col = 0; col * r * 1.732 < W + r; col++) {
       const x = col * r * 1.732 + (row % 2) * r * 0.866, y = row * r * 1.5;
@@ -879,14 +875,7 @@ $("go").onclick = async () => {
           clips = (await voiceFn({ lines: [...spoken, "Connect. Create. Discover. Grow."], voice: $("voice").value })).data.clips;
         } catch (e) { say("Voiceover failed, rendering without voice...", true); }
       }
-      HERO = null; say("Generating ad imagery...");
-      try {
-        const gdir = $("graphics").value.trim();
-        const ir = await imgFn({ prompt: (gdir ? gdir + ". Style: black and white, cinematic, no text. " : "") + (r.data.plan.imagePrompt || `Cinematic abstract ${$("focus").value} social app promo, dark moody lighting, no text`) });
-        const im = new Image();
-        await new Promise((ok, no) => { im.onload = ok; im.onerror = no; im.src = "data:image/png;base64," + ir.data.image; });
-        HERO = im;
-      } catch (e) {}
+      HERO = null;
       say("Rendering video...");
       await renderMotion(r.data.plan.lines, $("platform").value, clips, $("music").value);
       say("Video generated successfully!");
