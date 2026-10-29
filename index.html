@@ -397,6 +397,7 @@ const verifiedHTML = (title) => `<div class="vcard">
   <div class="vprice">${VERIFIED_PRICE}<small>one-time</small></div></div>
   <ul class="vlist">${VERIFIED_BENEFITS.map(([h, d]) => `<li>${TICK_SVG}<div><b>${esc(h)}</b><span>${esc(d)}</span></div></li>`).join("")}</ul>
 </div>`;
+const FLOW_BRIEF = "Write the lines as one continuous, professional narration: each line flows straight into the next with natural connecting words (Because, And, So, Now, That's why, With Haba), full confident sentences of about 8 to 14 words, no abrupt fragments, no gaps in the story.";
 const isVerified = () => $("focus").value === "verified";
 const syncVerified = () => {
   $("vpanel").innerHTML = isVerified() ? verifiedHTML("Haba Verified Badge") : "";
@@ -518,8 +519,9 @@ async function loadIcons() {
   return out;
 }
 
-function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero) {
-  const SEG = 2.4, END = 2.6, total = segs.length * SEG + END, u = Math.min(W, H), wide = W > H;
+function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
+  const SEG = 2.4, END = 2.6, D = segs.map((_, i) => (durs && durs[i]) || SEG), ST = [], SCENES = D.reduce((a, d, i) => (ST[i] = a, a + d), 0), total = SCENES + END; let SD = SEG;
+  const u = Math.min(W, H), wide = W > H;
   const OR = "#ee6c3a", TE = "#4f9da6", HL = new Set(HIGHLIGHT_WORDS);
   const played = new Set(); let now = 0;
   const sfx = (k, type) => { if (!played.has(k)) { played.add(k); if (sfxFn) sfxFn(type, now); } };
@@ -561,7 +563,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero) {
   // Visuals stay in the top/bottom bands so they never cover the words
   const vis = (t, idx, dk) => {
     const v = spec(idx); if (v.layout === "none" || v.layout === "phone") return;
-    const ic = v.icons, n = ic.length, s = u * 0.13, topY = H * 0.2, botY = H * 0.8, out = clamp((SEG - t) / 0.3);
+    const ic = v.icons, n = ic.length, s = u * 0.13, topY = H * 0.2, botY = H * 0.8, out = clamp((SD - t) / 0.12);
     c.save(); c.globalAlpha = out;
     const tt = (i, x, y, sz, rot) => { const p = backE(clamp((t - 0.25 - i * 0.18) / 0.4)); if (p > 0) sfx(`v${idx}_${i}`, i ? "pop" : "ding"); tile(ic[i % n], x, y, sz, dk, p, rot); };
     if (v.layout === "row") { const y = idx % 2 ? botY : topY; ic.forEach((_, i) => tt(i, W / 2 + (i - (n - 1) / 2) * s * 1.4, y + Math.sin(t * 2 + i) * u * 0.01, s)); }
@@ -618,7 +620,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero) {
   let idx0 = 0;
   const phone = (t, idx, dk) => {
     idx0 = idx; const w = u * (wide ? 0.34 : 0.42), h = w * 2.05, cx = wide ? W * 0.76 : W * 0.5, cy = wide ? H * 0.52 : H * 0.7;
-    const p = outC(clamp(t / 0.7)), out = clamp((SEG - t) / 0.3), m = w * 0.035, sw = w - 2 * m, sh = h - 2 * m;
+    const p = outC(clamp(t / 0.7)), out = clamp((SD - t) / 0.12), m = w * 0.035, sw = w - 2 * m, sh = h - 2 * m;
     sfx(`ph${idx}`, "whoosh");
     c.save(); c.globalAlpha = out; c.translate(cx, cy + (1 - p) * H * 0.45 + Math.sin(t * 1.6) * u * 0.012); c.rotate(Math.sin(t * 1.1) * 0.045 + (1 - p) * 0.2);
     c.shadowColor = "rgba(128,128,128,.4)"; c.shadowBlur = 40; c.fillStyle = "#111"; rr(c, -w / 2, -h / 2, w, h, w * 0.14); c.fill(); c.shadowBlur = 0;
@@ -634,7 +636,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero) {
     const sp = c.measureText(" ").width, maxW = box.mw, lines = []; let cur = [], cw = 0;
     txt.split(/\s+/).forEach((w) => { const ww = c.measureText(w).width; if (cw + ww > maxW && cur.length) { lines.push({ cur, cw }); cur = []; cw = 0; } cur.push({ w, ww }); cw += ww + sp; });
     lines.push({ cur, cw });
-    const lh = size * 1.25, y0 = box.cy - (lines.length - 1) * lh / 2, out = clamp((SEG - t) / 0.3);
+    const nW = txt.split(/\s+/).length, stag = Math.max(0.06, Math.min(0.22, (SD - 0.9) * 0.85 / nW)), lh = size * 1.25, y0 = box.cy - (lines.length - 1) * lh / 2, out = clamp((SD - t) / 0.12);
     if (mode === "bar") {
       const bh = lines.length * lh + size * 0.6, g = c.createLinearGradient(0, 0, W, 0); g.addColorStop(0, OR); g.addColorStop(1, TE);
       c.globalAlpha = out; c.fillStyle = g; c.fillRect(0, H / 2 - bh / 2, W * outC(clamp(t / 0.35)), bh); c.globalAlpha = 1;
@@ -643,7 +645,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero) {
     lines.forEach((L, li) => {
       let x = box.cx - (L.cw - sp) / 2;
       L.cur.forEach((o) => {
-        const p = clamp((t - 0.15 - k * 0.16) / 0.45), hl = HL.has(o.w.toLowerCase().replace(/[^a-z]/g, "")); k++;
+        const p = clamp((t - 0.1 - k * stag) / 0.35), hl = HL.has(o.w.toLowerCase().replace(/[^a-z]/g, "")); k++;
         if (p > 0) {
           sfx(`w${idx}_${k}`, hl ? "pop" : "type");
           const y = y0 + li * lh + (1 - outC(p)) * size * 0.4;
@@ -696,11 +698,11 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero) {
   };
 
   return {
-    total, SEG,
+    total, SEG, ST, SCENES,
     draw(t) {
-      now = t; const idx = Math.floor(t / SEG);
-      if (idx >= segs.length) return endCard(t - segs.length * SEG);
-      const lt = t - idx * SEG, kind = idx % 4, mode = idx % 2 ? "dark" : "light";
+      now = t; let idx = 0; while (idx < segs.length && t >= ST[idx] + D[idx]) idx++;
+      if (idx >= segs.length) return endCard(t - SCENES);
+      SD = D[idx]; const lt = t - ST[idx], kind = idx % 4, mode = idx % 2 ? "dark" : "light";
       bg(lt, mode === "dark"); sfx("s" + idx, "whoosh");
       const ph = spec(idx).layout === "phone";
       if (ph) phone(lt, idx, mode === "dark"); else vis(lt, idx, mode === "dark");
@@ -801,8 +803,17 @@ async function renderMotion(lines, platform, clips, music) {
 
   const segs = (lines || []).slice(0, 7).map(String);
   
+  // Decode voice first so each scene lasts exactly as long as its narration (no dead air between lines)
+  let pre = [];
+  if (clips && clips.length && window.OfflineAudioContext) {
+    try {
+      const dctx = new OfflineAudioContext(2, SR, SR);
+      pre = await Promise.all(clips.map((b64) => dctx.decodeAudioData(Uint8Array.from(atob(b64), ch => ch.charCodeAt(0)).buffer)));
+    } catch (e) { pre = []; }
+  }
+  const durs = segs.map((_, i) => (pre[i] ? Math.max(1.6, pre[i].duration + 0.1) : 2.4));
   const icons = VISUALS;
-  const m = makeMotion(cv.getContext("2d"), W, H, segs, LOGO, null, icons, HERO);
+  const m = makeMotion(cv.getContext("2d"), W, H, segs, LOGO, null, icons, HERO, durs);
 
   let vcodec = "avc1.640028";
   const wantMusic = music && music !== "none", hasVoice = clips && clips.length;
@@ -811,15 +822,9 @@ async function renderMotion(lines, platform, clips, music) {
   // Offline Audio Context Setup (Includes Voice, Music & Sound Effects in exported MP4)
   let audioBuf = null;
   if (window.OfflineAudioContext) {
-    let bufs = [];
-    if (hasVoice) {
-      try {
-        const dctx = new OfflineAudioContext(2, SR, SR);
-        bufs = await Promise.all(clips.map((b64) => dctx.decodeAudioData(Uint8Array.from(atob(b64), ch => ch.charCodeAt(0)).buffer)));
-      } catch (e) { bufs = []; }
-    }
+    let bufs = pre;
 
-    const starts = bufs.map((_, i) => (i < segs.length ? i * m.SEG + 0.1 : segs.length * m.SEG + 0.4));
+    const starts = bufs.map((_, i) => (i < segs.length ? m.ST[i] + 0.03 : m.SCENES + 0.3));
     if (bufs.length) dur = Math.max(m.total, ...bufs.map((b, i) => starts[i] + b.duration + 0.3));
 
     const octx = new OfflineAudioContext(2, Math.ceil(dur * SR), SR);
@@ -840,7 +845,7 @@ async function renderMotion(lines, platform, clips, music) {
     });
 
     // Re-run motion draw timeline onto offline audio context to bake typing & pop SFX into video file
-    const offlineMotion = makeMotion(cv.getContext("2d"), W, H, segs, LOGO, offlineSfxTrigger, icons, HERO);
+    const offlineMotion = makeMotion(cv.getContext("2d"), W, H, segs, LOGO, offlineSfxTrigger, icons, HERO, durs);
     const totalFrames = Math.ceil(dur * FPS);
     for (let f = 0; f < totalFrames; f += 2) {
       offlineMotion.draw(f / FPS);
@@ -927,7 +932,7 @@ $("go").onclick = async () => {
     $("offer").classList.toggle("hide", !VERIFIED_AD);
     const r = await start({
       focus: $("focus").value,
-      details: [vBrief, $("details").value].filter(Boolean).join(" "),
+      details: [vBrief, FLOW_BRIEF, $("details").value].filter(Boolean).join(" "),
       graphics: $("graphics").value,
       iconNames: Object.keys(ICON),
       visualsHint: "Also return plan.visuals: one object per line, {layout: phone|orbit|row|big|burst|corners|none, screen: chat|stories|live|shop|jobs|badge|lock|feed (only for phone), icons: [up to 4 iconNames]}. Show the phone for roughly a third of the lines, matching the feature being advertised, and use none for several lines. Be creative, vary layouts, match each line.",
