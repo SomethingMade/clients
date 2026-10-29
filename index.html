@@ -520,7 +520,7 @@ async function loadIcons() {
 }
 
 function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
-  const SEG = 2.4, END = 2.6, D = segs.map((_, i) => (durs && durs[i]) || SEG), ST = [], SCENES = D.reduce((a, d, i) => (ST[i] = a, a + d), 0), total = SCENES + END; let SD = SEG;
+  const SEG = 2.4, END = 2.6, INTRO = 2.2, D = segs.map((_, i) => (durs && durs[i]) || SEG), ST = [], SCENES = D.reduce((a, d, i) => (ST[i] = a, a + d), INTRO), total = SCENES + END; let SD = SEG;
   const u = Math.min(W, H), wide = W > H;
   const OR = "#ee6c3a", TE = "#4f9da6", HL = new Set(HIGHLIGHT_WORDS);
   const played = new Set(); let now = 0;
@@ -661,16 +661,15 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
     c.restore();
   };
 
-  let endDark = false;
-  if (logo) { try { const k = document.createElement("canvas"); k.width = k.height = 16; const x = k.getContext("2d"); x.drawImage(logo, 0, 0, 16, 16); const d = x.getImageData(0, 0, 16, 16).data; let l = 0, n = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 40) { l += (d[i] + d[i + 1] + d[i + 2]) / 3; n++; } endDark = n > 0 && l / n > 140; } catch (e) {} }
-  const endCard = (t) => {
-    bg(t, endDark); sfx("end", "hit");
-    const s = backE(clamp(t / 0.6)), a = clamp((t - 0.4) / 0.4), fg = endDark ? "#fff" : "#000", lsz = u * 0.3, lcy = H * (wide ? 0.36 : 0.4), uy = lcy + lsz / 2 + u * 0.1;
-    c.save(); c.translate(W / 2, lcy); c.scale(s, s); c.textAlign = "center"; c.textBaseline = "middle";
-    if (logo) {
-      const iw = logo.naturalWidth || 512, ih = logo.naturalHeight || 512, k = Math.min(lsz / iw, lsz / ih), w = iw * k, h = ih * k;
-      c.save(); rr(c, -w / 2, -h / 2, w, h, Math.min(w, h) * 0.24); c.clip(); c.drawImage(logo, -w / 2, -h / 2, w, h); c.restore();
-    } else { c.fillStyle = fg; c.font = `900 ${u * 0.16}px ${BRAND}`; c.fillText("Haba.", 0, 0); }
+  // ---- Logo morph: pill -> normal rounded square ----
+  const logoMorph = (cx, cy, sz, m) => {
+    const ww = sz * (1.9 - 0.9 * m), hh = sz * (0.62 + 0.38 * m), r = Math.max(0, (hh / 2) * (1 - m) + sz * 0.24 * m);
+    c.save(); c.translate(cx, cy);
+    c.shadowColor = "rgba(0,0,0,.35)"; c.shadowBlur = u * 0.04; c.shadowOffsetY = u * 0.012;
+    c.fillStyle = "#fff"; rr(c, -ww / 2, -hh / 2, ww, hh, r); c.fill();
+    c.shadowColor = "transparent"; c.shadowBlur = 0; c.shadowOffsetY = 0;
+    rr(c, -ww / 2, -hh / 2, ww, hh, r); c.clip();
+    if (logo) { logoMorph(0, 0, lsz, backE(clamp((t - 0.1) / 0.8))); } else { c.fillStyle = fg; c.font = `900 ${u * 0.16}px ${BRAND}`; c.fillText("Haba.", 0, 0); }
     c.restore();
     c.save(); c.globalAlpha = a; c.textAlign = "center"; c.fillStyle = fg; c.font = `700 ${u * 0.048}px ${TEXT}`; c.fillText("habaapp.co.za", W / 2, uy);
     if (VERIFIED_AD) {
@@ -700,7 +699,8 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
   return {
     total, SEG, ST, SCENES,
     draw(t) {
-      now = t; let idx = 0; while (idx < segs.length && t >= ST[idx] + D[idx]) idx++;
+      now = t; if (t < INTRO) return intro(t);
+      let idx = 0; while (idx < segs.length && t >= ST[idx] + D[idx]) idx++;
       if (idx >= segs.length) return endCard(t - SCENES);
       SD = D[idx]; const lt = t - ST[idx], kind = idx % 4, mode = idx % 2 ? "dark" : "light";
       bg(lt, mode === "dark"); sfx("s" + idx, "whoosh");
