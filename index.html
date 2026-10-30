@@ -186,6 +186,10 @@ video, canvas {
 }
 
 .hide { display: none !important; }
+.fxrow { display: flex; flex-wrap: wrap; gap: 4px 6px; }
+.fxrow label { display: inline-flex; gap: 6px; align-items: center; text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 500; color: var(--text); margin: 0 10px 6px 0; }
+input[type=checkbox] { width: auto; padding: 0; accent-color: var(--accent); }
+input[type=range] { padding: 0; border: 0; background: none; box-shadow: none; accent-color: var(--accent); }
 
 .vcard {
   background: linear-gradient(160deg, rgba(29,155,240,.14), rgba(56,189,248,.04));
@@ -340,6 +344,17 @@ video, canvas {
     </div>
     <label>Graphics Direction (optional)</label>
     <textarea id="graphics" maxlength="500" placeholder="Tell the AI what to show, e.g. 'Dark scene with a glowing phone showing the stories feed, a creator going live, then a shop storefront opening. Black and white, bold and minimal.'"></textarea>
+
+    <label>Effects</label>
+    <div class="fxrow">
+      <label><input type="checkbox" data-fx="vig" checked> Vignette</label>
+      <label><input type="checkbox" data-fx="blur"> Blur</label>
+      <label><input type="checkbox" data-fx="ab"> Aberration</label>
+      <label><input type="checkbox" data-fx="noise" checked> Noise</label>
+      <label><input type="checkbox" data-fx="post"> Posterize</label>
+    </div>
+    <label>Effect strength</label>
+    <input id="fxk" type="range" min="0.2" max="1" step="0.05" value="0.6">
 
     <label>Brand Logo (optional)</label>
     <div class="logo-preview-box">
@@ -533,12 +548,33 @@ const PALETTES = [
 const HIGHLIGHT_WORDS = ["connect", "build", "grow", "discover", "haba", "create", "fast", "instant", "future", "live", "chat", "tabs", "thoughts", "power"];
 
 // DYNAMIC BACKGROUND COLOR PALETTES & GRADIENTS
-const COLOR_THEMES = [
-  { bg: ["#05070d", "#0a1226", "#0d1b3a"], accent: "#5aa9ff", secondary: "#7c8cff", blob: "rgba(90,169,255,0.24)" },
-  { bg: ["#04090a", "#06201f", "#0a2f2a"], accent: "#4fd1b5", secondary: "#5aa9ff", blob: "rgba(79,209,181,0.2)" },
-  { bg: ["#07050d", "#1a1030", "#2a1450"], accent: "#a58bff", secondary: "#ff8fb1", blob: "rgba(165,139,255,0.22)" },
-  { bg: ["#0a0605", "#2a110a", "#43180d"], accent: "#ffb070", secondary: "#ff7a59", blob: "rgba(255,176,112,0.2)" }
-];
+const STYLES = {
+  aurora: { bg: ["#04060c", "#0b1330", "#1a1250"], accent: "#6ea8ff", secondary: "#c07bff", blob: "rgba(110,168,255,0.26)", ink: "#F5F5F7", sub: "rgba(245,245,247,.64)", light: false, grad: true, mot: "rise" },
+  paper: { bg: ["#f5f5f7", "#ecedf3", "#e2e6f2"], accent: "#0071e3", secondary: "#ff375f", blob: "rgba(0,113,227,0.18)", ink: "#1d1d1f", sub: "rgba(29,29,31,.62)", light: true, grad: false, mot: "pop" },
+  spotlight: { bg: ["#000000", "#05080f", "#0a1428"], accent: "#2997ff", secondary: "#64d2ff", blob: "rgba(41,151,255,0.3)", ink: "#F5F5F7", sub: "rgba(245,245,247,.6)", light: false, grad: false, mot: "zoom" },
+  ember: { bg: ["#0a0405", "#2a0f16", "#4a1424"], accent: "#ff6a88", secondary: "#ffb35c", blob: "rgba(255,106,136,0.24)", ink: "#FFF6F2", sub: "rgba(255,246,242,.66)", light: false, grad: true, mot: "slide" }
+};
+let AD_FOCUS = "overall", AD_TONE = "energetic";
+const FOCUS_STYLE = { overall: "aurora", stories: "aurora", chats: "aurora", live: "ember", creators: "ember", shop: "paper", jobs: "paper", verified: "spotlight", privacy: "spotlight" };
+const TONE_STYLE = { premium: "spotlight", funny: "paper", friendly: "paper", emotional: "ember" };
+const pickTheme = (arg) => STYLES[arg === "verified" ? "spotlight" : (arg && arg !== "overall" ? FOCUS_STYLE[arg] : null) || (AD_FOCUS !== "overall" && !arg ? FOCUS_STYLE[AD_FOCUS] : null) || TONE_STYLE[AD_TONE] || "aurora"] || STYLES.aurora;
+
+// Real icons (Lucide, via CDN). Falls back to built-in paths if offline.
+const REAL = {}, TC = {};
+const LUCIDE = { chat: "message-circle", camera: "camera", video: "video", shop: "shopping-bag", heart: "heart", zap: "zap", check: "check", badge: "badge-check", users: "users", trend: "trending-up", star: "star", gift: "gift", pin: "map-pin", wallet: "wallet", bell: "bell", globe: "globe", crown: "crown", music: "music", shield: "shield-check", spark: "sparkles" };
+let REALP = null;
+const loadReal = () => REALP || (REALP = Promise.race([
+  Promise.all(Object.entries(LUCIDE).map(async ([k, n]) => {
+    try {
+      const t = await (await fetch(`https://cdn.jsdelivr.net/npm/lucide-static@0.468.0/icons/${n}.svg`)).text();
+      const im = new Image();
+      await new Promise((ok, no) => { im.onload = ok; im.onerror = no; im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(t.replace(/currentColor/g, "#ffffff").replace('width="24"', 'width="96"').replace('height="24"', 'height="96"')); });
+      REAL[k] = im;
+    } catch (e) {}
+  })),
+  new Promise((r) => setTimeout(r, 5000))
+]));
+const tinted = (n, col) => { const key = n + col; if (!TC[key]) { const k = document.createElement("canvas"); k.width = k.height = 96; const x = k.getContext("2d"); x.drawImage(REAL[n], 0, 0, 96, 96); x.globalCompositeOperation = "source-in"; x.fillStyle = col; x.fillRect(0, 0, 96, 96); TC[key] = k; } return TC[key]; };
 
 const APPS = { gmail:"EA4335", slack:"4A154B", whatsapp:"25D366", instagram:"E4405F", tiktok:"000000", facebook:"0866FF", youtube:"FF0000", telegram:"26A5E4" };
 async function loadIcons() {
@@ -563,7 +599,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
   const sfx = (k, type) => { if (!played.has(k)) { played.add(k); if (sfxFn) sfxFn(type, now); } };
   const F = (wt, px, face, ls) => { c.font = `${wt} ${px}px ${face || TEXT}`; if ("letterSpacing" in c) c.letterSpacing = ls ? (ls * px).toFixed(2) + "px" : "0px"; };
   const blob = (x, y, r, col) => { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col); g.addColorStop(1, col.replace(/[\d.]+\)$/, "0)")); c.fillStyle = g; c.fillRect(0, 0, W, H); };
-  let GR = null, TINT = null;
+  let GR = null, TINT = null, th = pickTheme(VERIFIED_AD ? "verified" : null);
   const grain = (a) => { if (!GR) { const k = document.createElement("canvas"); k.width = k.height = 128; const x = k.getContext("2d"), d = x.createImageData(128, 128); for (let i = 0; i < d.data.length; i += 4) { d.data[i] = d.data[i + 1] = d.data[i + 2] = Math.random() * 255; d.data[i + 3] = 255; } x.putImageData(d, 0, 0); GR = c.createPattern(k, "repeat"); } c.save(); c.globalAlpha = a; c.globalCompositeOperation = "overlay"; c.fillStyle = GR; c.fillRect(0, 0, W, H); c.restore(); };
 
   const bg = (t, dark) => {
@@ -595,11 +631,13 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
   const tile = (n, x, y, s, dk, p, rot) => {
     if (p <= 0) return;
     c.save(); c.translate(x, y); c.rotate(rot || 0); c.scale(p, p);
-    c.shadowColor = "rgba(0,0,0,.45)"; c.shadowBlur = s * 0.3; c.shadowOffsetY = s * 0.1;
-    c.fillStyle = "rgba(14,20,34,.78)"; rr(c, -s / 2, -s / 2, s, s, s * 0.3); c.fill(); c.shadowColor = "transparent";
-    c.fillStyle = grad(0, -s / 2, 0, s / 2, "rgba(255,255,255,.2)", "rgba(255,255,255,.04)"); c.fill();
-    c.strokeStyle = "rgba(255,255,255,.22)"; c.lineWidth = Math.max(1, s * 0.014); c.stroke();
-    c.scale(s * 0.46 / 24, s * 0.46 / 24); c.translate(-12, -12); c.strokeStyle = lite(TINT || th.accent, 0.3); c.lineWidth = 1.7; c.lineCap = c.lineJoin = "round"; ICON[n].forEach((d) => c.stroke(d));
+    c.shadowColor = th.light ? "rgba(0,0,0,.14)" : "rgba(0,0,0,.45)"; c.shadowBlur = s * 0.3; c.shadowOffsetY = s * 0.1;
+    c.fillStyle = th.light ? "rgba(255,255,255,.92)" : "rgba(14,20,34,.78)"; rr(c, -s / 2, -s / 2, s, s, s * 0.3); c.fill(); c.shadowColor = "transparent";
+    if (!th.light) { c.fillStyle = grad(0, -s / 2, 0, s / 2, "rgba(255,255,255,.2)", "rgba(255,255,255,.04)"); c.fill(); }
+    c.strokeStyle = th.light ? "rgba(0,0,0,.06)" : "rgba(255,255,255,.22)"; c.lineWidth = Math.max(1, s * 0.014); c.stroke();
+    const col = th.light ? th.accent : lite(th.accent, 0.3);
+    if (REAL[n]) c.drawImage(tinted(n, col), -s * 0.27, -s * 0.27, s * 0.54, s * 0.54);
+    else { c.scale(s * 0.46 / 24, s * 0.46 / 24); c.translate(-12, -12); c.strokeStyle = col; c.lineWidth = 1.7; c.lineCap = c.lineJoin = "round"; ICON[n].forEach((d) => c.stroke(d)); }
     c.restore();
   };
   // Visuals stay in the top/bottom bands so they never cover the words
@@ -755,7 +793,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
     [[0, 0], [15, 0], [0, 15], [15, 15], [1, 1], [14, 1], [1, 14], [14, 14]].forEach(([px, py]) => { const d = x.getImageData(px, py, 1, 1).data; if (d[3] > 200) { R += d[0]; G += d[1]; B += d[2]; n++; } });
     if (n >= 6) logoBg = `rgb(${Math.round(R / n)},${Math.round(G / n)},${Math.round(B / n)})`;
   } catch (e) {} }
-  if (fluid) endDark = true;
+  if (fluid) endDark = !th.light;
   const endCard = (t) => {
     if (fluid) flowBg(t + SCENES); else bg(t, endDark); sfx("end", "hit");
     const s = backE(clamp(t / 0.6)), a = clamp((t - 0.4) / 0.4), fg = endDark ? "#fff" : "#000", lsz = u * 0.3, lcy = H * (wide ? 0.36 : 0.4), uy = lcy + lsz / 2 + u * 0.1;
@@ -790,7 +828,6 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
   // ==========================================
   // FLUID GLASS STYLE: flowing gradient mesh, blur-slide text, tilted tile grid, blur-through scene transitions
   // ==========================================
-  const th = COLOR_THEMES[VERIFIED_AD ? 0 : hash(segs.join("|")) % COLOR_THEMES.length];
   const hexA = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
   const lite = (h, k) => { const n = parseInt(h.slice(1), 16), m = (v) => Math.round(v + (255 - v) * k); return `rgb(${m(n >> 16)},${m((n >> 8) & 255)},${m(n & 255)})`; };
   function flowBg(t) {
@@ -799,7 +836,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
       const x = W * (fx + 0.08 * Math.sin(t * 0.7 * sp + ph)), y = H * (fy + 0.06 * Math.cos(t * 0.6 * sp + ph)), r = u * (0.95 + 0.1 * Math.sin(t * 0.5 + ph));
       const k = c.createRadialGradient(x, y, 0, x, y, r); k.addColorStop(0, hexA(col, a)); k.addColorStop(1, hexA(col, 0)); c.fillStyle = k; c.fillRect(0, 0, W, H);
     });
-    const v = c.createRadialGradient(W / 2, H / 2, u * 0.3, W / 2, H / 2, Math.max(W, H) * 0.75); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.45)"); c.fillStyle = v; c.fillRect(0, 0, W, H); grain(0.07);
+    const v = c.createRadialGradient(W / 2, H / 2, u * 0.3, W / 2, H / 2, Math.max(W, H) * 0.75); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, th.light ? "rgba(0,0,0,.05)" : "rgba(0,0,0,.45)"); c.fillStyle = v; c.fillRect(0, 0, W, H); grain(0.07);
   }
   // Tilted grid of rounded tiles scrolling diagonally (rows alternate direction)
   const TILT = -0.32;
@@ -810,12 +847,12 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
       const off = (r % 2 ? 1 : -1) * t * u * 0.1, base = Math.floor(off / step), fr = off - base * step;
       for (let k = -half; k <= half; k++) {
         const id = k - base, x = k * step + fr, y = r * step;
-        c.fillStyle = "rgba(255,255,255,.045)"; rr(c, x - s / 2, y - s / 2, s, s, s * 0.3); c.fill(); c.strokeStyle = "rgba(255,255,255,.1)"; c.lineWidth = 1.5; c.stroke();
-        c.save(); c.translate(x, y); c.scale(s * 0.4 / 24, s * 0.4 / 24); c.translate(-12, -12); c.strokeStyle = "rgba(255,255,255,.4)"; c.lineWidth = 1.6; c.lineCap = c.lineJoin = "round";
+        c.fillStyle = th.light ? "rgba(255,255,255,.75)" : "rgba(255,255,255,.045)"; rr(c, x - s / 2, y - s / 2, s, s, s * 0.3); c.fill(); c.strokeStyle = th.light ? "rgba(0,0,0,.06)" : "rgba(255,255,255,.1)"; c.lineWidth = 1.5; c.stroke();
+        c.save(); c.translate(x, y); c.scale(s * 0.4 / 24, s * 0.4 / 24); c.translate(-12, -12); c.strokeStyle = th.light ? "rgba(0,113,227,.4)" : "rgba(255,255,255,.4)"; c.lineWidth = 1.6; c.lineCap = c.lineJoin = "round";
         ICON[names[(((id * 7 + r * 3) % names.length) + names.length) % names.length]].forEach((d) => c.stroke(d)); c.restore();
       }
     }
-    c.restore(); c.fillStyle = "rgba(0,0,0,.25)"; c.fillRect(0, 0, W, H);
+    c.restore(); c.fillStyle = th.light ? "rgba(255,255,255,.2)" : "rgba(0,0,0,.25)"; c.fillRect(0, 0, W, H);
   };
   // Kinetic words: each word slides in from the right with motion blur; the whole line slides out left, blurred
   const fwords = (txt, t, idx, box, SDv, ee) => {
@@ -824,20 +861,27 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
     const sp = c.measureText(" ").width, ws = txt.split(/\s+/).filter(Boolean), lines = []; let cur = [], cw = 0;
     ws.forEach((w) => { const ww = c.measureText(w).width; if (cw + ww > box.mw && cur.length) { lines.push({ cur, cw }); cur = []; cw = 0; } cur.push({ w, ww }); cw += ww + sp; });
     lines.push({ cur, cw });
-    const nW = ws.length, stag = Math.max(0.07, Math.min(0.2, (SDv - 1.1) * 0.8 / nW)), lh = size * 1.08, y0 = box.cy - (lines.length - 1) * lh / 2;
-    c.translate(box.cx, box.cy); c.rotate(box.rot || 0); c.translate(-box.cx, -box.cy); c.translate(-ee * W * 0.4, 0);
-    c.shadowColor = "rgba(0,0,0,.35)"; c.shadowBlur = size * 0.2; c.shadowOffsetY = size * 0.05;
+    const nW = ws.length, stag = Math.max(0.07, Math.min(0.2, (SDv - 1.1) * 0.8 / nW)), lh = size * 1.08, y0 = box.cy - (lines.length - 1) * lh / 2, mot = th.mot;
+    c.translate(box.cx, box.cy); c.rotate(box.rot || 0); c.translate(-box.cx, -box.cy);
+    if (mot === "slide") c.translate(-ee * W * 0.4, 0); else { c.translate(box.cx, box.cy); c.scale(1 - ee * 0.05, 1 - ee * 0.05); c.translate(-box.cx, -box.cy); }
+    c.shadowColor = th.light ? "rgba(0,0,0,.08)" : "rgba(0,0,0,.35)"; c.shadowBlur = size * 0.2; c.shadowOffsetY = size * 0.05;
     let k = 0;
     lines.forEach((L, li) => {
       let x = box.cx - (L.cw - sp) / 2;
       L.cur.forEach((o) => {
-        const hl = HL.has(o.w.toLowerCase().replace(/[^a-z]/g, "")) || k === nW - 1, p = clamp((t - 0.12 - k * stag) / 0.5), q = outC(p); k++;
+        const last = k === nW - 1, hl = HL.has(o.w.toLowerCase().replace(/[^a-z]/g, "")) || last, p = clamp((t - 0.12 - k * stag) / 0.5), q = outC(p); k++;
         if (p > 0) {
           sfx(`w${idx}_${k}`, hl ? "pop" : "type");
-          const a0 = q * (1 - ee), bl = Math.min(1, (1 - q) + ee * 1.2), X = x + (1 - q) * size * 1.4, Y = y0 + li * lh;
-          c.fillStyle = "#F5F3EE";
-          if (bl > 0.04) { c.shadowColor = "transparent"; for (let g = 3; g >= 1; g--) { c.globalAlpha = a0 * 0.2; c.fillText(o.w, X + g * size * 0.22 * bl, Y); } c.shadowColor = "rgba(0,0,0,.35)"; }
-          c.globalAlpha = a0 * (1 - 0.35 * bl); c.fillText(o.w, X, Y);
+          const a0 = q * (1 - ee), Y = y0 + li * lh;
+          c.fillStyle = th.grad && last ? grad(x, 0, x + o.ww, 0, lite(th.accent, 0.25), th.secondary) : th.ink;
+          if (mot === "slide") {
+            const bl = Math.min(1, (1 - q) + ee * 1.2), X = x + (1 - q) * size * 1.4;
+            if (bl > 0.04) { c.shadowColor = "transparent"; for (let g = 3; g >= 1; g--) { c.globalAlpha = a0 * 0.2; c.fillText(o.w, X + g * size * 0.22 * bl, Y); } c.shadowColor = "rgba(0,0,0,.35)"; }
+            c.globalAlpha = a0 * (1 - 0.35 * bl); c.fillText(o.w, X, Y);
+          } else {
+            const sc = mot === "zoom" ? 1 + (1 - q) * 0.3 : mot === "pop" ? 0.6 + 0.4 * backE(p) : 1, dy = mot === "rise" ? (1 - q) * size * 0.5 : mot === "pop" ? (1 - q) * size * 0.3 : 0;
+            c.save(); c.translate(x + o.ww / 2, Y + dy); c.scale(sc, sc); c.globalAlpha = a0; c.filter = q < 1 ? `blur(${(1 - q) * 8}px)` : "none"; c.fillText(o.w, -o.ww / 2, 0); c.filter = "none"; c.restore();
+          }
         }
         x += o.ww + sp;
       });
@@ -884,8 +928,8 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
   };
   const phoneStatic = (cx, cy, w, kind, rot) => { idx0 = 0; c.save(); c.translate(cx, cy); c.rotate(rot); device(w, w * 2.05, w * 0.03, (sw, sh) => screen(kind, 2.2, sw, sh)); c.restore(); };
   const drawPoster = (o) => {
-    const th = COLOR_THEMES[o.verified ? 0 : hash((o.head || "") + segs.join("")) % COLOR_THEMES.length];
-    TINT = th.accent; const side = W / H > 0.75, mg = u * 0.075, INK = "#F5F3EE", SUBC = "rgba(245,243,238,.62)";
+    th = pickTheme(o.verified ? "verified" : (o.focus || "overall"));
+    TINT = th.accent; const side = W / H > 0.75, mg = u * 0.075, INK = th.ink, SUBC = th.sub;
     const bgG = c.createLinearGradient(0, 0, W * 0.4, H); th.bg.forEach((col, i) => bgG.addColorStop(i / (th.bg.length - 1), col)); c.fillStyle = bgG; c.fillRect(0, 0, W, H);
     blob(W * 0.82, H * 0.2, u * 0.95, th.blob); blob(W * 0.05, H * 0.95, u * 0.7, hexA(th.secondary, 0.14)); grain(0.09);
     // wrapped, auto-fitting paragraph; returns bottom y
@@ -905,8 +949,8 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
     const fitF = (txt, maxW, fs0, wt, face, ls) => { let f = fs0; F(wt, f, face, ls); while (c.measureText(txt).width > maxW && f > 8) { f *= 0.94; F(wt, f, face, ls); } return f; };
     const chip = (x, y, txt, right) => {
       const fs = u * 0.028, ph = fs * 2.3; F(500, fs, TEXT, 0.01); const pw = c.measureText(txt).width + ph * 1.1, px = right ? x - pw : x;
-      c.fillStyle = "rgba(255,255,255,.06)"; rr(c, px, y, pw, ph, ph / 2); c.fill(); c.strokeStyle = "rgba(255,255,255,.2)"; c.lineWidth = Math.max(1, u * 0.0015); c.stroke();
-      c.fillStyle = "rgba(245,243,238,.85)"; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText(txt, px + ph * 0.55, y + ph / 2 + fs * 0.04); return ph;
+      c.fillStyle = th.light ? "rgba(0,0,0,.04)" : "rgba(255,255,255,.06)"; rr(c, px, y, pw, ph, ph / 2); c.fill(); c.strokeStyle = th.light ? "rgba(0,0,0,.14)" : "rgba(255,255,255,.2)"; c.lineWidth = Math.max(1, u * 0.0015); c.stroke();
+      c.fillStyle = th.ink; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText(txt, px + ph * 0.55, y + ph / 2 + fs * 0.04); return ph;
     };
     const pill = (x, cy, maxW, fs0) => {
       const label = "Get Verified \u00b7 " + VERIFIED_PRICE, meas = (f) => { F(600, f, TEXT, 0); const tw = c.measureText(label).width, ph = f * 2.2, ic = ph * 0.55; return { ph, ic, pw: tw + ic + ph * 0.9 }; };
@@ -948,7 +992,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
       const pTop = sb + u * 0.05, vis = H - bandH - pTop, pw = Math.max(u * 0.34, Math.min(u * 0.5, vis * 1.35 / 2.05)), cx = W / 2;
       blob(cx, pTop + vis * 0.4, u * 0.6, th.blob); phoneStatic(cx, pTop + pw * 2.05 / 2, pw, kind, 0);
       [[-0.52, 0.2, -0.12], [0.52, 0.5, 0.12]].forEach(([dx, fy, rot], i) => tl[i] && tile(tl[i], cx + dx * pw, pTop + vis * fy, ts, true, 1, rot));
-      const bg2 = c.createLinearGradient(0, H - bandH * 1.8, 0, H); bg2.addColorStop(0, "rgba(5,7,13,0)"); bg2.addColorStop(0.45, "rgba(5,7,13,.94)"); bg2.addColorStop(1, "rgba(5,7,13,.99)");
+      const bg2 = c.createLinearGradient(0, H - bandH * 1.8, 0, H); bg2.addColorStop(0, hexA(th.bg[0], 0)); bg2.addColorStop(0.45, hexA(th.bg[0], 0.94)); bg2.addColorStop(1, hexA(th.bg[0], 0.99));
       c.fillStyle = bg2; c.fillRect(0, H - bandH * 1.8, W, bandH * 1.8);
       const cy = H - bandH / 2 - u * 0.01, tx = mg + bw + u * 0.045, tw = W - mg - tx;
       playBadge(mg, cy - bh / 2, bw, bh); urlLine(tx, cy - u * 0.03, tw); infoLine(tx, cy + u * 0.035, tw, u * 0.03);
@@ -1041,6 +1085,34 @@ function scheduleMusic(ctx, dest, t0, dur, style) {
   return duck;
 }
 
+// Post effects: Blur (edge), Aberration (RGB split), Posterize, Noise, Vignette
+const FX = { vig: false, blur: false, ab: false, noise: false, post: false, k: 0.6 };
+let FXC = null, FXS = null, FXN = null;
+function applyFx(c, W, H) {
+  const k = FX.k, u = Math.min(W, H);
+  if (FX.blur) {
+    FXC = FXC || document.createElement("canvas"); if (FXC.width !== W || FXC.height !== H) { FXC.width = W; FXC.height = H; }
+    const b = FXC.getContext("2d"); b.globalCompositeOperation = "source-over"; b.clearRect(0, 0, W, H);
+    b.filter = `blur(${(u * 0.024 * k).toFixed(1)}px)`; b.drawImage(c.canvas, 0, 0); b.filter = "none";
+    b.globalCompositeOperation = "destination-in"; const g = b.createRadialGradient(W / 2, H / 2, u * 0.25, W / 2, H / 2, Math.max(W, H) * 0.62);
+    g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,1)"); b.fillStyle = g; b.fillRect(0, 0, W, H); c.drawImage(FXC, 0, 0);
+  }
+  if (FX.ab || FX.post) {
+    const im = c.getImageData(0, 0, W, H), d = im.data;
+    if (FX.ab) {
+      const sd = FXS && FXS.length === d.length ? FXS : (FXS = new Uint8ClampedArray(d.length)); sd.set(d); const sh = Math.max(1, W * 0.012 * k);
+      for (let y = 0; y < H; y++) { const row = y * W * 4; for (let x = 0; x < W; x++) { const i = row + x * 4, s2 = Math.round(sh * (0.25 + Math.abs(x - W / 2) / (W / 2))), xr = x - s2 < 0 ? 0 : x - s2, xb = x + s2 >= W ? W - 1 : x + s2; d[i] = sd[row + xr * 4]; d[i + 2] = sd[row + xb * 4 + 2]; } }
+    }
+    if (FX.post) { const lv = Math.max(4, Math.round(24 - 20 * k)), st = 255 / (lv - 1); for (let i = 0; i < d.length; i += 4) { d[i] = Math.round(d[i] / st) * st; d[i + 1] = Math.round(d[i + 1] / st) * st; d[i + 2] = Math.round(d[i + 2] / st) * st; } }
+    c.putImageData(im, 0, 0);
+  }
+  if (FX.noise) {
+    if (!FXN) { FXN = document.createElement("canvas"); FXN.width = FXN.height = 128; const x = FXN.getContext("2d"), d = x.createImageData(128, 128); for (let i = 0; i < d.data.length; i += 4) { d.data[i] = d.data[i + 1] = d.data[i + 2] = Math.random() * 255; d.data[i + 3] = 255; } x.putImageData(d, 0, 0); }
+    c.save(); c.globalAlpha = 0.04 + 0.22 * k; c.globalCompositeOperation = "overlay"; c.translate(-(Math.random() * 128 | 0), -(Math.random() * 128 | 0)); c.fillStyle = c.createPattern(FXN, "repeat"); c.fillRect(0, 0, W + 128, H + 128); c.restore();
+  }
+  if (FX.vig) { const g = c.createRadialGradient(W / 2, H / 2, u * 0.3, W / 2, H / 2, Math.max(W, H) * 0.72); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, `rgba(0,0,0,${(0.15 + 0.6 * k).toFixed(2)})`); c.fillStyle = g; c.fillRect(0, 0, W, H); }
+}
+
 // WebCodecs MP4 Exporter with Offline Audio Processing
 async function renderMotion(lines, platform, clips, music) {
   const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.0/+esm");
@@ -1062,7 +1134,7 @@ async function renderMotion(lines, platform, clips, music) {
     ]);
   } catch (e) {}
 
-  const segs = (lines || []).slice(0, 7).map(String);
+  await loadReal(); const segs = (lines || []).slice(0, 7).map(String);
   
   // Decode voice first so each scene lasts exactly as long as its narration (no dead air between lines)
   let pre = [];
@@ -1074,7 +1146,7 @@ async function renderMotion(lines, platform, clips, music) {
   }
   const durs = segs.map((_, i) => (pre[i] ? Math.max(1.6, pre[i].duration + 0.1) : 2.4));
   const icons = VISUALS;
-  const m = makeMotion(cv.getContext("2d"), W, H, segs, LOGO, null, icons, HERO, durs);
+  const m = makeMotion(cv.getContext("2d", { willReadFrequently: !!(FX.ab || FX.post) }), W, H, segs, LOGO, null, icons, HERO, durs);
 
   let vcodec = "avc1.640028";
   const wantMusic = music && music !== "none", hasVoice = clips && clips.length;
@@ -1144,7 +1216,7 @@ async function renderMotion(lines, platform, clips, music) {
 
   const N = Math.ceil(dur * FPS);
   for (let i = 0; i < N; i++) {
-    m.draw(Math.min(i / FPS, m.total - 0.01));
+    m.draw(Math.min(i / FPS, m.total - 0.01)); applyFx(cv.getContext("2d"), W, H);
     const f = new VideoFrame(cv, { timestamp: Math.round((i * 1e6) / FPS), duration: Math.round(1e6 / FPS) });
     venc.encode(f, { keyFrame: i % FPS === 0 });
     f.close();
@@ -1176,12 +1248,12 @@ async function renderPoster(plan, size) {
       document.fonts.load('500 40px "Google Sans Flex"')
     ]);
   } catch (e) {}
-  const segs = (plan.lines || []).slice(0, 7).map(String);
+  await loadReal(); const segs = (plan.lines || []).slice(0, 7).map(String);
   const head = String(plan.hook || "").trim() || segs[0] || "Haba";
   const sub = [segs[0], segs[1]].find((x) => x && x !== head) || "";
   const f = $("focus"), tag = f.options[f.selectedIndex].text.split("·")[0].trim().slice(0, 30);
   const m = makeMotion(cv.getContext("2d"), W, H, segs, LOGO, null, VISUALS, null, null);
-  m.drawPoster({ head, sub, tag, verified: VERIFIED_AD, focus: f.value });
+  m.drawPoster({ head, sub, tag, verified: VERIFIED_AD, focus: f.value }); applyFx(cv.getContext("2d"), W, H);
   const blob = await new Promise((r) => cv.toBlob(r, "image/png"));
   const url = URL.createObjectURL(blob);
   wrap.innerHTML = `<img src="${url}" alt="Haba poster" style="width:100%;max-height:75vh;object-fit:contain;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.3);margin-top:8px"><a href="${url}" download="haba-poster.png" style="display:block;margin-top:10px;color:var(--accent);font-weight:600;">Download Poster (.png)</a>`;
@@ -1211,7 +1283,7 @@ $("go").onclick = async () => {
   const btn = $("go"); btn.disabled = true; $("result").classList.add("hide");
   say($("mode").value === "poster" ? "Writing your poster copy..." : "Generating script and setting up mobile mockup...");
   try {
-    VERIFIED_AD = isVerified();
+    VERIFIED_AD = isVerified(); document.querySelectorAll("[data-fx]").forEach((e) => (FX[e.dataset.fx] = e.checked)); FX.k = +$("fxk").value; AD_FOCUS = $("focus").value; AD_TONE = $("tone").value;
     const isPoster = $("mode").value === "poster";
     const vBrief = VERIFIED_AD
       ? `Advertise the Haba Verified Badge, sold for ${VERIFIED_PRICE} (South African rand, one-time) to secure your account and be trusted. Clearly state the price ${VERIFIED_PRICE} and the call to action "Get Verified". Cover these benefits: ` + VERIFIED_BENEFITS.map(([h, d]) => h + " (" + d + ")").join("; ") + ". Show the blue verified tick on a phone profile screen (screen: badge)."
