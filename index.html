@@ -6,7 +6,7 @@
 <title>Haba Ads Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Michroma&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Instrument+Sans:wght@400..700&family=Google+Sans+Flex:wght@100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Michroma&family=Google+Sans+Flex:wght@100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #09090b;
@@ -345,6 +345,19 @@ input[type=range] { padding: 0; border: 0; background: none; box-shadow: none; a
     <label>Graphics Direction (optional)</label>
     <textarea id="graphics" maxlength="500" placeholder="Tell the AI what to show, e.g. 'Dark scene with a glowing phone showing the stories feed, a creator going live, then a shop storefront opening. Black and white, bold and minimal.'"></textarea>
 
+    <label>Background colour</label>
+    <select id="bgc">
+      <option value="auto">Auto (matches the ad)</option>
+      <option value="black">Black</option>
+      <option value="charcoal">Charcoal</option>
+      <option value="cloud">Cloud white</option>
+      <option value="blue">Google blue</option>
+      <option value="indigo">Deep indigo</option>
+      <option value="crimson">Crimson</option>
+      <option value="forest">Forest green</option>
+      <option value="sun">Sun yellow</option>
+    </select>
+
     <label>Effects</label>
     <div class="fxrow">
       <label><input type="checkbox" data-fx="vig" checked> Vignette</label>
@@ -498,8 +511,8 @@ function showPlan(p) {
 // MOBILE MOCKUP & KINETIC TYPING ENGINE
 // ==========================================
 const BRAND = "Michroma, sans-serif";
-const TEXT = '"Instrument Sans", "Google Sans Flex", -apple-system, BlinkMacSystemFont, sans-serif';
-const HEAD = '"Bricolage Grotesque", "Google Sans Flex", -apple-system, sans-serif';
+const TEXT = '"Google Sans Flex", -apple-system, BlinkMacSystemFont, sans-serif';
+const HEAD = '"Google Sans Flex", -apple-system, BlinkMacSystemFont, sans-serif';
 const MONO = '"JetBrains Mono", monospace';
 
 const clamp = (v) => Math.max(0, Math.min(1, v));
@@ -554,10 +567,17 @@ const STYLES = {
   spotlight: { bg: ["#000000", "#05080f", "#0a1428"], accent: "#2997ff", secondary: "#64d2ff", blob: "rgba(41,151,255,0.3)", ink: "#F5F5F7", sub: "rgba(245,245,247,.6)", light: false, grad: false, mot: "zoom" },
   ember: { bg: ["#0a0405", "#2a0f16", "#4a1424"], accent: "#ff6a88", secondary: "#ffb35c", blob: "rgba(255,106,136,0.24)", ink: "#FFF6F2", sub: "rgba(255,246,242,.66)", light: false, grad: true, mot: "slide" }
 };
-let AD_FOCUS = "overall", AD_TONE = "energetic";
+let AD_FOCUS = "overall", AD_TONE = "energetic", AD_BG = "auto";
 const FOCUS_STYLE = { overall: "aurora", stories: "aurora", chats: "aurora", live: "ember", creators: "ember", shop: "paper", jobs: "paper", verified: "spotlight", privacy: "spotlight" };
 const TONE_STYLE = { premium: "spotlight", funny: "paper", friendly: "paper", emotional: "ember" };
-const pickTheme = (arg) => STYLES[arg === "verified" ? "spotlight" : (arg && arg !== "overall" ? FOCUS_STYLE[arg] : null) || (AD_FOCUS !== "overall" && !arg ? FOCUS_STYLE[AD_FOCUS] : null) || TONE_STYLE[AD_TONE] || "aurora"] || STYLES.aurora;
+const AUTO_SOLID = { aurora: "#101322", paper: "#F8FAFD", spotlight: "#000000", ember: "#2A0F16" };
+const BGS = { black: "#000000", charcoal: "#131314", cloud: "#F8FAFD", blue: "#0B57D0", indigo: "#2D1B69", crimson: "#8C1D2F", forest: "#0F3D2E", sun: "#FBBC04" };
+const pickTheme = (arg) => {
+  const key = (arg === "verified" ? "spotlight" : (arg && arg !== "overall" ? FOCUS_STYLE[arg] : null) || (AD_FOCUS !== "overall" && !arg ? FOCUS_STYLE[AD_FOCUS] : null) || TONE_STYLE[AD_TONE] || "aurora");
+  const base = STYLES[key] || STYLES.aurora, col = AD_BG !== "auto" && BGS[AD_BG] ? BGS[AD_BG] : (AUTO_SOLID[key] || "#101322");
+  const n = parseInt(col.slice(1), 16), lt = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255 > 0.6;
+  return { ...base, bg: [col, col, col], light: lt, ink: lt ? "#1F1F1F" : "#F8FAFD", sub: lt ? "rgba(31,31,31,.64)" : "rgba(248,250,253,.68)", accent: lt ? "#0B57D0" : "#A8C7FA", secondary: lt ? "#9B72CB" : "#C58AF9", blob: "rgba(0,0,0,0)" };
+};
 
 // Real icons (Lucide, via CDN). Falls back to built-in paths if offline.
 const REAL = {}, TC = {};
@@ -598,6 +618,11 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
   const fluid = typeof FLUID !== "undefined" && !!FLUID, TRN = 0.32;
   const sfx = (k, type) => { if (!played.has(k)) { played.add(k); if (sfxFn) sfxFn(type, now); } };
   const F = (wt, px, face, ls) => { c.font = `${wt} ${px}px ${face || TEXT}`; if ("letterSpacing" in c) c.letterSpacing = ls ? (ls * px).toFixed(2) + "px" : "0px"; };
+  const dw = (w, x, y, col) => {
+    if (!col) return c.fillText(w, x, y);
+    const G = th.light ? ["#1A73E8", "#9B72CB", "#D96570"] : ["#8AB4F8", "#C58AF9", "#F28B9B"]; let px = x;
+    [...w].forEach((ch, i) => { c.fillStyle = G[Math.min(2, Math.floor(i * 3 / w.length))]; c.fillText(ch, px, y); px += c.measureText(ch).width; });
+  };
   const blob = (x, y, r, col) => { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col); g.addColorStop(1, col.replace(/[\d.]+\)$/, "0)")); c.fillStyle = g; c.fillRect(0, 0, W, H); };
   let GR = null, TINT = null, th = pickTheme(VERIFIED_AD ? "verified" : null);
   const grain = (a) => { if (!GR) { const k = document.createElement("canvas"); k.width = k.height = 128; const x = k.getContext("2d"), d = x.createImageData(128, 128); for (let i = 0; i < d.data.length; i += 4) { d.data[i] = d.data[i + 1] = d.data[i + 2] = Math.random() * 255; d.data[i + 3] = 255; } x.putImageData(d, 0, 0); GR = c.createPattern(k, "repeat"); } c.save(); c.globalAlpha = a; c.globalCompositeOperation = "overlay"; c.fillStyle = GR; c.fillRect(0, 0, W, H); c.restore(); };
@@ -830,14 +855,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
   // ==========================================
   const hexA = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
   const lite = (h, k) => { const n = parseInt(h.slice(1), 16), m = (v) => Math.round(v + (255 - v) * k); return `rgb(${m(n >> 16)},${m((n >> 8) & 255)},${m(n & 255)})`; };
-  function flowBg(t) {
-    const g = c.createLinearGradient(0, 0, W * 0.4, H); th.bg.forEach((col, i) => g.addColorStop(i / (th.bg.length - 1), col)); c.fillStyle = g; c.fillRect(0, 0, W, H);
-    [[0.78, 0.18, 0.5, th.accent, 0.5, 0], [0.15, 0.88, 0.4, th.secondary, 0.32, 2.4]].forEach(([fx, fy, sp, col, a, ph]) => {
-      const x = W * (fx + 0.08 * Math.sin(t * 0.7 * sp + ph)), y = H * (fy + 0.06 * Math.cos(t * 0.6 * sp + ph)), r = u * (0.95 + 0.1 * Math.sin(t * 0.5 + ph));
-      const k = c.createRadialGradient(x, y, 0, x, y, r); k.addColorStop(0, hexA(col, a)); k.addColorStop(1, hexA(col, 0)); c.fillStyle = k; c.fillRect(0, 0, W, H);
-    });
-    const v = c.createRadialGradient(W / 2, H / 2, u * 0.3, W / 2, H / 2, Math.max(W, H) * 0.75); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, th.light ? "rgba(0,0,0,.05)" : "rgba(0,0,0,.45)"); c.fillStyle = v; c.fillRect(0, 0, W, H); grain(0.07);
-  }
+  function flowBg(t) { c.fillStyle = th.bg[0]; c.fillRect(0, 0, W, H); }
   // Tilted grid of rounded tiles scrolling diagonally (rows alternate direction)
   const TILT = -0.32;
   const tiltGrid = (t) => {
@@ -876,11 +894,11 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
           c.fillStyle = th.grad && last ? grad(x, 0, x + o.ww, 0, lite(th.accent, 0.25), th.secondary) : th.ink;
           if (mot === "slide") {
             const bl = Math.min(1, (1 - q) + ee * 1.2), X = x + (1 - q) * size * 1.4;
-            if (bl > 0.04) { c.shadowColor = "transparent"; for (let g = 3; g >= 1; g--) { c.globalAlpha = a0 * 0.2; c.fillText(o.w, X + g * size * 0.22 * bl, Y); } c.shadowColor = "rgba(0,0,0,.35)"; }
-            c.globalAlpha = a0 * (1 - 0.35 * bl); c.fillText(o.w, X, Y);
+            if (bl > 0.04) { c.shadowColor = "transparent"; for (let g = 3; g >= 1; g--) { c.globalAlpha = a0 * 0.2; dw(o.w, X + g * size * 0.22 * bl, Y, hl); } c.shadowColor = "rgba(0,0,0,.35)"; }
+            c.globalAlpha = a0 * (1 - 0.35 * bl); dw(o.w, X, Y, hl);
           } else {
             const sc = mot === "zoom" ? 1 + (1 - q) * 0.3 : mot === "pop" ? 0.6 + 0.4 * backE(p) : 1, dy = mot === "rise" ? (1 - q) * size * 0.5 : mot === "pop" ? (1 - q) * size * 0.3 : 0;
-            c.save(); c.translate(x + o.ww / 2, Y + dy); c.scale(sc, sc); c.globalAlpha = a0; c.filter = q < 1 ? `blur(${(1 - q) * 8}px)` : "none"; c.fillText(o.w, -o.ww / 2, 0); c.filter = "none"; c.restore();
+            c.save(); c.translate(x + o.ww / 2, Y + dy); c.scale(sc, sc); c.globalAlpha = a0; c.filter = q < 1 ? `blur(${(1 - q) * 8}px)` : "none"; dw(o.w, -o.ww / 2, 0, hl); c.filter = "none"; c.restore();
           }
         }
         x += o.ww + sp;
@@ -930,8 +948,8 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
   const drawPoster = (o) => {
     th = pickTheme(o.verified ? "verified" : (o.focus || "overall"));
     TINT = th.accent; const side = W / H > 0.75, mg = u * 0.075, INK = th.ink, SUBC = th.sub;
-    const bgG = c.createLinearGradient(0, 0, W * 0.4, H); th.bg.forEach((col, i) => bgG.addColorStop(i / (th.bg.length - 1), col)); c.fillStyle = bgG; c.fillRect(0, 0, W, H);
-    blob(W * 0.82, H * 0.2, u * 0.95, th.blob); blob(W * 0.05, H * 0.95, u * 0.7, hexA(th.secondary, 0.14)); grain(0.09);
+    c.fillStyle = th.bg[0]; c.fillRect(0, 0, W, H);
+    
     // wrapped, auto-fitting paragraph; returns bottom y
     const para = (txt, x, top, mw, maxLines, size0, minSize, wt, fg, maxH, face, ls) => {
       let size = size0, lines, lh;
@@ -943,7 +961,11 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
         size *= 0.94;
       }
       c.textBaseline = "middle"; c.textAlign = "left"; c.fillStyle = fg;
-      lines.forEach((L, li) => c.fillText(L.join(" "), x, top + lh * (li + 0.5)));
+      if (face !== HEAD) lines.forEach((L, li) => c.fillText(L.join(" "), x, top + lh * (li + 0.5)));
+      else {
+        const sp2 = c.measureText(" ").width, flat = lines.flat(), pick = []; flat.forEach((w, i) => HL.has(w.toLowerCase().replace(/[^a-z]/g, "")) && pick.length < 2 && pick.push(i)); if (!pick.length) pick.push(flat.length - 1);
+        let n = 0; lines.forEach((L, li) => { let px = x; const y = top + lh * (li + 0.5); L.forEach((w) => { c.fillStyle = fg; dw(w, px, y, pick.includes(n)); n++; px += c.measureText(w).width + sp2; }); });
+      }
       return top + lh * lines.length;
     };
     const fitF = (txt, maxW, fs0, wt, face, ls) => { let f = fs0; F(wt, f, face, ls); while (c.measureText(txt).width > maxW && f > 8) { f *= 0.94; F(wt, f, face, ls); } return f; };
@@ -1128,7 +1150,7 @@ async function renderMotion(lines, platform, clips, music) {
 
   try {
     await Promise.all([
-      document.fonts.load("700 40px Michroma"), document.fonts.load('700 40px "Bricolage Grotesque"'), document.fonts.load('400 40px "Instrument Sans"'), document.fonts.load('600 40px "Instrument Sans"'),
+      document.fonts.load("700 40px Michroma"), document.fonts.load('700 40px "Google Sans Flex"'), document.fonts.load('500 40px "Google Sans Flex"'),
       document.fonts.load('800 40px "Google Sans Flex"'),
       document.fonts.load('500 40px "JetBrains Mono"')
     ]);
@@ -1243,7 +1265,7 @@ async function renderPoster(plan, size) {
   const cv = $("cv"); cv.width = W; cv.height = H;
   try {
     await Promise.all([
-      document.fonts.load("700 40px Michroma"), document.fonts.load('700 40px "Bricolage Grotesque"'), document.fonts.load('400 40px "Instrument Sans"'), document.fonts.load('600 40px "Instrument Sans"'),
+      document.fonts.load("700 40px Michroma"), document.fonts.load('700 40px "Google Sans Flex"'), document.fonts.load('500 40px "Google Sans Flex"'),
       document.fonts.load('800 40px "Google Sans Flex"'),
       document.fonts.load('500 40px "Google Sans Flex"')
     ]);
@@ -1283,7 +1305,7 @@ $("go").onclick = async () => {
   const btn = $("go"); btn.disabled = true; $("result").classList.add("hide");
   say($("mode").value === "poster" ? "Writing your poster copy..." : "Generating script and setting up mobile mockup...");
   try {
-    VERIFIED_AD = isVerified(); document.querySelectorAll("[data-fx]").forEach((e) => (FX[e.dataset.fx] = e.checked)); FX.k = +$("fxk").value; AD_FOCUS = $("focus").value; AD_TONE = $("tone").value;
+    VERIFIED_AD = isVerified(); document.querySelectorAll("[data-fx]").forEach((e) => (FX[e.dataset.fx] = e.checked)); FX.k = +$("fxk").value; AD_BG = $("bgc").value; AD_FOCUS = $("focus").value; AD_TONE = $("tone").value;
     const isPoster = $("mode").value === "poster";
     const vBrief = VERIFIED_AD
       ? `Advertise the Haba Verified Badge, sold for ${VERIFIED_PRICE} (South African rand, one-time) to secure your account and be trusted. Clearly state the price ${VERIFIED_PRICE} and the call to action "Get Verified". Cover these benefits: ` + VERIFIED_BENEFITS.map(([h, d]) => h + " (" + d + ")").join("; ") + ". Show the blue verified tick on a phone profile screen (screen: badge)."
