@@ -738,12 +738,60 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
     c.fillStyle = grad(-sw / 2, -sh / 2, sw / 2, sh / 2, "rgba(255,255,255,.1)", "rgba(255,255,255,0)"); c.fillRect(-sw / 2, -sh / 2, sw, sh); c.restore();
     c.fillStyle = "#000"; rr(c, -w * 0.17, -sh / 2 + m * 0.9, w * 0.34, m * 1.9, m); c.fill();
   };
+  // Neural lines: branching curves with glowing nodes and travelling pulses
+  const neural = (t) => {
+    const ys = [0.14, 0.3, 0.5, 0.7, 0.86], x0 = -W * 0.05, y0 = H * 0.5, x1 = W * 1.05, Ln = W + H * 1.2, col = th.light ? "31,31,31" : "255,255,255";
+    c.save(); c.lineCap = "round";
+    ys.forEach((fy, i) => {
+      const yE = H * fy, xm = W * (0.3 + 0.04 * i), p = outC(clamp(t / 1.1 - i * 0.08));
+      const pt = (s) => { const m = 1 - s; return [m * m * m * x0 + 3 * m * m * s * xm + 3 * m * s * s * xm + s * s * s * x1, m * m * m * y0 + 3 * m * m * s * y0 + 3 * m * s * s * yE + s * s * s * yE]; };
+      c.strokeStyle = `rgba(${col},.2)`; c.lineWidth = Math.max(1.2, u * 0.0025); c.setLineDash([Ln, Ln]); c.lineDashOffset = Ln * (1 - p);
+      c.beginPath(); c.moveTo(x0, y0); c.bezierCurveTo(xm, y0, xm, yE, x1, yE); c.stroke(); c.setLineDash([]);
+      const pop = backE(clamp((t - 1.1 - i * 0.08) / 0.4));
+      if (pop > 0) {
+        const [nx, ny] = pt(0.72 + 0.03 * i), r = u * (0.026 + 0.006 * (i % 2));
+        c.save(); c.translate(nx, ny); c.scale(pop, pop);
+        const gl = c.createRadialGradient(0, 0, 0, 0, 0, r * 2.6); gl.addColorStop(0, hexA(th.accent, 0.35)); gl.addColorStop(1, hexA(th.accent, 0)); c.fillStyle = gl; c.fillRect(-r * 2.6, -r * 2.6, r * 5.2, r * 5.2);
+        const og = c.createRadialGradient(-r * 0.3, -r * 0.3, 0, 0, 0, r); og.addColorStop(0, lite(th.accent, 0.5)); og.addColorStop(0.6, th.accent); og.addColorStop(1, th.secondary); c.fillStyle = og; c.beginPath(); c.arc(0, 0, r, 0, 7); c.fill(); c.restore();
+      }
+      if (p > 0.2) { const [px, py] = pt((t * 0.22 + i * 0.19) % 1), g = c.createRadialGradient(px, py, 0, px, py, u * 0.03); g.addColorStop(0, hexA(th.accent, 0.9)); g.addColorStop(1, hexA(th.accent, 0)); c.fillStyle = g; c.fillRect(px - u * 0.03, py - u * 0.03, u * 0.06, u * 0.06); }
+    });
+    c.restore();
+  };
+  // Apple-style frosted glass card with a typing chat bubble
+  const glassCard = (w, h, t, text) => {
+    const r = w * 0.1, L = th.light, ic = L ? "rgba(31,31,31,.55)" : "rgba(255,255,255,.65)";
+    c.save(); c.shadowColor = L ? "rgba(0,0,0,.18)" : "rgba(0,0,0,.5)"; c.shadowBlur = u * 0.06; c.shadowOffsetY = u * 0.03;
+    rr(c, -w / 2, -h / 2, w, h, r); c.fillStyle = L ? "rgba(255,255,255,.5)" : "rgba(255,255,255,.09)"; c.fill(); c.restore();
+    rr(c, -w / 2, -h / 2, w, h, r); c.fillStyle = grad(-w / 2, -h / 2, w / 2, h / 2, L ? "rgba(255,255,255,.5)" : "rgba(255,255,255,.18)", "rgba(255,255,255,0)"); c.fill();
+    c.strokeStyle = grad(-w / 2, -h / 2, w / 2, h / 2, "rgba(255,255,255,.65)", "rgba(255,255,255,.08)"); c.lineWidth = Math.max(1.5, u * 0.002); c.stroke();
+    c.strokeStyle = ic; c.lineWidth = Math.max(1.5, w * 0.008); c.lineCap = c.lineJoin = "round";
+    const hy = -h / 2 + h * 0.07, s = w * 0.02; c.beginPath(); c.moveTo(-w / 2 + w * 0.1 + s, hy - s * 1.2); c.lineTo(-w / 2 + w * 0.1, hy); c.lineTo(-w / 2 + w * 0.1 + s, hy + s * 1.2); c.stroke();
+    c.beginPath(); c.arc(w / 2 - w * 0.1, hy, w * 0.026, 0, 7); c.stroke();
+    const fs = w * 0.072; F(500, fs, TEXT, 0); const mx = w * 0.64, lines = []; let cur = "";
+    String(text || "Hello").slice(0, 80).split(" ").forEach((wd) => { const tt = cur ? cur + " " + wd : wd; if (c.measureText(tt).width > mx && cur) { lines.push(cur); cur = wd; } else cur = tt; }); lines.push(cur);
+    const lh = fs * 1.3, bh = lines.length * lh + fs * 1.1, bw = Math.max(...lines.map((l) => c.measureText(l).width)) + fs * 1.7, bx = -w / 2 + w * 0.1, by = -bh / 2 - h * 0.04, pp = backE(clamp((t - 0.4) / 0.35));
+    if (pp > 0) {
+      c.save(); c.translate(bx + bw / 2, by + bh / 2); c.scale(pp, pp); c.shadowColor = "rgba(0,0,0,.18)"; c.shadowBlur = u * 0.02; R(-bw / 2, -bh / 2, bw, bh, fs * 0.9, "rgba(255,255,255,.94)"); c.shadowColor = "transparent";
+      let left = Math.floor(lines.join("").length * clamp((t - 0.6) / 1.2)); c.fillStyle = "#1F1F1F"; c.textAlign = "left"; c.textBaseline = "middle";
+      lines.forEach((l, i) => { const n = Math.max(0, Math.min(l.length, left)); left -= l.length; c.fillText(l.slice(0, n), -bw / 2 + fs * 0.85, -bh / 2 + fs * 0.55 + lh * (i + 0.5)); });
+      c.restore();
+    }
+    const rp = backE(clamp((t - 1.9) / 0.35));
+    if (rp > 0) {
+      const rt = ["Done \u2713", "On it", "Sent \u2713", "Love it"][String(text || "").length % 4]; F(600, fs, TEXT, 0);
+      const rw = c.measureText(rt).width + fs * 1.8, rh = fs * 2.1, rx = w / 2 - w * 0.1 - rw, ry = by + bh + fs * 0.7;
+      c.save(); c.translate(rx + rw / 2, ry + rh / 2); c.scale(rp, rp); R(-rw / 2, -rh / 2, rw, rh, rh / 2, th.accent);
+      c.fillStyle = th.light ? "#FFFFFF" : "#0B1B3A"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(rt, 0, fs * 0.04); c.restore();
+    }
+    const iy = h / 2 - h * 0.085, pr = w * 0.05; c.strokeStyle = ic; c.beginPath(); c.arc(-w / 2 + w * 0.13, iy, pr, 0, 7); c.moveTo(-w / 2 + w * 0.13 - pr * 0.45, iy); c.lineTo(-w / 2 + w * 0.13 + pr * 0.45, iy); c.moveTo(-w / 2 + w * 0.13, iy - pr * 0.45); c.lineTo(-w / 2 + w * 0.13, iy + pr * 0.45); c.stroke();
+    rr(c, -w / 2 + w * 0.23, iy - pr, w * 0.66, pr * 2, pr); c.stroke();
+    const sx = w / 2 - w * 0.16; c.beginPath(); c.moveTo(sx - pr * 0.5, iy + pr * 0.45); c.lineTo(sx + pr * 0.55, iy - pr * 0.5); c.lineTo(sx + pr * 0.1, iy + pr * 0.55); c.closePath(); c.stroke();
+  };
   const phone = (t, idx, dk) => {
-    idx0 = idx; const w = u * (wide ? 0.34 : 0.42), h = w * 2.05, cx = wide ? W * 0.76 : W * 0.5, cy = wide ? H * 0.52 : H * 0.7;
-    const p = outC(clamp(t / 0.7)), out = fluid ? 1 : clamp((SD - t) / 0.12);
-    sfx(`ph${idx}`, "whoosh");
-    c.save(); c.globalAlpha = out; c.translate(cx, cy + (1 - p) * H * 0.45 + Math.sin(t * 1.6) * u * 0.012); c.rotate(Math.sin(t * 1.1) * 0.045 + (1 - p) * 0.2);
-    device(w, h, w * 0.03, (sw, sh) => screen(screenFor(idx), t, sw, sh)); c.restore();
+    idx0 = idx; const w = u * (wide ? 0.34 : 0.62), h = w * 1.5, cx = wide ? W * 0.76 : W * 0.5, cy = wide ? H * 0.52 : H * 0.68;
+    const p = outC(clamp(t / 0.7)), out = fluid ? 1 : clamp((SD - t) / 0.12); sfx(`ph${idx}`, "whoosh");
+    c.save(); c.globalAlpha = out; c.translate(cx, cy + (1 - p) * H * 0.45 + Math.sin(t * 1.6) * u * 0.012); c.scale(0.9 + 0.1 * p, 0.9 + 0.1 * p); glassCard(w, h, t, segs[idx]); c.restore();
   };
 
   // Kinetic words: blur-in, stagger, highlights, tick/pop sound per word
@@ -855,7 +903,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
   // ==========================================
   const hexA = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
   const lite = (h, k) => { const n = parseInt(h.slice(1), 16), m = (v) => Math.round(v + (255 - v) * k); return `rgb(${m(n >> 16)},${m((n >> 8) & 255)},${m(n & 255)})`; };
-  function flowBg(t) { c.fillStyle = th.bg[0]; c.fillRect(0, 0, W, H); }
+  function flowBg(t) { c.fillStyle = th.bg[0]; c.fillRect(0, 0, W, H); neural(now); }
   // Tilted grid of rounded tiles scrolling diagonally (rows alternate direction)
   const TILT = -0.32;
   const tiltGrid = (t) => {
@@ -944,12 +992,13 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
     c.font = `700 ${bh * 0.33}px ${TEXT}`; c.fillText("Google Play", tx + ts + bh * 0.2, by + bh * 0.74);
     c.restore();
   };
-  const phoneStatic = (cx, cy, w, kind, rot) => { idx0 = 0; c.save(); c.translate(cx, cy); c.rotate(rot); device(w, w * 2.05, w * 0.03, (sw, sh) => screen(kind, 2.2, sw, sh)); c.restore(); };
+  const phoneStatic = (cx, cy, w, kind, rot) => { c.save(); c.translate(cx, cy); c.rotate(rot * 0.4); const cw = w * 1.3; glassCard(cw, cw * 1.55, 9, segs.find((s) => s.length > 10) || segs[0]); c.restore(); };
   const drawPoster = (o) => {
     th = pickTheme(o.verified ? "verified" : (o.focus || "overall"));
     TINT = th.accent; const side = W / H > 0.75, mg = u * 0.075, INK = th.ink, SUBC = th.sub;
     c.fillStyle = th.bg[0]; c.fillRect(0, 0, W, H);
     
+    neural(3);
     // wrapped, auto-fitting paragraph; returns bottom y
     const para = (txt, x, top, mw, maxLines, size0, minSize, wt, fg, maxH, face, ls) => {
       let size = size0, lines, lh;
