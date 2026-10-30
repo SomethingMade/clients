@@ -903,7 +903,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
   // ==========================================
   const hexA = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
   const lite = (h, k) => { const n = parseInt(h.slice(1), 16), m = (v) => Math.round(v + (255 - v) * k); return `rgb(${m(n >> 16)},${m((n >> 8) & 255)},${m(n & 255)})`; };
-  function flowBg(t) { c.fillStyle = th.bg[0]; c.fillRect(0, 0, W, H); neural(now); }
+  function flowBg(t) { c.fillStyle = th.bg[0]; c.fillRect(0, 0, W, H); }
   // Tilted grid of rounded tiles scrolling diagonally (rows alternate direction)
   const TILT = -0.32;
   const tiltGrid = (t) => {
@@ -954,15 +954,103 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
     });
     c.restore();
   };
+  // ---- Scene templates: every scene is designed and animated differently ----
+  const ico = (n, x, y, s, col) => {
+    n = n && ICON[n] ? n : Object.keys(ICON)[0];
+    if (REAL[n]) c.drawImage(tinted(n, col), x - s / 2, y - s / 2, s, s);
+    else { c.save(); c.translate(x, y); c.scale(s / 24, s / 24); c.translate(-12, -12); c.strokeStyle = col; c.lineWidth = 1.8; c.lineCap = c.lineJoin = "round"; ICON[n].forEach((d) => c.stroke(d)); c.restore(); }
+  };
+  const wrapT = (txt, mx) => { const out = []; let cur = ""; String(txt).split(/\s+/).filter(Boolean).forEach((wd) => { const t2 = cur ? cur + " " + wd : wd; if (c.measureText(t2).width > mx && cur) { out.push(cur); cur = wd; } else cur = t2; }); out.push(cur); return out; };
+  const gGlass = (w, h, r) => {
+    const L = th.light; c.save(); c.shadowColor = L ? "rgba(0,0,0,.18)" : "rgba(0,0,0,.55)"; c.shadowBlur = u * 0.06; c.shadowOffsetY = u * 0.03;
+    rr(c, -w / 2, -h / 2, w, h, r); c.fillStyle = L ? "rgba(255,255,255,.6)" : "rgba(255,255,255,.07)"; c.fill(); c.restore();
+    rr(c, -w / 2, -h / 2, w, h, r); c.fillStyle = grad(-w / 2, -h / 2, w / 2, h / 2, L ? "rgba(255,255,255,.5)" : "rgba(255,255,255,.16)", "rgba(255,255,255,0)"); c.fill();
+    c.strokeStyle = grad(-w / 2, -h / 2, w / 2, h / 2, "rgba(255,255,255,.65)", "rgba(255,255,255,.08)"); c.lineWidth = Math.max(1.5, u * 0.002); c.stroke();
+  };
+  let TPC = null;
+  const ORDER = ["card", "tilt", "chip", "wave", "title"];
+  const tplFor = (idx) => { if (/\d/.test(segs[idx])) return "stat"; let n = 0; for (let j = 0; j < idx; j++) if (!/\d/.test(segs[j])) n++; return ORDER[n % ORDER.length]; };
+  const TPL = {
+    // 1. Glass input card, typing text, chips, aurora ribbons behind
+    card(idx, lt) {
+      const txt = segs[idx], w = u * (wide ? 0.62 : 0.88), h = w * 0.5, cx = W / 2, cy = H / 2 + Math.sin(lt * 1.3) * u * 0.008;
+      c.save(); c.filter = "blur(12px)";
+      for (let i = 0; i < 3; i++) { c.beginPath(); for (let k = 0; k <= 24; k++) { const x = cx - w * 0.75 + k * (w * 1.5 / 24), y = cy + (i - 1) * h * 0.28 + Math.sin(k * 0.5 + lt * 1.4 + i * 2) * h * 0.16; k ? c.lineTo(x, y) : c.moveTo(x, y); } c.strokeStyle = hexA(i % 2 ? th.secondary : th.accent, 0.55); c.lineWidth = u * 0.018; c.stroke(); }
+      c.restore();
+      c.save(); c.translate(cx, cy); gGlass(w, h, w * 0.07);
+      const fs = h * 0.13; F(500, fs, TEXT, 0); const lines = wrapT(txt, w * 0.84); let left = Math.floor(txt.length * clamp((lt - 0.5) / 1.1));
+      c.fillStyle = th.ink; c.textAlign = "left"; c.textBaseline = "middle";
+      lines.slice(0, 3).forEach((l, i) => { const n = Math.max(0, Math.min(l.length, left)); left -= l.length; c.fillText(l.slice(0, n), -w / 2 + w * 0.08, -h / 2 + h * 0.2 + i * fs * 1.35); });
+      const kw = txt.split(/\s+/).filter((s) => s.length > 3).slice(0, 3), cy2 = h / 2 - h * 0.17, ch = h * 0.16; let x = -w / 2 + w * 0.08; F(500, h * 0.085, TEXT, 0);
+      kw.forEach((k, j) => {
+        const cw = c.measureText(k).width + ch * 1.25, pp = backE(clamp((lt - 1.0 - j * 0.15) / 0.35));
+        if (pp > 0) { c.save(); c.translate(x + cw / 2, cy2); c.scale(pp, pp); rr(c, -cw / 2, -ch / 2, cw, ch, ch / 2); c.strokeStyle = th.light ? "rgba(0,0,0,.2)" : "rgba(255,255,255,.28)"; c.lineWidth = Math.max(1.5, u * 0.002); c.stroke(); ico(spec(idx).icons[j] || ["zap", "star", "check"][j], -cw / 2 + ch * 0.5, 0, ch * 0.45, th.light ? "#444" : "#ddd"); c.fillStyle = th.ink; c.textAlign = "left"; c.fillText(k, -cw / 2 + ch * 0.85, 0); c.restore(); }
+        x += cw + h * 0.04;
+      });
+      const sr = h * 0.09, sx = w / 2 - w * 0.08 - sr; c.fillStyle = th.accent; c.beginPath(); c.arc(sx, cy2, sr, 0, 7); c.fill();
+      c.strokeStyle = th.light ? "#fff" : "#0B1B3A"; c.lineWidth = sr * 0.18; c.lineCap = c.lineJoin = "round"; c.beginPath(); c.moveTo(sx, cy2 + sr * 0.4); c.lineTo(sx, cy2 - sr * 0.4); c.moveTo(sx - sr * 0.35, cy2 - sr * 0.05); c.lineTo(sx, cy2 - sr * 0.42); c.lineTo(sx + sr * 0.35, cy2 - sr * 0.05); c.stroke();
+      c.restore();
+    },
+    // 2. Tilted 3D UI panel with rack-focus blur and scrolling thumbnails
+    tilt(idx, lt, SDv) {
+      const pw = 720, ph = 440; if (!TPC) { TPC = document.createElement("canvas"); TPC.width = pw; TPC.height = ph; }
+      const p = TPC.getContext("2d"); p.clearRect(0, 0, pw, ph); rr(p, 0, 0, pw, ph, 26); p.fillStyle = "#12151b"; p.fill(); p.strokeStyle = "rgba(255,255,255,.14)"; p.lineWidth = 2; p.stroke();
+      rr(p, 24, 22, pw * 0.5, 34, 17); p.fillStyle = "rgba(255,255,255,.08)"; p.fill();
+      p.save(); rr(p, 24, 70, pw - 48, 110, 18); p.clip();
+      for (let i = 0; i < 8; i++) { const x = 24 + i * 108 - ((lt * 46) % 108), g = p.createLinearGradient(x, 76, x + 96, 172); g.addColorStop(0, PAL[i % 6][0]); g.addColorStop(1, PAL[i % 6][1]); rr(p, x, 76, 96, 96, 18); p.fillStyle = g; p.fill(); p.fillStyle = "rgba(255,255,255,.28)"; p.beginPath(); p.arc(x + 62, 108, 20, 0, 7); p.fill(); }
+      p.restore();
+      const hot = Math.floor(lt * 1.2) % 4;
+      for (let i = 0; i < 4; i++) { const y = 196 + i * 56; rr(p, 24, y, pw - 48, 44, 12); p.fillStyle = i === hot ? hexA(th.accent, 0.25) : "rgba(255,255,255,.05)"; p.fill(); p.fillStyle = "rgba(255,255,255,.18)"; p.beginPath(); p.arc(52, y + 22, 13, 0, 7); p.fill(); rr(p, 78, y + 12, 170, 8, 4); p.fillStyle = "rgba(255,255,255,.55)"; p.fill(); rr(p, 78, y + 26, 100, 6, 3); p.fillStyle = "rgba(255,255,255,.2)"; p.fill(); }
+      const dw = u * (wide ? 0.8 : 1.12), dh = dw * ph / pw, cx = W / 2, cy = H * 0.58, drift = Math.sin(lt * 0.9) * 0.03;
+      const gl = c.createRadialGradient(cx, cy, 0, cx, cy, dw * 0.7); gl.addColorStop(0, hexA(th.accent, 0.35)); gl.addColorStop(1, hexA(th.accent, 0)); c.fillStyle = gl; c.fillRect(0, 0, W, H);
+      c.save(); c.translate(cx, cy); c.rotate(-0.07 + drift); const N = 48;
+      for (let i = 0; i < N; i++) { const f = 1 - 0.24 * (1 - i / N); c.drawImage(TPC, 0, i * ph / N, pw, ph / N + 1, -dw * f / 2, -dh / 2 + i * dh / N, dw * f, dh / N + 1); }
+      c.restore();
+      fwords(segs[idx], lt, idx, { cx: W / 2, cy: H * 0.17, mw: W * 0.84, sc: 0.8 }, SDv, 0);
+    },
+    // 3. Large glowing text with counting digits
+    stat(idx, lt) {
+      const txt = segs[idx], m = txt.match(/\d[\d,.]*/); let shown = txt;
+      if (m) { const num = parseFloat(m[0].replace(/,/g, "")), v = Math.round(num * outC(clamp((lt - 0.2) / 1.3))); shown = txt.replace(m[0], m[0].includes(",") ? v.toLocaleString("en-US") : String(v)); }
+      let size = u * 0.16; F(700, size, HEAD, -0.03); while (c.measureText(txt).width > W * 0.86 && size > 12) { size *= 0.94; F(700, size, HEAD, -0.03); }
+      c.save(); c.textAlign = "center"; c.textBaseline = "middle"; const pulse = 0.75 + 0.25 * Math.sin(lt * 3);
+      c.shadowColor = hexA(th.accent, 0.9); c.shadowBlur = size * 0.6 * pulse; c.fillStyle = th.ink; c.fillText(shown, W / 2, H / 2); c.fillText(shown, W / 2, H / 2); c.restore();
+    },
+    // 4. Glass pill with icon, popping in with depth echoes
+    chip(idx, lt) {
+      const txt = segs[idx], size = u * 0.07; F(600, size, HEAD, -0.02); const lines = wrapT(txt, W * 0.62).slice(0, 3), lh = size * 1.2, pad = size * 0.8, isz = size * 1.1;
+      const tw = Math.max(...lines.map((l) => c.measureText(l).width)), pw = tw + isz + pad * 2.6, ph = lines.length * lh + pad * 1.5, pop = backE(clamp((lt - 0.1) / 0.5));
+      c.save(); c.translate(W / 2, H / 2 + Math.sin(lt * 1.4) * u * 0.01); c.scale(Math.max(0.01, pop), Math.max(0.01, pop));
+      [1.4, 1.2].forEach((k, i) => { c.save(); c.scale(k, k); c.globalAlpha = (0.1 + 0.08 * Math.sin(lt * 2 + i)) * (i ? 1.4 : 1); rr(c, -pw / 2, -ph / 2, pw, ph, ph / 2); c.strokeStyle = th.ink; c.lineWidth = Math.max(1.5, u * 0.002); c.stroke(); c.restore(); });
+      gGlass(pw, ph, Math.min(ph / 2, u * 0.08)); ico(spec(idx).icons[0], -pw / 2 + pad + isz / 2, 0, isz, th.light ? th.accent : lite(th.accent, 0.3));
+      c.fillStyle = th.ink; c.textAlign = "left"; c.textBaseline = "middle"; lines.forEach((l, i) => c.fillText(l, -pw / 2 + pad * 1.6 + isz, (i - (lines.length - 1) / 2) * lh)); c.restore();
+    },
+    // 5. Audio-style waveform with caption
+    wave(idx, lt) {
+      const N = wide ? 110 : 72, bw = W * 0.9 / N, mx = W * 0.05, env0 = 0.4 + 0.6 * clamp(lt / 0.8);
+      for (let i = 0; i < N; i++) {
+        const env = Math.exp(-Math.pow((i - N / 2) / (N * 0.3), 2)), amp = (0.25 + 0.75 * Math.abs(Math.sin(i * 0.55 + lt * 5) * Math.cos(i * 0.21 - lt * 3))) * env * env0, hh = u * 0.28 * amp + u * 0.006;
+        c.globalAlpha = 0.3 + 0.7 * env; R(mx + i * bw + bw * 0.2, H * 0.42 - hh / 2, bw * 0.6, hh, bw * 0.3, env > 0.6 ? th.accent : th.ink);
+      }
+      c.globalAlpha = 1; const fs = u * 0.046; F(500, fs, TEXT, 0); const lines = wrapT("\u201C" + segs[idx] + "\u201D", W * 0.76), a = outC(clamp((lt - 0.5) / 0.6));
+      c.globalAlpha = a; c.fillStyle = th.ink; c.textAlign = "center"; c.textBaseline = "middle"; lines.forEach((l, i) => c.fillText(l, W / 2, H * 0.42 + u * 0.26 + i * fs * 1.4 + (1 - a) * fs)); c.globalAlpha = 1;
+    },
+    // 6. Icon + title whose letter-spacing tightens as it reveals
+    title(idx, lt) {
+      const txt = segs[idx], p = outC(clamp((lt - 0.15) / 0.9)); let size = u * 0.1; F(700, size, HEAD, -0.02); while (c.measureText(txt).width > W * 0.82 && size > 14) size *= 0.94;
+      F(700, size, HEAD, 0.3 * (1 - p) - 0.02); const lines = wrapT(txt, W * 0.84), lh = size * 1.1, isz = size * 1.2, y0 = H / 2 - (lines.length * lh + isz) / 2;
+      c.save(); c.globalAlpha = p; c.filter = `blur(${((1 - p) * 10).toFixed(1)}px)`;
+      const pulse = 1 + 0.06 * Math.sin(lt * 4); c.save(); c.translate(W / 2, y0 + isz / 2); c.scale(pulse, pulse); ico(spec(idx).icons[0], 0, 0, isz, th.light ? th.accent : lite(th.accent, 0.3)); c.restore();
+      c.textAlign = "left"; c.textBaseline = "middle"; const sp = c.measureText(" ").width;
+      lines.forEach((l, i) => { const ws = l.split(" "), lw = c.measureText(l).width; let x = W / 2 - lw / 2; const y = y0 + isz + lh * (i + 0.5); ws.forEach((w, k) => { c.fillStyle = th.ink; dw(w, x, y, i === lines.length - 1 && k === ws.length - 1); x += c.measureText(w).width + sp; }); });
+      c.restore();
+    }
+  };
   const fscene = (idx, lt) => {
-    const SDv = D[idx]; SD = SDv;
-    const e = clamp((lt - (SDv - TRN)) / TRN), ee = e * e; let lay = spec(idx).layout; if (lay === "none" && idx % 2) lay = "tilt";
-    c.save(); c.globalAlpha = 1 - ee; c.translate(-ee * W * 0.3, 0);
-    if (lay === "tilt") tiltGrid(lt); else if (lay === "phone") phone(lt, idx, true); else vis(lt, idx, true);
-    c.restore(); c.filter = "none";
-    const box = lay === "phone" ? (wide ? { cx: W * 0.3, cy: H * 0.5, mw: W * 0.46, sc: 0.9 } : { cx: W / 2, cy: H * 0.21, mw: W * 0.84, sc: 0.8 })
-      : { cx: W / 2, cy: H * 0.5, mw: W * (lay === "tilt" ? 0.7 : 0.84), sc: 1, rot: lay === "tilt" ? TILT : 0 };
-    fwords(segs[idx], lt, idx, box, SDv, ee);
+    const SDv = D[idx]; SD = SDv; const e = clamp((lt - (SDv - TRN)) / TRN), ee = e * e, q = outC(clamp(lt / 0.6)), bl = (1 - q) * 14 + ee * 12;
+    c.save(); c.globalAlpha = (1 - ee) * Math.min(1, q * 1.4); if (bl > 0.4) c.filter = `blur(${bl.toFixed(1)}px)`;
+    const sc = 0.94 + 0.06 * q + ee * 0.04; c.translate(W / 2, H / 2); c.scale(sc, sc); c.translate(-W / 2, -H / 2);
+    TPL[tplFor(idx)](idx, lt, SDv); c.restore(); c.filter = "none";
   };
   const fintro = (t) => {
     flowBg(t); sfx("introhit", "hit");
@@ -998,7 +1086,6 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
     TINT = th.accent; const side = W / H > 0.75, mg = u * 0.075, INK = th.ink, SUBC = th.sub;
     c.fillStyle = th.bg[0]; c.fillRect(0, 0, W, H);
     
-    neural(3);
     // wrapped, auto-fitting paragraph; returns bottom y
     const para = (txt, x, top, mw, maxLines, size0, minSize, wt, fg, maxH, face, ls) => {
       let size = size0, lines, lh;
