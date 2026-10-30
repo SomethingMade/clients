@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Haba Ads Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Michroma&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Instrument+Sans:wght@400..700&family=Google+Sans+Flex:wght@100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #09090b;
+  --card: #121215;
+  --card-hover: #1a1a1f;
+  --text: #f4f4f5;
+  --sub: #a1a1aa;
+  --line: #27272a;
+  --accent: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.25);
+  --btn: #f4f4f5;
+  --btn-t: #09090b;
+  --err: #ef4444;
+  --radius: 14px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --card-hover: #f1f5f9;
+    --text: #0f172a;
+    --sub: #64748b;
+    --line: #e2e8f0;
+    --btn: #0f172a;
+    --btn-t: #ffffff;
+    --err: #dc2626;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 'Google Sans Flex', -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: max(16px, env(safe-area-inset-top)) 16px 40px;
+}
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.brand-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+h1 {
+  font-family: 'Michroma', sans-serif;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  margin: 0;
+  background: linear-gradient(135deg, var(--text) 30%, var(--sub));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.sub {
+  color: var(--sub);
+  font-size: 14px;
+  margin: 0 0 20px;
+}
+
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sub);
+  margin: 14px 0 6px;
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+}
+.row > div { flex: 1; }
+
+button {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--btn);
+  color: var(--btn-t);
+  font: 700 15px 'Google Sans Flex', sans-serif;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.2s, background-color 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+button:hover { opacity: 0.92; }
+button:active { transform: scale(0.98); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+button.ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text);
+  margin-top: 8px;
+  padding: 10px;
+  font-size: 13px;
+  box-shadow: none;
+}
+button.ghost:hover { background: var(--card-hover); }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-top: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+.card h3 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--sub);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.sc {
+  margin: 10px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--line);
+}
+.sc:last-child { border-bottom: none; }
+.sc b { display: block; color: var(--accent); font-size: 13px; }
+
+#msg {
+  margin-top: 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--sub);
+}
+#msg.err { color: var(--err); }
+
+video, canvas {
+  width: 100%;
+  border-radius: var(--radius);
+  background: #000;
+  margin-top: 8px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+}
+
+.hide { display: none !important; }
+
+.vcard {
+  background: linear-gradient(160deg, rgba(29,155,240,.14), rgba(56,189,248,.04));
+  border: 1px solid rgba(29,155,240,.45);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-top: 16px;
+}
+.vhead { display: flex; align-items: center; gap: 12px; }
+.vhead svg { width: 40px; height: 40px; flex: none; }
+.vhead b { display: block; font-size: 16px; }
+.vhead span { color: var(--sub); font-size: 13px; }
+.vprice { margin-left: auto; text-align: right; font: 700 22px 'Michroma', sans-serif; color: #1d9bf0; white-space: nowrap; }
+.vprice small { display: block; font: 500 11px 'Google Sans Flex', sans-serif; color: var(--sub); }
+.vlist { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 10px; }
+.vlist li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
+.vlist li svg { width: 18px; height: 18px; flex: none; margin-top: 2px; }
+.vlist li b { display: block; font-size: 14px; }
+.vlist li span { color: var(--sub); font-size: 13px; }
+
+.logo-preview-box {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.logo-preview-box img {
+  height: 48px;
+  max-width: 120px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  padding: 6px;
+}
+</style>
+</head>
+<body>
+<main>
+  <div class="brand-header">
+    <h1>Haba Ads Studio</h1>
+    <button id="out" class="ghost hide" style="width:auto;margin:0;">Sign out</button>
+  </div>
+  
+  <p class="sub">Create high-converting promotional ads with realistic mobile phone mockups, live typing animations, and kinetic pop-up text, as a video or a still poster.</p>
+
+  <!-- Login Section -->
+  <section id="login" class="hide">
+    <div class="card">
+      <h3>Authentication</h3>
+      <label>Email</label>
+      <input id="em" type="email" placeholder="you@example.com" autocomplete="email">
+      <label>Password</label>
+      <input id="pw" type="password" autocomplete="current-password">
+      <button id="signin">Sign in</button>
+      <button id="google" class="ghost">Continue with Google</button>
+    </div>
+  </section>
+
+  <!-- Main Generator Form -->
+  <section id="app" class="hide">
+    <label>Feature to spotlight</label>
+    <select id="focus">
+      <option value="overall">Haba Overall Platform</option>
+      <option value="stories">Stories & Visual Feed</option>
+      <option value="chats">Chats, Calls & Group Mesh</option>
+      <option value="live">Live Streams & Gifts</option>
+      <option value="shop">Social Shop & Commerce</option>
+      <option value="jobs">Job Network & Freelance</option>
+      <option value="verified">Verified Badge · R4.99 (Secure &amp; Trusted)</option>
+      <option value="privacy">End-to-End Privacy</option>
+      <option value="creators">Creator Monetization</option>
+    </select>
+
+    <div id="vpanel" class="hide"></div>
+
+    <label>Extra angle or context (optional)</label>
+    <textarea id="details" maxlength="600" placeholder="e.g. Highlight mobile app chat speeds, creator earnings, or instant connected tabs."></textarea>
+
+    <label>Target audience (optional)</label>
+    <input id="audience" maxlength="200" placeholder="e.g. South African creators, devs, and small businesses">
+
+    <div class="row">
+      <div>
+        <label>Tone</label>
+        <select id="tone">
+          <option value="energetic">Energetic</option>
+          <option value="premium">Premium</option>
+          <option value="funny">Funny</option>
+          <option value="emotional">Emotional</option>
+          <option value="friendly">Friendly</option>
+        </select>
+      </div>
+      <div class="vid-only">
+        <label>Platform</label>
+        <select id="platform">
+          <option value="tiktok">TikTok (9:16)</option>
+          <option value="reels">Reels (9:16)</option>
+          <option value="facebook">Facebook (1:1)</option>
+          <option value="youtube">YouTube (16:9)</option>
+        </select>
+      </div>
+      <div class="vid-only">
+        <label>Duration (s)</label>
+        <select id="duration">
+          <option value="5">5s</option>
+          <option value="8" selected>8s</option>
+          <option value="12">12s</option>
+          <option value="15">15s</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Rendering Mode</label>
+    <select id="mode">
+      <option value="motion">Mobile Mockup + Kinetic Typing & Pop-ups</option>
+      <option value="ai">AI Cinematic Video (Cloud Generator)</option>
+      <option value="poster">Poster (Still Image, PNG)</option>
+    </select>
+
+    <div class="motion-only">
+      <label>Motion Style</label>
+      <select id="mstyle">
+        <option value="fluid">Fluid Glass (flowing gradient, blur-slide transitions)</option>
+        <option value="classic">Classic (black &amp; white scenes)</option>
+      </select>
+    </div>
+    <div class="poster-only hide">
+      <label>Poster size</label>
+      <select id="psize">
+        <option value="portrait">Feed Post (4:5)</option>
+        <option value="story">Story / Reel Cover (9:16)</option>
+        <option value="square">Square (1:1)</option>
+        <option value="a4">Print Poster (A-series)</option>
+        <option value="landscape">Banner (16:9)</option>
+      </select>
+    </div>
+    <div class="vid-only">
+    <label>Voiceover</label>
+    <select id="voice">
+      <option value="eve">Voiceover: Eve</option>
+      <option value="ara">Voiceover: Ara</option>
+      <option value="none">No Voiceover</option>
+    </select>
+
+    <label>Background Music</label>
+    <select id="music">
+      <option value="upbeat">Upbeat Rhythm</option>
+      <option value="chill">Chill Lo-Fi</option>
+      <option value="none">No Music</option>
+    </select>
+
+    </div>
+    <label>Graphics Direction (optional)</label>
+    <textarea id="graphics" maxlength="500" placeholder="Tell the AI what to show, e.g. 'Dark scene with a glowing phone showing the stories feed, a creator going live, then a shop storefront opening. Black and white, bold and minimal.'"></textarea>
+
+    <label>Brand Logo (optional)</label>
+    <div class="logo-preview-box">
+      <img id="logoPrev" class="hide" alt="Brand Logo">
+      <input id="logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+      <button id="logoX" type="button" class="ghost hide" style="width:auto;margin:0;white-space:nowrap;">Remove</button>
+    </div>
+
+    <button id="go">Generate High-Impact Ad</button>
+  </section>
+
+  <div id="msg"></div>
+
+  <div id="result" class="hide">
+    <div class="card">
+      <h3 id="ptitle">Video Preview</h3>
+      <div id="vwrap" class="sub">Preparing dynamic mockup engine and rendering video...</div>
+    </div>
+    <div id="offer" class="hide"></div>
+    <div class="card">
+      <h3>Concept Hook</h3>
+      <div id="hook"></div>
+    </div>
+    <div class="card" id="sbcard">
+      <h3>Ad Storyboard</h3>
+      <div id="script"></div>
+    </div>
+    <div class="card">
+      <h3>Social Caption & Hashtags</h3>
+      <div id="caption"></div>
+      <button class="ghost" id="copy">Copy Caption Text</button>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+
+// Firebase Setup
+const app = initializeApp({
+  apiKey: "AIzaSyBQSPwpVbGrdCuOoyitAeWQHIeipj2MgIY", authDomain: "newstart-64c43.firebaseapp.com",
+  databaseURL: "https://newstart-64c43-default-rtdb.firebaseio.com", projectId: "newstart-64c43",
+  storageBucket: "newstart-64c43.firebasestorage.app", messagingSenderId: "941619830061",
+  appId: "1:941619830061:web:de9e0f791eb8f6eacf87a4"
+});
+const auth = getAuth(app), fns = getFunctions(app);
+const start = httpsCallable(fns, "habaAdStart", { timeout: 130000 });
+const status = httpsCallable(fns, "habaAdStatus");
+const imgFn = httpsCallable(fns, "habaAdImage", { timeout: 90000 });
+const voiceFn = httpsCallable(fns, "habaAdVoice", { timeout: 90000 });
+
+const $ = (id) => document.getElementById(id);
+const say = (t, err) => { $("msg").textContent = t || ""; $("msg").className = err ? "err" : ""; };
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+let copyText = "";
+
+// ==========================================
+// VERIFIED BADGE OFFER (edit price / benefits here)
+// ==========================================
+const VERIFIED_PRICE = "R4.99";
+const VERIFIED_BENEFITS = [
+  ["Blue verified badge", "Shown next to your name on your profile, chats, posts, stories and live streams."],
+  ["Be trusted instantly", "People know you are the real you, so fake and impersonator accounts stand out."],
+  ["Secure your account", "Identity-checked profile with extra protection against takeovers and cloning."],
+  ["Get seen more", "Verified accounts get priority in search, suggestions and the feed."],
+  ["Sell and earn with confidence", "Buyers trust verified shops, gifts and freelance profiles, so you convert more."],
+  ["Priority support", "Faster help if something goes wrong with your account."]
+];
+const BADGE_SVG = '<svg viewBox="0 0 24 24" fill="#1d9bf0"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const TICK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+const verifiedHTML = (title) => `<div class="vcard">
+  <div class="vhead">${BADGE_SVG}<div><b>${esc(title)}</b><span>Secure your account and be trusted</span></div>
+  <div class="vprice">${VERIFIED_PRICE}<small>one-time</small></div></div>
+  <ul class="vlist">${VERIFIED_BENEFITS.map(([h, d]) => `<li>${TICK_SVG}<div><b>${esc(h)}</b><span>${esc(d)}</span></div></li>`).join("")}</ul>
+</div>`;
+const FLOW_BRIEF = "Write the lines as one continuous, professional narration: each line flows straight into the next with natural connecting words (Because, And, So, Now, That's why, With Haba), full confident sentences of about 8 to 14 words, no abrupt fragments, no gaps in the story.";
+const isVerified = () => $("focus").value === "verified";
+const syncVerified = () => {
+  $("vpanel").innerHTML = isVerified() ? verifiedHTML("Haba Verified Badge") : "";
+  $("vpanel").classList.toggle("hide", !isVerified());
+};
+$("focus").onchange = syncVerified;
+syncVerified();
+
+const POSTER_BRIEF = "This is for a single still poster, not a video. Make the hook a punchy headline of 3 to 9 words. Make the first line one short, clear supporting sentence (under 16 words) that works as the poster subheading.";
+const POSTER_PLATFORM = { story: "tiktok", portrait: "facebook", square: "facebook", a4: "facebook", landscape: "youtube" };
+const syncMode = () => {
+  const p = $("mode").value === "poster";
+  document.querySelectorAll(".vid-only").forEach((e) => e.classList.toggle("hide", p));
+  document.querySelectorAll(".poster-only").forEach((e) => e.classList.toggle("hide", !p));
+  $("go").textContent = p ? "Generate Poster" : "Generate High-Impact Ad";
+  $("ptitle").textContent = p ? "Poster Preview" : "Video Preview";
+  $("sbcard").classList.toggle("hide", p);
+  document.querySelectorAll(".motion-only").forEach((e) => e.classList.toggle("hide", $("mode").value !== "motion"));
+};
+$("mode").onchange = syncMode;
+syncMode();
+
+onAuthStateChanged(auth, (u) => {
+  $("login").classList.toggle("hide", !!u);
+  $("app").classList.toggle("hide", !u);
+  $("out").classList.toggle("hide", !u);
+});
+
+$("signin").onclick = async () => {
+  try { say(""); await signInWithEmailAndPassword(auth, $("em").value.trim(), $("pw").value); }
+  catch (e) { say("Could not sign in. Check your credentials.", true); }
+};
+$("google").onclick = async () => {
+  try { say(""); await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch (e) { say("Google sign-in was cancelled.", true); }
+};
+$("out").onclick = () => signOut(auth);
+
+$("copy").onclick = async () => {
+  try {
+    const el = document.createElement('textarea');
+    el.value = copyText;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    say("Caption copied to clipboard!");
+  } catch (e) { say("Copy failed. Please copy manually.", true); }
+};
+
+function showPlan(p) {
+  $("hook").textContent = p.hook || "";
+  $("script").innerHTML = (p.script || []).map((s, i) => 
+    `<div class="sc"><b>Scene ${i + 1}</b>${esc(s.scene)}<br><span class="sub">"${esc(s.voiceover)}"</span></div>`
+  ).join("");
+  const tags = (p.hashtags || []).join(" ");
+  $("caption").textContent = (p.caption || "") + (tags ? "\n\n" + tags : "");
+  $("caption").style.whiteSpace = "pre-wrap";
+  copyText = $("caption").textContent;
+}
+
+// ==========================================
+// MOBILE MOCKUP & KINETIC TYPING ENGINE
+// ==========================================
+const BRAND = "Michroma, sans-serif";
+const TEXT = '"Instrument Sans", "Google Sans Flex", -apple-system, BlinkMacSystemFont, sans-serif';
+const HEAD = '"Bricolage Grotesque", "Google Sans Flex", -apple-system, sans-serif';
+const MONO = '"JetBrains Mono", monospace';
+
+const clamp = (v) => Math.max(0, Math.min(1, v));
+const outC = (t) => 1 - Math.pow(1 - t, 3);
+const backE = (t) => { const s = 1.70158; return 1 + (s + 1) * Math.pow(t - 1, 3) + s * Math.pow(t - 1, 2); };
+const rr = (c, x, y, w, h, r) => {
+  c.beginPath(); c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+};
+
+const ICON_SRC = {
+  chat: ["M7.9 20A9 9 0 1 0 4 16.1L2 22Z"],
+  camera: ["M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z", "M15 13a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"],
+  video: ["m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5", "M4 6h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"],
+  shop: ["M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z", "M3 6h18", "M16 10a4 4 0 0 1-8 0"],
+  heart: ["M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"],
+  zap: ["M13 2 3 14h9l-1 8 10-12h-9l1-8z"],
+  check: ["M20 6L9 17l-5-5"],
+  badge: ["M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z", "m9 12 2 2 4-4"],
+  users: ["M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2", "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z", "M22 21v-2a4 4 0 0 0-3-3.87", "M16 3.13a4 4 0 0 1 0 7.75"],
+  trend: ["M22 7 13.5 15.5 8.5 10.5 2 17", "M16 7h6v6"],
+  star: ["M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"],
+  gift: ["M20 12v10H4V12", "M2 7h20v5H2z", "M12 22V7", "M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z", "M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"],
+  pin: ["M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z", "M15 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"],
+  wallet: ["M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1", "M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"],
+  bell: ["M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9", "M10.3 21a1.94 1.94 0 0 0 3.4 0"],
+  globe: ["M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z", "M2 12h20", "M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"],
+  crown: ["M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z", "M5 20h14"],
+  music: ["M9 18V5l12-2v13", "M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0z", "M21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"],
+  shield: ["M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"],
+  spark: ["M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"]
+};
+const ICON = {}; for (const k in ICON_SRC) ICON[k] = ICON_SRC[k].map((d) => new Path2D(d));
+
+const PALETTES = [
+  ["#0066ff", "#3b82f6", "#60a5fa"],
+  ["#0f172a", "#2563eb", "#38bdf8"],
+  ["#18181b", "#8b5cf6", "#ec4899"],
+  ["#022c22", "#10b981", "#34d399"]
+];
+
+const HIGHLIGHT_WORDS = ["connect", "build", "grow", "discover", "haba", "create", "fast", "instant", "future", "live", "chat", "tabs", "thoughts", "power"];
+
+// DYNAMIC BACKGROUND COLOR PALETTES & GRADIENTS
+const COLOR_THEMES = [
+  { bg: ["#05070d", "#0a1226", "#0d1b3a"], accent: "#5aa9ff", secondary: "#7c8cff", blob: "rgba(90,169,255,0.24)" },
+  { bg: ["#04090a", "#06201f", "#0a2f2a"], accent: "#4fd1b5", secondary: "#5aa9ff", blob: "rgba(79,209,181,0.2)" },
+  { bg: ["#07050d", "#1a1030", "#2a1450"], accent: "#a58bff", secondary: "#ff8fb1", blob: "rgba(165,139,255,0.22)" },
+  { bg: ["#0a0605", "#2a110a", "#43180d"], accent: "#ffb070", secondary: "#ff7a59", blob: "rgba(255,176,112,0.2)" }
+];
+
+const APPS = { gmail:"EA4335", slack:"4A154B", whatsapp:"25D366", instagram:"E4405F", tiktok:"000000", facebook:"0866FF", youtube:"FF0000", telegram:"26A5E4" };
+async function loadIcons() {
+  const out = {};
+  await Promise.all(Object.entries(APPS).map(async ([n, h]) => {
+    try {
+      const t = await (await fetch(`https://cdn.jsdelivr.net/npm/simple-icons@11.14.0/icons/${n}.svg`)).text();
+      const im = new Image();
+      await new Promise((ok, no) => { im.onload = ok; im.onerror = no; im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(t.replace("<svg", `<svg fill="#${h}" width="128" height="128"`)); });
+      out[n] = im;
+    } catch (e) {}
+  }));
+  return out;
+}
+
+function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
+  const SEG = 2.4, END = 2.6, INTRO = 2.2, D = segs.map((_, i) => (durs && durs[i]) || SEG), ST = [], SCENES = D.reduce((a, d, i) => (ST[i] = a, a + d), INTRO), total = SCENES + END; let SD = SEG;
+  const u = Math.min(W, H), wide = W > H;
+  const OR = "#ee6c3a", TE = "#4f9da6", HL = new Set(HIGHLIGHT_WORDS);
+  const played = new Set(); let now = 0;
+  const fluid = typeof FLUID !== "undefined" && !!FLUID, TRN = 0.32;
+  const sfx = (k, type) => { if (!played.has(k)) { played.add(k); if (sfxFn) sfxFn(type, now); } };
+  const F = (wt, px, face, ls) => { c.font = `${wt} ${px}px ${face || TEXT}`; if ("letterSpacing" in c) c.letterSpacing = ls ? (ls * px).toFixed(2) + "px" : "0px"; };
+  const blob = (x, y, r, col) => { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col); g.addColorStop(1, col.replace(/[\d.]+\)$/, "0)")); c.fillStyle = g; c.fillRect(0, 0, W, H); };
+  let GR = null, TINT = null;
+  const grain = (a) => { if (!GR) { const k = document.createElement("canvas"); k.width = k.height = 128; const x = k.getContext("2d"), d = x.createImageData(128, 128); for (let i = 0; i < d.data.length; i += 4) { d.data[i] = d.data[i + 1] = d.data[i + 2] = Math.random() * 255; d.data[i + 3] = 255; } x.putImageData(d, 0, 0); GR = c.createPattern(k, "repeat"); } c.save(); c.globalAlpha = a; c.globalCompositeOperation = "overlay"; c.fillStyle = GR; c.fillRect(0, 0, W, H); c.restore(); };
+
+  const bg = (t, dark) => {
+    c.fillStyle = dark ? "#000" : "#fff"; c.fillRect(0, 0, W, H);
+    if (!dark) return;
+    c.strokeStyle = "rgba(255,255,255,.07)"; c.lineWidth = 1; const r = u * 0.06;
+    for (let row = 0; row * r * 1.5 < H + r; row++) for (let col = 0; col * r * 1.732 < W + r; col++) {
+      const x = col * r * 1.732 + (row % 2) * r * 0.866, y = row * r * 1.5;
+      c.beginPath(); for (let a = 0; a < 6; a++) { const an = Math.PI / 3 * a + Math.PI / 6; c.lineTo(x + r * Math.cos(an), y + r * Math.sin(an)); }
+      c.closePath(); c.stroke();
+    }
+  };
+
+  // AI-directed visuals: each scene gets its own layout + icons (from plan.visuals, else derived from the line's meaning)
+  const KEYS = { badge: ["badge", "verif", "blue", "trust"], chat: ["chat", "message", "talk", "reply", "connect"], camera: ["photo", "story", "stories", "snap"], video: ["video", "live", "stream", "watch"], shop: ["shop", "sell", "store", "business", "buy"], heart: ["love", "like", "follow", "fan"], zap: ["fast", "instant", "speed", "power", "boost"], users: ["friends", "community", "people", "audience", "together"], trend: ["grow", "rank", "earn", "top", "reach"], star: ["star", "best", "creator", "featured"], gift: ["gift", "reward", "win", "free"], pin: ["near", "local", "city", "johannesburg", "africa"], wallet: ["pay", "money", "wallet", "income"], bell: ["notif", "alert", "never miss"], globe: ["world", "global", "discover", "everywhere"], crown: ["gold", "premium", "vip"], music: ["music", "song", "beat", "sound"], shield: ["safe", "secure", "real", "privacy"], spark: ["new", "magic", "create", "idea"] };
+  const hash = (str) => { let h = 2166136261; for (const ch of str) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+  const LAYOUTS = ["orbit", "row", "big", "burst", "corners", "none", "phone"];
+  const FALLBACK = ["phone", "none", "orbit", "none", "row", "phone", "none", "big", "corners", "none", "burst"];
+  const spec = (idx) => {
+    const ai = visuals && visuals[idx], txt = segs[idx].toLowerCase(), pick = [];
+    if (ai && Array.isArray(ai.icons)) ai.icons.forEach((n) => ICON[n] && !pick.includes(n) && pick.push(n));
+    if (!pick.length) for (const k in KEYS) if (ICON[k] && KEYS[k].some((w) => txt.includes(w))) pick.push(k);
+    const all = Object.keys(ICON); let h = hash(txt + idx);
+    while (pick.length < 3) { const n = all[h % all.length]; h = (Math.imul(h, 1103515245) + 12345) >>> 0; if (!pick.includes(n)) pick.push(n); }
+    const layout = ai && LAYOUTS.includes(ai.layout) ? ai.layout : FALLBACK[(hash(txt) + idx) % FALLBACK.length];
+    return { layout, icons: pick.slice(0, 4) };
+  };
+  const ICOL = { chat: ["#25a0ff", "#3b5bff"], camera: ["#ff5f9e", "#ff8a3d"], video: ["#ff3b3b", "#ff7a18"], shop: ["#22c55e", "#10b981"], heart: ["#ff2d6f", "#ff6b9a"], zap: ["#facc15", "#f59e0b"], users: ["#8b5cf6", "#6366f1"], trend: ["#10b981", "#06b6d4"], star: ["#fbbf24", "#f97316"], gift: ["#ec4899", "#f43f5e"], pin: ["#ef4444", "#f97316"], wallet: ["#14b8a6", "#0ea5e9"], bell: ["#f59e0b", "#ef4444"], globe: ["#0ea5e9", "#2563eb"], crown: ["#f59e0b", "#eab308"], music: ["#a855f7", "#ec4899"], shield: ["#3b82f6", "#6366f1"], badge: ["#1d9bf0", "#38bdf8"], spark: ["#a855f7", "#f472b6"] };
+  const tile = (n, x, y, s, dk, p, rot) => {
+    if (p <= 0) return;
+    c.save(); c.translate(x, y); c.rotate(rot || 0); c.scale(p, p);
+    c.shadowColor = "rgba(0,0,0,.45)"; c.shadowBlur = s * 0.3; c.shadowOffsetY = s * 0.1;
+    c.fillStyle = "rgba(14,20,34,.78)"; rr(c, -s / 2, -s / 2, s, s, s * 0.3); c.fill(); c.shadowColor = "transparent";
+    c.fillStyle = grad(0, -s / 2, 0, s / 2, "rgba(255,255,255,.2)", "rgba(255,255,255,.04)"); c.fill();
+    c.strokeStyle = "rgba(255,255,255,.22)"; c.lineWidth = Math.max(1, s * 0.014); c.stroke();
+    c.scale(s * 0.46 / 24, s * 0.46 / 24); c.translate(-12, -12); c.strokeStyle = lite(TINT || th.accent, 0.3); c.lineWidth = 1.7; c.lineCap = c.lineJoin = "round"; ICON[n].forEach((d) => c.stroke(d));
+    c.restore();
+  };
+  // Visuals stay in the top/bottom bands so they never cover the words
+  const vis = (t, idx, dk) => {
+    const v = spec(idx); if (v.layout === "none" || v.layout === "phone") return;
+    const ic = v.icons, n = ic.length, s = u * 0.13, topY = H * 0.2, botY = H * 0.8, out = fluid ? 1 : clamp((SD - t) / 0.12);
+    c.save(); c.globalAlpha = out;
+    const tt = (i, x, y, sz, rot) => { const p = backE(clamp((t - 0.25 - i * 0.18) / 0.4)); if (p > 0) sfx(`v${idx}_${i}`, i ? "pop" : "ding"); tile(ic[i % n], x, y, sz, dk, p, rot); };
+    if (v.layout === "row") { const y = idx % 2 ? botY : topY; ic.forEach((_, i) => tt(i, W / 2 + (i - (n - 1) / 2) * s * 1.4, y + Math.sin(t * 2 + i) * u * 0.01, s)); }
+    else if (v.layout === "orbit") { const y = idx % 2 ? botY : topY; ic.forEach((_, i) => { const a = t * 0.9 + i * Math.PI * 2 / n; tt(i, W / 2 + Math.cos(a) * W * 0.3, y + Math.sin(a) * s * 0.45, s * (0.8 + 0.25 * Math.sin(a)), 0); }); }
+    else if (v.layout === "big") tt(0, W / 2, idx % 2 ? botY : topY, u * 0.26, Math.sin(t * 1.5) * 0.08);
+    else if (v.layout === "burst") ic.forEach((_, i) => tt(i, W * (i % 2 ? 0.14 : 0.86), H * (0.14 + i * 0.22) + Math.sin(t * 2 + i) * u * 0.012, s * 0.9, (i % 2 ? -1 : 1) * 0.15));
+    else if (v.layout === "corners") ic.forEach((_, i) => tt(i, W * (i % 2 ? 0.84 : 0.16), i < 2 ? topY : botY, s, (i % 2 ? 1 : -1) * 0.12));
+    c.restore();
+  };
+
+  // Animated phone mockup: the screen content depends on what the ad is about
+  const SCREENK = { badge: ["badge", "verif", "blue", "gold"], chat: ["chat", "message", "dm", "talk"], stories: ["story", "stories", "moment"], live: ["live", "gift", "stream"], shop: ["shop", "sell", "store", "buy", "business"], jobs: ["job", "hire", "cv", "work", "career"], lock: ["privacy", "private", "secure", "encrypt", "lock", "safe"] };
+  const screenFor = (idx) => {
+    const ai = visuals && visuals[idx]; if (ai && SCREENK[ai.screen] || ai && ai.screen === "feed") return ai.screen;
+    for (const src of [segs[idx], segs.join(" ")]) for (const k in SCREENK) if (SCREENK[k].some((w) => src.toLowerCase().includes(w))) return k;
+    return "feed";
+  };
+  const grad = (x0, y0, x1, y1, a, b) => { const g = c.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, a); g.addColorStop(1, b); return g; };
+  const R = (x, y, w, h, r, f) => { c.fillStyle = f; rr(c, x, y, w, h, r); c.fill(); };
+  const circ = (x, y, r, f) => { c.fillStyle = f; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); };
+  const heart = (x, y, s, f) => { c.save(); c.translate(x, y); c.fillStyle = f; c.beginPath(); c.moveTo(0, s * 0.35); c.bezierCurveTo(-s * 1.1, -s * 0.4, -s * 0.3, -s * 1, 0, -s * 0.35); c.bezierCurveTo(s * 0.3, -s, s * 1.1, -s * 0.4, 0, s * 0.35); c.fill(); c.restore(); };
+  const PAL = [["#6C8CFF", "#2B3A8F"], ["#3DBFA7", "#16685C"], ["#C98BFF", "#5B2B8F"], ["#FF9F7A", "#8F3A2B"], ["#6CC4FF", "#1E4F8F"], ["#E6C07B", "#7A5320"]];
+  const screen = (kind, t, sw, sh) => {
+    const L = (x, y, w, h, a) => R(x, y, w, h, h / 2, `rgba(255,255,255,${a})`), BL = "#2F8CFF", PN = "#141B2B", BG = "#0B101B";
+    const photo = (x, y, w, h, r, i) => { const [a, b] = PAL[((i % 6) + 6) % 6]; R(x, y, w, h, r, grad(x, y, x + w, y + h, a, b)); c.save(); rr(c, x, y, w, h, r); c.clip(); const g = c.createRadialGradient(x + w * 0.7, y + h * 0.3, 0, x + w * 0.7, y + h * 0.3, w * 0.65); g.addColorStop(0, "rgba(255,255,255,.35)"); g.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = g; c.fillRect(x, y, w, h); c.restore(); };
+    if (kind === "chat") {
+      R(0, sh * 0.065, sw, sh * 0.075, 0, "rgba(255,255,255,.04)"); circ(sw * 0.1, sh * 0.103, sw * 0.05, grad(0, 0, sw, sh, ...PAL[1])); L(sw * 0.19, sh * 0.092, sw * 0.28, sh * 0.012, 0.7); L(sw * 0.19, sh * 0.113, sw * 0.16, sh * 0.009, 0.25);
+      for (let i = 0; i < 5; i++) { const p = backE(clamp((t - 0.5 - i * 0.32) / 0.3)); if (p <= 0) continue; const side = i % 2, bw = sw * (0.42 + 0.1 * ((i * 7) % 3)), bh = sh * 0.085, x = side ? sw - bw - sw * 0.05 : sw * 0.05, y = sh * 0.18 + i * sh * 0.14; c.save(); c.translate(side ? x + bw : x, y + bh / 2); c.scale(p, p); const ox = side ? -bw : 0; R(ox, -bh / 2, bw, bh, bh * 0.4, side ? grad(ox, 0, ox + bw, 0, "#3B95FF", "#2468E0") : PN); L(ox + bw * 0.1, -bh * 0.2, bw * 0.65, bh * 0.14, side ? 0.8 : 0.4); L(ox + bw * 0.1, bh * 0.08, bw * 0.4, bh * 0.14, side ? 0.55 : 0.22); c.restore(); }
+      R(sw * 0.05, sh * 0.9, sw * 0.9, sh * 0.055, sh * 0.0275, PN); circ(sw * 0.87, sh * 0.9275, sh * 0.02, BL);
+    } else if (kind === "stories") {
+      for (let i = 0; i < 4; i++) { const x = sw * (0.15 + i * 0.23), y = sh * 0.105; circ(x, y, sw * 0.085, grad(x - 30, y - 30, x + 30, y + 30, "#5aa9ff", "#7c5cff")); circ(x, y, sw * 0.072, BG); circ(x, y, sw * 0.063, grad(x - 10, y - 10, x + 10, y + 10, ...PAL[(i + 2) % 6])); }
+      photo(sw * 0.05, sh * 0.19, sw * 0.9, sh * 0.52, 22, Math.floor(t * 1.2));
+      heart(sw * 0.1, sh * 0.77, sw * 0.045 * (1 + 0.2 * Math.sin(t * 6)), "#FF4D6D"); L(sw * 0.2, sh * 0.755, sw * 0.5, sh * 0.012, 0.6); L(sw * 0.2, sh * 0.785, sw * 0.3, sh * 0.01, 0.25);
+    } else if (kind === "live") {
+      R(0, 0, sw, sh, 0, grad(0, 0, sw, sh, "#1a1442", "#6a2a7a")); circ(sw * 0.5, sh * 0.36, sw * 0.2, "rgba(255,255,255,.14)"); R(sw * 0.06, sh * 0.075, sw * 0.2, sh * 0.04, sh * 0.02, "#FF4D5E"); circ(sw * 0.1, sh * 0.095, 3 + 1.5 * Math.sin(t * 8), "#fff"); R(sw * 0.72, sh * 0.075, sw * 0.22, sh * 0.04, sh * 0.02, "rgba(255,255,255,.16)");
+      for (let i = 0; i < 7; i++) { const ph = (t * 0.55 + i * 0.15) % 1; heart(sw * (0.75 + 0.14 * Math.sin(i * 2 + t * 3)), sh * 0.9 - ph * sh * 0.7, sw * (0.035 + 0.015 * (i % 3)), `rgba(255,${90 + i * 15},160,${1 - ph})`); }
+      for (let i = 0; i < 3; i++) { R(sw * 0.05, sh * (0.72 + i * 0.07), sw * (0.5 + 0.08 * i), sh * 0.05, sh * 0.025, "rgba(255,255,255,.14)"); circ(sw * 0.085, sh * (0.745 + i * 0.07), sh * 0.016, grad(0, 0, sw, sh, ...PAL[i])); }
+    } else if (kind === "shop") {
+      for (let i = 0; i < 8; i++) { const x = sw * 0.05 + (i % 2) * sw * 0.47, y = sh * 0.15 + (i >> 1) * sh * 0.3 - t * sh * 0.1, cw = sw * 0.43; R(x, y, cw, sh * 0.27, 14, PN); photo(x + 4, y + 4, cw - 8, sh * 0.17, 11, i); L(x + 8, y + sh * 0.19, cw * 0.7, sh * 0.011, 0.6); R(x + 8, y + sh * 0.215, cw * 0.38, sh * 0.026, sh * 0.013, "rgba(47,140,255,.28)"); }
+      R(0, 0, sw, sh * 0.13, 0, BG); R(sw * 0.05, sh * 0.07, sw * 0.9, sh * 0.05, sh * 0.025, PN);
+    } else if (kind === "jobs") {
+      for (let i = 0; i < 6; i++) { const y = sh * 0.15 + i * sh * 0.15 - t * sh * 0.035; R(sw * 0.05, y, sw * 0.9, sh * 0.125, 16, PN); circ(sw * 0.16, y + sh * 0.0625, sw * 0.065, grad(0, y, sw, y + 50, ...PAL[i % 6])); L(sw * 0.28, y + sh * 0.04, sw * 0.42, sh * 0.012, 0.65); L(sw * 0.28, y + sh * 0.07, sw * 0.26, sh * 0.009, 0.25); if (i === 1) { const p = backE(clamp((t - 0.8) / 0.3)); c.save(); c.translate(sw * 0.84, y + sh * 0.0625); c.scale(p, p); circ(0, 0, sw * 0.055, "#3DD68C"); c.strokeStyle = "#06121f"; c.lineWidth = 3; c.lineCap = "round"; c.beginPath(); c.moveTo(-sw * 0.022, 0); c.lineTo(-sw * 0.004, sw * 0.018); c.lineTo(sw * 0.027, -sw * 0.018); c.stroke(); c.restore(); } }
+      R(0, 0, sw, sh * 0.12, 0, BG); L(sw * 0.07, sh * 0.075, sw * 0.3, sh * 0.016, 0.8);
+    } else if (kind === "badge") {
+      R(0, 0, sw, sh * 0.25, 0, grad(0, 0, sw, sh * 0.25, "#1d3b78", BL)); const ax = sw / 2, ay = sh * 0.26, ar = sw * 0.17; circ(ax, ay, ar + 5, BG); circ(ax, ay, ar, grad(ax - ar, ay - ar, ax + ar, ay + ar, ...PAL[2]));
+      L(sw * 0.3, sh * 0.43, sw * 0.4, sh * 0.016, 0.8); L(sw * 0.36, sh * 0.47, sw * 0.28, sh * 0.01, 0.3); for (let i = 0; i < 3; i++) { L(sw * (0.16 + i * 0.28), sh * 0.54, sw * 0.14, sh * 0.014, 0.7); L(sw * (0.15 + i * 0.28), sh * 0.565, sw * 0.16, sh * 0.008, 0.22); }
+      const p = backE(clamp((t - 0.5) / 0.4)), bx = ax + ar * 0.75, by = ay + ar * 0.75; if (p > 0) { sfx(`bd${idx0}`, "ding"); c.strokeStyle = `rgba(29,155,240,${1 - ((t * 1.2) % 1)})`; c.lineWidth = 4; c.beginPath(); c.arc(bx, by, ar * 0.4 * (1 + (t * 1.2) % 1), 0, 7); c.stroke(); c.save(); c.translate(bx, by); c.scale(p * ar * 0.07, p * ar * 0.07); c.translate(-12, -12); c.fillStyle = "#1d9bf0"; c.fill(ICON.badge[0]); c.strokeStyle = "#fff"; c.lineWidth = 2.2; c.lineCap = c.lineJoin = "round"; c.stroke(ICON.badge[1]); c.restore(); }
+      for (let i = 0; i < 2; i++) R(sw * 0.05, sh * (0.65 + i * 0.13), sw * 0.9, sh * 0.1, 14, PN);
+    } else if (kind === "lock") {
+      R(0, 0, sw, sh, 0, grad(0, 0, sw, sh, "#0b1530", "#1e3a8a"));
+      for (let i = 0; i < 3; i++) { const ph = (t * 0.7 + i / 3) % 1; c.strokeStyle = `rgba(96,165,250,${0.5 - ph * 0.5})`; c.lineWidth = 2; c.beginPath(); c.arc(sw / 2, sh * 0.38, sw * (0.15 + ph * 0.3), 0, 7); c.stroke(); }
+      circ(sw / 2, sh * 0.38, sw * 0.14, "rgba(255,255,255,.1)"); c.save(); c.translate(sw / 2, sh * 0.38); c.scale(sw * 0.01, sw * 0.01); c.translate(-12, -12); c.strokeStyle = "#fff"; c.lineWidth = 1.8; c.lineCap = c.lineJoin = "round"; ICON.shield.forEach((d) => c.stroke(d)); c.restore();
+      for (let i = 0; i < 3; i++) R(sw * (i % 2 ? 0.4 : 0.1), sh * (0.65 + i * 0.09), sw * 0.5, sh * 0.06, 12, "rgba(255,255,255,.14)");
+    } else {
+      for (let i = 0; i < 4; i++) { const y = sh * 0.07 + i * sh * 0.38 - ((t * sh * 0.1) % (sh * 0.38)); circ(sw * 0.1, y + sh * 0.03, sw * 0.045, grad(0, y, sw, y + 40, ...PAL[i % 6])); L(sw * 0.19, y + sh * 0.022, sw * 0.32, sh * 0.012, 0.65); photo(sw * 0.05, y + sh * 0.07, sw * 0.9, sh * 0.22, 16, i + 1); heart(sw * 0.1, y + sh * 0.335, sw * 0.035, "#FF4D6D"); }
+    }
+    F(600, sw * 0.042, TEXT, 0); c.textAlign = "left"; c.textBaseline = "middle"; c.fillStyle = "rgba(255,255,255,.9)"; c.fillText("9:41", sw * 0.09, sh * 0.034); R(sw * 0.8, sh * 0.027, sw * 0.09, sh * 0.014, sh * 0.007, "rgba(255,255,255,.85)");
+  };
+  let idx0 = 0;
+  const device = (w, h, m, fn) => {
+    c.save(); c.shadowColor = "rgba(0,0,0,.6)"; c.shadowBlur = u * 0.07; c.shadowOffsetY = u * 0.03;
+    const fg = c.createLinearGradient(-w / 2, -h / 2, w / 2, h / 2); fg.addColorStop(0, "#5a5e67"); fg.addColorStop(0.25, "#23262c"); fg.addColorStop(0.7, "#16181c"); fg.addColorStop(1, "#4a4d55");
+    c.fillStyle = fg; rr(c, -w / 2, -h / 2, w, h, w * 0.15); c.fill(); c.restore();
+    c.fillStyle = "#050608"; rr(c, -w / 2 + w * 0.012, -h / 2 + w * 0.012, w * 0.976, h - w * 0.024, w * 0.14); c.fill();
+    const sw = w - 2 * m, sh = h - 2 * m; c.save(); rr(c, -sw / 2, -sh / 2, sw, sh, w * 0.115); c.clip(); c.fillStyle = "#0B101B"; c.fillRect(-sw / 2, -sh / 2, sw, sh);
+    c.save(); c.translate(-sw / 2, -sh / 2); fn(sw, sh); c.restore();
+    c.fillStyle = grad(-sw / 2, -sh / 2, sw / 2, sh / 2, "rgba(255,255,255,.1)", "rgba(255,255,255,0)"); c.fillRect(-sw / 2, -sh / 2, sw, sh); c.restore();
+    c.fillStyle = "#000"; rr(c, -w * 0.17, -sh / 2 + m * 0.9, w * 0.34, m * 1.9, m); c.fill();
+  };
+  const phone = (t, idx, dk) => {
+    idx0 = idx; const w = u * (wide ? 0.34 : 0.42), h = w * 2.05, cx = wide ? W * 0.76 : W * 0.5, cy = wide ? H * 0.52 : H * 0.7;
+    const p = outC(clamp(t / 0.7)), out = fluid ? 1 : clamp((SD - t) / 0.12);
+    sfx(`ph${idx}`, "whoosh");
+    c.save(); c.globalAlpha = out; c.translate(cx, cy + (1 - p) * H * 0.45 + Math.sin(t * 1.6) * u * 0.012); c.rotate(Math.sin(t * 1.1) * 0.045 + (1 - p) * 0.2);
+    device(w, h, w * 0.03, (sw, sh) => screen(screenFor(idx), t, sw, sh)); c.restore();
+  };
+
+  // Kinetic words: blur-in, stagger, highlights, tick/pop sound per word
+  const words = (txt, t, mode, idx, box) => {
+    c.save(); c.textAlign = "left"; c.textBaseline = "middle";
+    const size = u * (wide ? 0.085 : 0.09) * box.sc; c.font = `800 ${size}px ${TEXT}`;
+    const sp = c.measureText(" ").width, maxW = box.mw, lines = []; let cur = [], cw = 0;
+    txt.split(/\s+/).forEach((w) => { const ww = c.measureText(w).width; if (cw + ww > maxW && cur.length) { lines.push({ cur, cw }); cur = []; cw = 0; } cur.push({ w, ww }); cw += ww + sp; });
+    lines.push({ cur, cw });
+    const nW = txt.split(/\s+/).length, stag = Math.max(0.06, Math.min(0.22, (SD - 0.9) * 0.85 / nW)), lh = size * 1.25, y0 = box.cy - (lines.length - 1) * lh / 2, out = clamp((SD - t) / 0.12);
+    if (mode === "bar") {
+      const bh = lines.length * lh + size * 0.6, g = c.createLinearGradient(0, 0, W, 0); g.addColorStop(0, OR); g.addColorStop(1, TE);
+      c.globalAlpha = out; c.fillStyle = g; c.fillRect(0, H / 2 - bh / 2, W * outC(clamp(t / 0.35)), bh); c.globalAlpha = 1;
+    }
+    let k = 0;
+    lines.forEach((L, li) => {
+      let x = box.cx - (L.cw - sp) / 2;
+      L.cur.forEach((o) => {
+        const p = clamp((t - 0.1 - k * stag) / 0.35), hl = HL.has(o.w.toLowerCase().replace(/[^a-z]/g, "")); k++;
+        if (p > 0) {
+          sfx(`w${idx}_${k}`, hl ? "pop" : "type");
+          const y = y0 + li * lh + (1 - outC(p)) * size * 0.4;
+          c.globalAlpha = p * out; c.filter = `blur(${(1 - p) * 14}px)`;
+          const dk = mode === "dark";
+          if (hl) { c.fillStyle = dk ? "#fff" : "#000"; rr(c, x - 10, y - size * 0.62, o.ww + 20, size * 1.2, 14); c.fill(); }
+          c.fillStyle = hl ? (dk ? "#000" : "#fff") : (dk ? "#fff" : "#000");
+          c.fillText(o.w, x, y); c.filter = "none";
+        }
+        x += o.ww + sp;
+      });
+    });
+    c.restore();
+  };
+
+  // ---- Logo morph: pill -> normal rounded square ----
+  let logoBg = "#fff";
+  const logoMorph = (cx, cy, sz, m) => {
+    const ww = sz * (1.9 - 0.9 * m), hh = sz * (0.62 + 0.38 * m), r = Math.max(0, (hh / 2) * (1 - m) + sz * 0.24 * m);
+    c.save(); c.translate(cx, cy);
+    c.shadowColor = "rgba(0,0,0,.35)"; c.shadowBlur = u * 0.04; c.shadowOffsetY = u * 0.012;
+    c.fillStyle = logoBg; rr(c, -ww / 2, -hh / 2, ww, hh, r); c.fill();
+    c.shadowColor = "transparent"; c.shadowBlur = 0; c.shadowOffsetY = 0;
+    rr(c, -ww / 2, -hh / 2, ww, hh, r); c.clip();
+    if (logo) {
+      const iw = logo.naturalWidth || 512, ih = logo.naturalHeight || 512, pad = 1 - 0.16 * clamp(1 - m), k = Math.min(ww * pad / iw, hh * pad / ih), w = iw * k, h = ih * k;
+      c.drawImage(logo, -w / 2, -h / 2, w, h);
+    } else {
+      c.fillStyle = "#000"; c.textAlign = "center"; c.textBaseline = "middle"; c.font = `900 ${hh * 0.42}px ${BRAND}`; c.fillText("Haba.", 0, hh * 0.02);
+    }
+    c.restore();
+  };
+
+  const intro = (t) => {
+    c.fillStyle = "#08080c"; c.fillRect(0, 0, W, H);
+    sfx("introhit", "hit");
+    const s = backE(clamp((t - 0.4) / 0.5));
+    if (s > 0) {
+      sfx("intrologo", "pop");
+      const m = backE(clamp((t - 1.05) / 0.7)); if (t > 1.05) sfx("intromorph", "ding");
+      c.save(); c.translate(W / 2, H * 0.46); c.scale(Math.max(0.001, s), Math.max(0.001, s)); logoMorph(0, 0, u * 0.34, m); c.restore();
+    }
+    const f = clamp((t - (INTRO - 0.35)) / 0.35);
+    if (f > 0) { c.fillStyle = `rgba(255,255,255,${f})`; c.fillRect(0, 0, W, H); }
+  };
+
+  let endDark = false;
+  if (logo) { try { const k = document.createElement("canvas"); k.width = k.height = 16; const x = k.getContext("2d"); x.drawImage(logo, 0, 0, 16, 16); const d = x.getImageData(0, 0, 16, 16).data; let l = 0, n = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 40) { l += (d[i] + d[i + 1] + d[i + 2]) / 3; n++; } endDark = n > 0 && l / n > 140; } catch (e) {} }
+  // sample the logo's corners: if it has a solid background, the pill / square takes that exact colour
+  if (logo) { try {
+    const k = document.createElement("canvas"); k.width = k.height = 16; const x = k.getContext("2d"); x.drawImage(logo, 0, 0, 16, 16);
+    let R = 0, G = 0, B = 0, n = 0;
+    [[0, 0], [15, 0], [0, 15], [15, 15], [1, 1], [14, 1], [1, 14], [14, 14]].forEach(([px, py]) => { const d = x.getImageData(px, py, 1, 1).data; if (d[3] > 200) { R += d[0]; G += d[1]; B += d[2]; n++; } });
+    if (n >= 6) logoBg = `rgb(${Math.round(R / n)},${Math.round(G / n)},${Math.round(B / n)})`;
+  } catch (e) {} }
+  if (fluid) endDark = true;
+  const endCard = (t) => {
+    if (fluid) flowBg(t + SCENES); else bg(t, endDark); sfx("end", "hit");
+    const s = backE(clamp(t / 0.6)), a = clamp((t - 0.4) / 0.4), fg = endDark ? "#fff" : "#000", lsz = u * 0.3, lcy = H * (wide ? 0.36 : 0.4), uy = lcy + lsz / 2 + u * 0.1;
+    c.save(); c.translate(W / 2, lcy); c.scale(s, s); c.textAlign = "center"; c.textBaseline = "middle";
+    if (logo) { logoMorph(0, 0, lsz, backE(clamp((t - 0.1) / 0.8))); } else { c.fillStyle = fg; c.font = `900 ${u * 0.16}px ${BRAND}`; c.fillText("Haba.", 0, 0); }
+    c.restore();
+    c.save(); c.globalAlpha = a; c.textAlign = "center"; c.fillStyle = fg; c.font = `700 ${u * 0.048}px ${TEXT}`; c.fillText("habaapp.co.za", W / 2, uy);
+    if (VERIFIED_AD) {
+      const label = "Get Verified · " + VERIFIED_PRICE, fs = u * 0.04;
+      c.font = `700 ${fs}px ${TEXT}`;
+      const tw = c.measureText(label).width, ph = u * 0.075, ic = ph * 0.6, pw = tw + ic + ph * 0.9, px = W / 2 - pw / 2, py = uy + u * 0.035;
+      const g = c.createLinearGradient(px, py, px + pw, py); g.addColorStop(0, "#1d9bf0"); g.addColorStop(1, "#38bdf8");
+      c.fillStyle = g; rr(c, px, py, pw, ph, ph / 2); c.fill();
+      c.save(); c.translate(px + ph * 0.3, py + (ph - ic) / 2); c.scale(ic / 24, ic / 24); c.fillStyle = "#fff"; c.fill(ICON.badge[0]); c.strokeStyle = "#1d9bf0"; c.lineWidth = 2.2; c.lineCap = c.lineJoin = "round"; c.stroke(ICON.badge[1]); c.restore();
+      c.fillStyle = "#fff"; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText(label, px + ph * 0.3 + ic + ph * 0.2, py + ph / 2 + fs * 0.04); c.textAlign = "center"; c.textBaseline = "alphabetic";
+    } else {
+      c.fillStyle = endDark ? "#a1a1aa" : "#555"; c.font = `500 ${u * 0.035}px ${TEXT}`; c.fillText("Connect. Create. Discover. Grow.", W / 2, uy + u * 0.07);
+    }
+    // Google Play badge so viewers know where to download the app
+    const bw = u * 0.44, bh = u * 0.125, bx = W / 2 - bw / 2, by = uy + u * 0.07 + u * 0.075, ts = bh * 0.52, tx = bx + bh * 0.28, ty = by + (bh - ts) / 2;
+    sfx("play", "ding");
+    c.globalAlpha = a * clamp((t - 0.9) / 0.4); c.translate(0, (1 - clamp((t - 0.9) / 0.4)) * u * 0.03);
+    c.fillStyle = "#000"; rr(c, bx, by, bw, bh, bh * 0.18); c.fill(); c.strokeStyle = endDark ? "#a1a1aa" : "#000"; c.lineWidth = 2; c.stroke();
+    const poly = (pts, col) => { c.fillStyle = col; c.beginPath(); pts.forEach(([x, y], i) => c[i ? "lineTo" : "moveTo"](tx + x * ts, ty + y * ts)); c.closePath(); c.fill(); };
+    poly([[0, 0], [0, 1], [0.52, 0.5]], "#00a0ff"); poly([[0, 0], [0.52, 0.5], [0.78, 0.39]], "#00e676"); poly([[0, 1], [0.52, 0.5], [0.78, 0.61]], "#ff3a44"); poly([[0.78, 0.39], [1, 0.5], [0.78, 0.61], [0.64, 0.5]], "#ffd500");
+    c.textAlign = "left"; c.textBaseline = "alphabetic"; c.fillStyle = "#fff";
+    c.font = `500 ${bh * 0.17}px ${TEXT}`; c.fillText("GET IT ON", tx + ts + bh * 0.2, by + bh * 0.4);
+    c.font = `700 ${bh * 0.33}px ${TEXT}`; c.fillText("Google Play", tx + ts + bh * 0.2, by + bh * 0.74);
+    c.restore();
+  };
+
+  // ==========================================
+  // FLUID GLASS STYLE: flowing gradient mesh, blur-slide text, tilted tile grid, blur-through scene transitions
+  // ==========================================
+  const th = COLOR_THEMES[VERIFIED_AD ? 0 : hash(segs.join("|")) % COLOR_THEMES.length];
+  const hexA = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+  const lite = (h, k) => { const n = parseInt(h.slice(1), 16), m = (v) => Math.round(v + (255 - v) * k); return `rgb(${m(n >> 16)},${m((n >> 8) & 255)},${m(n & 255)})`; };
+  function flowBg(t) {
+    const g = c.createLinearGradient(0, 0, W * 0.4, H); th.bg.forEach((col, i) => g.addColorStop(i / (th.bg.length - 1), col)); c.fillStyle = g; c.fillRect(0, 0, W, H);
+    [[0.78, 0.18, 0.5, th.accent, 0.5, 0], [0.15, 0.88, 0.4, th.secondary, 0.32, 2.4]].forEach(([fx, fy, sp, col, a, ph]) => {
+      const x = W * (fx + 0.08 * Math.sin(t * 0.7 * sp + ph)), y = H * (fy + 0.06 * Math.cos(t * 0.6 * sp + ph)), r = u * (0.95 + 0.1 * Math.sin(t * 0.5 + ph));
+      const k = c.createRadialGradient(x, y, 0, x, y, r); k.addColorStop(0, hexA(col, a)); k.addColorStop(1, hexA(col, 0)); c.fillStyle = k; c.fillRect(0, 0, W, H);
+    });
+    const v = c.createRadialGradient(W / 2, H / 2, u * 0.3, W / 2, H / 2, Math.max(W, H) * 0.75); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.45)"); c.fillStyle = v; c.fillRect(0, 0, W, H); grain(0.07);
+  }
+  // Tilted grid of rounded tiles scrolling diagonally (rows alternate direction)
+  const TILT = -0.32;
+  const tiltGrid = (t) => {
+    const s = u * 0.22, step = s * 1.16, L = Math.hypot(W, H), half = Math.ceil(L / step / 2) + 1, names = Object.keys(ICON), a = outC(clamp(t / 0.5));
+    c.save(); c.globalAlpha = a * 0.9; c.translate(W / 2, H / 2); c.rotate(TILT);
+    for (let r = -half; r <= half; r++) {
+      const off = (r % 2 ? 1 : -1) * t * u * 0.1, base = Math.floor(off / step), fr = off - base * step;
+      for (let k = -half; k <= half; k++) {
+        const id = k - base, x = k * step + fr, y = r * step;
+        c.fillStyle = "rgba(255,255,255,.045)"; rr(c, x - s / 2, y - s / 2, s, s, s * 0.3); c.fill(); c.strokeStyle = "rgba(255,255,255,.1)"; c.lineWidth = 1.5; c.stroke();
+        c.save(); c.translate(x, y); c.scale(s * 0.4 / 24, s * 0.4 / 24); c.translate(-12, -12); c.strokeStyle = "rgba(255,255,255,.4)"; c.lineWidth = 1.6; c.lineCap = c.lineJoin = "round";
+        ICON[names[(((id * 7 + r * 3) % names.length) + names.length) % names.length]].forEach((d) => c.stroke(d)); c.restore();
+      }
+    }
+    c.restore(); c.fillStyle = "rgba(0,0,0,.25)"; c.fillRect(0, 0, W, H);
+  };
+  // Kinetic words: each word slides in from the right with motion blur; the whole line slides out left, blurred
+  const fwords = (txt, t, idx, box, SDv, ee) => {
+    c.save(); c.textAlign = "left"; c.textBaseline = "middle";
+    const size = u * (wide ? 0.088 : 0.094) * box.sc; F(700, size, HEAD, -0.035);
+    const sp = c.measureText(" ").width, ws = txt.split(/\s+/).filter(Boolean), lines = []; let cur = [], cw = 0;
+    ws.forEach((w) => { const ww = c.measureText(w).width; if (cw + ww > box.mw && cur.length) { lines.push({ cur, cw }); cur = []; cw = 0; } cur.push({ w, ww }); cw += ww + sp; });
+    lines.push({ cur, cw });
+    const nW = ws.length, stag = Math.max(0.07, Math.min(0.2, (SDv - 1.1) * 0.8 / nW)), lh = size * 1.08, y0 = box.cy - (lines.length - 1) * lh / 2;
+    c.translate(box.cx, box.cy); c.rotate(box.rot || 0); c.translate(-box.cx, -box.cy); c.translate(-ee * W * 0.4, 0);
+    c.shadowColor = "rgba(0,0,0,.35)"; c.shadowBlur = size * 0.2; c.shadowOffsetY = size * 0.05;
+    let k = 0;
+    lines.forEach((L, li) => {
+      let x = box.cx - (L.cw - sp) / 2;
+      L.cur.forEach((o) => {
+        const hl = HL.has(o.w.toLowerCase().replace(/[^a-z]/g, "")) || k === nW - 1, p = clamp((t - 0.12 - k * stag) / 0.5), q = outC(p); k++;
+        if (p > 0) {
+          sfx(`w${idx}_${k}`, hl ? "pop" : "type");
+          const a0 = q * (1 - ee), bl = Math.min(1, (1 - q) + ee * 1.2), X = x + (1 - q) * size * 1.4, Y = y0 + li * lh;
+          c.fillStyle = "#F5F3EE";
+          if (bl > 0.04) { c.shadowColor = "transparent"; for (let g = 3; g >= 1; g--) { c.globalAlpha = a0 * 0.2; c.fillText(o.w, X + g * size * 0.22 * bl, Y); } c.shadowColor = "rgba(0,0,0,.35)"; }
+          c.globalAlpha = a0 * (1 - 0.35 * bl); c.fillText(o.w, X, Y);
+        }
+        x += o.ww + sp;
+      });
+    });
+    c.restore();
+  };
+  const fscene = (idx, lt) => {
+    const SDv = D[idx]; SD = SDv;
+    const e = clamp((lt - (SDv - TRN)) / TRN), ee = e * e; let lay = spec(idx).layout; if (lay === "none" && idx % 2) lay = "tilt";
+    c.save(); c.globalAlpha = 1 - ee; c.translate(-ee * W * 0.3, 0);
+    if (lay === "tilt") tiltGrid(lt); else if (lay === "phone") phone(lt, idx, true); else vis(lt, idx, true);
+    c.restore(); c.filter = "none";
+    const box = lay === "phone" ? (wide ? { cx: W * 0.3, cy: H * 0.5, mw: W * 0.46, sc: 0.9 } : { cx: W / 2, cy: H * 0.21, mw: W * 0.84, sc: 0.8 })
+      : { cx: W / 2, cy: H * 0.5, mw: W * (lay === "tilt" ? 0.7 : 0.84), sc: 1, rot: lay === "tilt" ? TILT : 0 };
+    fwords(segs[idx], lt, idx, box, SDv, ee);
+  };
+  const fintro = (t) => {
+    flowBg(t); sfx("introhit", "hit");
+    const s = outC(clamp((t - 0.2) / 0.9)), e = clamp((t - (INTRO - 0.5)) / 0.5), ee = e * e;
+    c.save(); c.translate(W / 2 - ee * W * 0.3, H * 0.46); c.scale(0.8 + 0.2 * s, 0.8 + 0.2 * s); c.globalAlpha = s * (1 - ee);
+    if (s > 0) sfx("intrologo", "pop");
+    logoMorph(0, 0, u * 0.34, 1); c.restore();
+  };
+  const fdraw = (t) => {
+    if (t < INTRO) return fintro(t);
+    let idx = 0; while (idx < segs.length && t >= ST[idx] + D[idx]) idx++;
+    if (idx >= segs.length) return endCard(t - SCENES);
+    flowBg(t); sfx("s" + idx, "whoosh"); fscene(idx, t - ST[idx]);
+  };
+
+  // ==========================================
+  // STATIC POSTER (single still frame, reuses the phone screens + icon tiles above)
+  // ==========================================
+  const FOCUS_SCREEN = { stories: "stories", chats: "chat", live: "live", shop: "shop", jobs: "jobs", verified: "badge", privacy: "lock" };
+  const playBadge = (bx, by, bw, bh) => {
+    const ts = bh * 0.52, tx = bx + bh * 0.28, ty = by + (bh - ts) / 2;
+    c.save(); c.fillStyle = "#000"; rr(c, bx, by, bw, bh, bh * 0.18); c.fill(); c.strokeStyle = "#a1a1aa"; c.lineWidth = 2; c.stroke();
+    const poly = (pts, col) => { c.fillStyle = col; c.beginPath(); pts.forEach(([x, y], i) => c[i ? "lineTo" : "moveTo"](tx + x * ts, ty + y * ts)); c.closePath(); c.fill(); };
+    poly([[0, 0], [0, 1], [0.52, 0.5]], "#00a0ff"); poly([[0, 0], [0.52, 0.5], [0.78, 0.39]], "#00e676"); poly([[0, 1], [0.52, 0.5], [0.78, 0.61]], "#ff3a44"); poly([[0.78, 0.39], [1, 0.5], [0.78, 0.61], [0.64, 0.5]], "#ffd500");
+    c.textAlign = "left"; c.textBaseline = "alphabetic"; c.fillStyle = "#fff";
+    c.font = `500 ${bh * 0.17}px ${TEXT}`; c.fillText("GET IT ON", tx + ts + bh * 0.2, by + bh * 0.4);
+    c.font = `700 ${bh * 0.33}px ${TEXT}`; c.fillText("Google Play", tx + ts + bh * 0.2, by + bh * 0.74);
+    c.restore();
+  };
+  const phoneStatic = (cx, cy, w, kind, rot) => { idx0 = 0; c.save(); c.translate(cx, cy); c.rotate(rot); device(w, w * 2.05, w * 0.03, (sw, sh) => screen(kind, 2.2, sw, sh)); c.restore(); };
+  const drawPoster = (o) => {
+    const th = COLOR_THEMES[o.verified ? 0 : hash((o.head || "") + segs.join("")) % COLOR_THEMES.length];
+    TINT = th.accent; const side = W / H > 0.75, mg = u * 0.075, INK = "#F5F3EE", SUBC = "rgba(245,243,238,.62)";
+    const bgG = c.createLinearGradient(0, 0, W * 0.4, H); th.bg.forEach((col, i) => bgG.addColorStop(i / (th.bg.length - 1), col)); c.fillStyle = bgG; c.fillRect(0, 0, W, H);
+    blob(W * 0.82, H * 0.2, u * 0.95, th.blob); blob(W * 0.05, H * 0.95, u * 0.7, hexA(th.secondary, 0.14)); grain(0.09);
+    // wrapped, auto-fitting paragraph; returns bottom y
+    const para = (txt, x, top, mw, maxLines, size0, minSize, wt, fg, maxH, face, ls) => {
+      let size = size0, lines, lh;
+      for (;;) {
+        F(wt, size, face, ls); const sp = c.measureText(" ").width; lines = []; let cur = [], cw = 0;
+        String(txt).split(/\s+/).filter(Boolean).forEach((w) => { const ww = c.measureText(w).width; if (cw + ww > mw && cur.length) { lines.push(cur); cur = []; cw = 0; } cur.push(w); cw += ww + sp; });
+        lines.push(cur); lh = size * (face === HEAD ? 1.04 : 1.35);
+        if ((lines.length <= maxLines && lines.length * lh <= maxH) || size <= minSize) break;
+        size *= 0.94;
+      }
+      c.textBaseline = "middle"; c.textAlign = "left"; c.fillStyle = fg;
+      lines.forEach((L, li) => c.fillText(L.join(" "), x, top + lh * (li + 0.5)));
+      return top + lh * lines.length;
+    };
+    const fitF = (txt, maxW, fs0, wt, face, ls) => { let f = fs0; F(wt, f, face, ls); while (c.measureText(txt).width > maxW && f > 8) { f *= 0.94; F(wt, f, face, ls); } return f; };
+    const chip = (x, y, txt, right) => {
+      const fs = u * 0.028, ph = fs * 2.3; F(500, fs, TEXT, 0.01); const pw = c.measureText(txt).width + ph * 1.1, px = right ? x - pw : x;
+      c.fillStyle = "rgba(255,255,255,.06)"; rr(c, px, y, pw, ph, ph / 2); c.fill(); c.strokeStyle = "rgba(255,255,255,.2)"; c.lineWidth = Math.max(1, u * 0.0015); c.stroke();
+      c.fillStyle = "rgba(245,243,238,.85)"; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText(txt, px + ph * 0.55, y + ph / 2 + fs * 0.04); return ph;
+    };
+    const pill = (x, cy, maxW, fs0) => {
+      const label = "Get Verified \u00b7 " + VERIFIED_PRICE, meas = (f) => { F(600, f, TEXT, 0); const tw = c.measureText(label).width, ph = f * 2.2, ic = ph * 0.55; return { ph, ic, pw: tw + ic + ph * 0.9 }; };
+      let fs = fs0, q = meas(fs); while (q.pw > maxW && fs > 8) { fs *= 0.94; q = meas(fs); }
+      const py = cy - q.ph / 2; c.fillStyle = grad(x, py, x + q.pw, py, "#1d9bf0", "#4db4ff"); rr(c, x, py, q.pw, q.ph, q.ph / 2); c.fill();
+      c.save(); c.translate(x + q.ph * 0.3, py + (q.ph - q.ic) / 2); c.scale(q.ic / 24, q.ic / 24); c.fillStyle = "#fff"; c.fill(ICON.badge[0]); c.strokeStyle = "#1d9bf0"; c.lineWidth = 2.2; c.lineCap = c.lineJoin = "round"; c.stroke(ICON.badge[1]); c.restore();
+      c.fillStyle = "#fff"; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText(label, x + q.ph * 0.3 + q.ic + q.ph * 0.2, cy + fs * 0.04);
+    };
+    const infoLine = (x, cy, maxW, fs0) => {
+      if (o.verified) return pill(x, cy, maxW, fs0);
+      const t = "Connect. Create. Discover. Grow."; fitF(t, maxW, fs0, 400, TEXT, 0.01); c.fillStyle = SUBC; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText(t, x, cy);
+    };
+    const urlLine = (x, cy, maxW) => { fitF("habaapp.co.za", maxW, u * 0.046, 600, HEAD, -0.01); c.fillStyle = INK; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText("habaapp.co.za", x, cy); };
+    const icons = []; segs.forEach((_, i) => spec(i).icons.forEach((n) => !icons.includes(n) && icons.push(n)));
+    if (o.verified) icons.unshift("badge");
+    const tl = (icons.length ? icons : ["chat", "star", "zap"]).slice(0, 3), ts = u * 0.095;
+    const kind = FOCUS_SCREEN[o.focus] || (() => { const i = segs.findIndex((_, k) => spec(k).layout === "phone"); return screenFor(i < 0 ? 0 : i); })();
+    const lsz = u * 0.1;
+    if (side) {
+      const lw = Math.min(W * 0.52 - mg, u * 1.05), bw = u * 0.36, bh = bw * 0.3;
+      logoMorph(mg + lsz / 2, mg + lsz / 2, lsz, 1);
+      const chH = chip(mg, mg + lsz + u * 0.04, o.tag);
+      const top = mg + lsz + u * 0.04 + chH + u * 0.06, ctaH = u * 0.05 + u * 0.075 + bh + u * 0.05, ctaY = H - mg - ctaH;
+      const pw = Math.min(H * 0.82 / 2.05, W * 0.34), cx = W * 0.76, cy = H * 0.52, ph = pw * 2.05;
+      blob(cx, cy, u * 0.55, th.blob); phoneStatic(cx, cy, pw, kind, 0.05);
+      [[-0.46, -0.28, -0.12], [0.46, -0.04, 0.12]].forEach(([dx, dy, rot], i) => tl[i] && tile(tl[i], cx + dx * pw, cy + dy * ph, ts, true, 1, rot));
+      const hb = para(o.head, mg, top, lw, 5, u * 0.09, u * 0.04, 700, INK, Math.max(u * 0.2, ctaY - top - u * 0.14), HEAD, -0.035);
+      if (o.sub && ctaY - hb - u * 0.04 > u * 0.1) para(o.sub, mg, hb + u * 0.035, lw * 0.9, 3, u * 0.034, u * 0.025, 400, SUBC, ctaY - hb - u * 0.05, TEXT, 0);
+      urlLine(mg, ctaY + u * 0.025, lw); infoLine(mg, ctaY + u * 0.05 + u * 0.0375, lw, u * 0.03);
+      playBadge(mg, ctaY + u * 0.05 + u * 0.075 + u * 0.05, bw, bh);
+    } else {
+      const lw = W - 2 * mg, bandH = u * 0.2, bw = u * 0.4, bh = u * 0.12;
+      logoMorph(mg + lsz / 2, mg + lsz / 2, lsz, 1);
+      { const fs = u * 0.028, ph = fs * 2.3; chip(W - mg, mg + lsz / 2 - ph / 2, o.tag, true); }
+      const top = mg + lsz + u * 0.07;
+      const hb = para(o.head, mg, top, lw * 0.92, 3, u * 0.115, u * 0.05, 700, INK, H * 0.28, HEAD, -0.035);
+      let sb = hb;
+      if (o.sub) sb = para(o.sub, mg, hb + u * 0.03, lw * 0.82, 2, u * 0.036, u * 0.026, 400, SUBC, H * 0.1, TEXT, 0);
+      const pTop = sb + u * 0.05, vis = H - bandH - pTop, pw = Math.max(u * 0.34, Math.min(u * 0.5, vis * 1.35 / 2.05)), cx = W / 2;
+      blob(cx, pTop + vis * 0.4, u * 0.6, th.blob); phoneStatic(cx, pTop + pw * 2.05 / 2, pw, kind, 0);
+      [[-0.52, 0.2, -0.12], [0.52, 0.5, 0.12]].forEach(([dx, fy, rot], i) => tl[i] && tile(tl[i], cx + dx * pw, pTop + vis * fy, ts, true, 1, rot));
+      const bg2 = c.createLinearGradient(0, H - bandH * 1.8, 0, H); bg2.addColorStop(0, "rgba(5,7,13,0)"); bg2.addColorStop(0.45, "rgba(5,7,13,.94)"); bg2.addColorStop(1, "rgba(5,7,13,.99)");
+      c.fillStyle = bg2; c.fillRect(0, H - bandH * 1.8, W, bandH * 1.8);
+      const cy = H - bandH / 2 - u * 0.01, tx = mg + bw + u * 0.045, tw = W - mg - tx;
+      playBadge(mg, cy - bh / 2, bw, bh); urlLine(tx, cy - u * 0.03, tw); infoLine(tx, cy + u * 0.035, tw, u * 0.03);
+    }
+  };
+
+  return {
+    drawPoster, total, SEG, ST, SCENES,
+    draw(t) {
+      now = t; if (fluid) return fdraw(t); if (t < INTRO) return intro(t);
+      let idx = 0; while (idx < segs.length && t >= ST[idx] + D[idx]) idx++;
+      if (idx >= segs.length) return endCard(t - SCENES);
+      SD = D[idx]; const lt = t - ST[idx], kind = idx % 4, mode = idx % 2 ? "dark" : "light";
+      bg(lt, mode === "dark"); sfx("s" + idx, "whoosh");
+      const ph = spec(idx).layout === "phone";
+      if (ph) phone(lt, idx, mode === "dark"); else vis(lt, idx, mode === "dark");
+      words(segs[idx], lt, mode, idx, ph ? (wide ? { cx: W * 0.3, cy: H * 0.5, mw: W * 0.46, sc: 0.9 } : { cx: W / 2, cy: H * 0.21, mw: W * 0.84, sc: 0.8 }) : { cx: W / 2, cy: H * 0.5, mw: W * 0.84, sc: 1 });
+    }
+  };
+}
+
+// Synthesized SFX: type, pop, ding, whoosh, hit — all scheduled at time t
+function playSfx(ctx, dest, type, t) {
+  const osc = (f0, f1, len, v, ty = "sine", at = t) => {
+    const o = ctx.createOscillator(), e = ctx.createGain(); o.type = ty;
+    o.frequency.setValueAtTime(f0, at); o.frequency.exponentialRampToValueAtTime(f1, at + len);
+    e.gain.setValueAtTime(v, at); e.gain.exponentialRampToValueAtTime(0.0001, at + len);
+    o.connect(e); e.connect(dest); o.start(at); o.stop(at + len + 0.02);
+  };
+  const noise = (len, v, f0, f1) => {
+    const b = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * len), ctx.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), e = ctx.createGain();
+    s.buffer = b; f.type = "bandpass"; f.Q.value = 1.2;
+    f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + len * 0.6);
+    e.gain.setValueAtTime(0.0001, t); e.gain.linearRampToValueAtTime(v, t + len * 0.4); e.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    s.connect(f); f.connect(e); e.connect(dest); s.start(t);
+  };
+  if (type === "type") osc(1800, 600, 0.03, 0.05, "square");
+  else if (type === "pop") osc(300, 950, 0.09, 0.16);
+  else if (type === "ding") { osc(1318, 1318, 0.35, 0.1); osc(1760, 1760, 0.4, 0.08, "sine", t + 0.09); }
+  else if (type === "whoosh") noise(0.55, 0.35, 300, 4000);
+  else if (type === "hit") { osc(140, 35, 0.5, 0.6); noise(0.3, 0.2, 2000, 500); }
+}
+
+// Procedural Synth Music Engine
+function scheduleMusic(ctx, dest, t0, dur, style) {
+  const chill = style === "chill";
+  const bpm = chill ? 90 : 124, spb = 60 / bpm, step = spb / 4, BASE = 0.35;
+  const duck = ctx.createGain(), fade = ctx.createGain();
+  duck.connect(fade); fade.connect(dest);
+  fade.gain.setValueAtTime(0, t0);
+  fade.gain.linearRampToValueAtTime(BASE, t0 + 0.5);
+  fade.gain.setValueAtTime(BASE, Math.max(t0 + 0.5, t0 + dur - 1.0));
+  fade.gain.linearRampToValueAtTime(0, t0 + dur);
+
+  const nb = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate), nd = nb.getChannelData(0);
+  for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+  const hz = (n) => 440 * Math.pow(2, (n - 69) / 12);
+  const env = (g, t, len, v) => { g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(v, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + len); };
+
+  const kick = (t, v) => {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.12);
+    env(g, t, 0.25, v); o.connect(g); g.connect(duck); o.start(t); o.stop(t + 0.3);
+  };
+
+  const noise = (t, len, freq, v) => {
+    const sr = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    sr.buffer = nb; f.type = "highpass"; f.frequency.value = freq;
+    env(g, t, len, v); sr.connect(f); f.connect(g); g.connect(duck); sr.start(t, Math.random() * 0.5, len + 0.05);
+  };
+
+  const tone = (n, t, len, v) => {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = "triangle"; o.frequency.value = hz(n);
+    env(g, t, len, v); o.connect(g); g.connect(duck); o.start(t); o.stop(t + len + 0.05);
+  };
+
+  const bars = Math.ceil(dur / (spb * 4));
+  for (let b = 0; b < bars; b++) {
+    for (let s = 0; s < 16; s++) {
+      const t = t0 + (b * 16 + s) * step;
+      if (t > t0 + dur - 0.1) return duck;
+      if (s % 4 === 0) kick(t, 0.8);
+      if (s === 4 || s === 12) noise(t, 0.12, 2000, 0.3);
+      if (s % 2 === 0) tone(57 + (s % 4), t, step * 1.5, 0.15);
+    }
+  }
+  return duck;
+}
+
+// WebCodecs MP4 Exporter with Offline Audio Processing
+async function renderMotion(lines, platform, clips, music) {
+  const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.0/+esm");
+  let [W, H] = platform === "youtube" ? [1280, 720] : platform === "facebook" ? [720, 720] : [720, 1280];
+  // phones: render at 75% size so the browser doesn't run out of memory / freeze
+  if (/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1) { W = Math.round(W * 0.75 / 2) * 2; H = Math.round(H * 0.75 / 2) * 2; }
+  const FPS = 30, SR = 44100;
+  
+  const wrap = $("vwrap");
+  wrap.className = "";
+  wrap.innerHTML = '<canvas id="cv" style="width:100%;max-height:70vh;object-fit:contain;border-radius:12px;background:#000"></canvas>';
+  const cv = $("cv"); cv.width = W; cv.height = H;
+
+  try {
+    await Promise.all([
+      document.fonts.load("700 40px Michroma"), document.fonts.load('700 40px "Bricolage Grotesque"'), document.fonts.load('400 40px "Instrument Sans"'), document.fonts.load('600 40px "Instrument Sans"'),
+      document.fonts.load('800 40px "Google Sans Flex"'),
+      document.fonts.load('500 40px "JetBrains Mono"')
+    ]);
+  } catch (e) {}
+
+  const segs = (lines || []).slice(0, 7).map(String);
+  
+  // Decode voice first so each scene lasts exactly as long as its narration (no dead air between lines)
+  let pre = [];
+  if (clips && clips.length && window.OfflineAudioContext) {
+    try {
+      const dctx = new OfflineAudioContext(2, SR, SR);
+      pre = await Promise.all(clips.map((b64) => dctx.decodeAudioData(Uint8Array.from(atob(b64), ch => ch.charCodeAt(0)).buffer)));
+    } catch (e) { pre = []; }
+  }
+  const durs = segs.map((_, i) => (pre[i] ? Math.max(1.6, pre[i].duration + 0.1) : 2.4));
+  const icons = VISUALS;
+  const m = makeMotion(cv.getContext("2d"), W, H, segs, LOGO, null, icons, HERO, durs);
+
+  let vcodec = "avc1.640028";
+  const wantMusic = music && music !== "none", hasVoice = clips && clips.length;
+  let dur = m.total;
+
+  // Offline Audio Context Setup (Includes Voice, Music & Sound Effects in exported MP4)
+  let audioBuf = null;
+  if (window.OfflineAudioContext) {
+    let bufs = pre;
+
+    const starts = bufs.map((_, i) => (i < segs.length ? m.ST[i] + 0.03 : m.SCENES + 0.3));
+    if (bufs.length) dur = Math.max(m.total, ...bufs.map((b, i) => starts[i] + b.duration + 0.3));
+
+    const octx = new OfflineAudioContext(2, Math.ceil(dur * SR), SR);
+    const duck = wantMusic ? scheduleMusic(octx, octx.destination, 0, dur, music) : null;
+
+    // Offline Sound Effects Trigger
+    const offlineSfxTrigger = (type, at) => playSfx(octx, octx.destination, type, at);
+
+    bufs.forEach((b, i) => {
+      const src = octx.createBufferSource();
+      src.buffer = b;
+      src.connect(octx.destination);
+      src.start(starts[i]);
+      if (duck) {
+        duck.gain.setTargetAtTime(0.2, Math.max(0, starts[i] - 0.05), 0.06);
+        duck.gain.setTargetAtTime(1, starts[i] + b.duration + 0.1, 0.3);
+      }
+    });
+
+    // Re-run motion draw timeline onto offline audio context to bake typing & pop SFX into video file
+    const offlineMotion = makeMotion(cv.getContext("2d"), W, H, segs, LOGO, offlineSfxTrigger, icons, HERO, durs);
+    const totalFrames = Math.ceil(dur * FPS);
+    for (let f = 0; f < totalFrames; f += 6) {
+      offlineMotion.draw(f / FPS);
+    }
+
+    audioBuf = await octx.startRendering();
+  }
+
+  const muxer = new Muxer({
+    target: new ArrayBufferTarget(),
+    video: { codec: "avc", width: W, height: H, frameRate: FPS },
+    ...(audioBuf ? { audio: { codec: "aac", numberOfChannels: 2, sampleRate: SR } } : {}),
+    fastStart: "in-memory"
+  });
+
+  let encErr = null;
+
+  // Encode AAC Audio
+  if (audioBuf && window.AudioEncoder) {
+    const aenc = new AudioEncoder({ output: (c, meta) => muxer.addAudioChunk(c, meta), error: (e) => (encErr = e) });
+    aenc.configure({ codec: "mp4a.40.2", sampleRate: SR, numberOfChannels: 2, bitrate: 128000 });
+    const L = audioBuf.getChannelData(0), R = audioBuf.getChannelData(1), CH = 4096;
+    for (let o = 0; o < L.length; o += CH) {
+      const n = Math.min(CH, L.length - o), data = new Float32Array(n * 2);
+      data.set(L.subarray(o, o + n), 0); data.set(R.subarray(o, o + n), n);
+      const ad = new AudioData({ format: "f32-planar", sampleRate: SR, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round((o / SR) * 1e6), data });
+      aenc.encode(ad); ad.close();
+    }
+    await aenc.flush(); aenc.close();
+  }
+
+  // Encode H.264 Video
+  const venc = new VideoEncoder({ output: (c, meta) => muxer.addVideoChunk(c, meta), error: (e) => (encErr = e) });
+  venc.configure({ codec: vcodec, width: W, height: H, bitrate: 4e6, framerate: FPS });
+
+  const N = Math.ceil(dur * FPS);
+  for (let i = 0; i < N; i++) {
+    m.draw(Math.min(i / FPS, m.total - 0.01));
+    const f = new VideoFrame(cv, { timestamp: Math.round((i * 1e6) / FPS), duration: Math.round(1e6 / FPS) });
+    venc.encode(f, { keyFrame: i % FPS === 0 });
+    f.close();
+    while (venc.encodeQueueSize > 6) await new Promise((r) => setTimeout(r, 8));
+    if (i % 6 === 0) {
+      say(`Rendering your video ad... ${Math.round((i / N) * 100)}% (keep this screen open)`);
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+  await venc.flush(); venc.close();
+  muxer.finalize();
+
+  const blob = new Blob([muxer.target.buffer], { type: "video/mp4" });
+  const url = URL.createObjectURL(blob);
+  wrap.innerHTML = `<video src="${url}" controls playsinline loop autoplay style="max-height:70vh"></video><a href="${url}" download="haba-ad.mp4" style="display:block;margin-top:10px;color:var(--accent);font-weight:600;">Download Video (.mp4)</a>`;
+}
+
+// Poster exporter: draws one still frame and hands back a PNG
+async function renderPoster(plan, size) {
+  const SZ = { story: [1080, 1920], portrait: [1080, 1350], square: [1080, 1080], a4: [1240, 1754], landscape: [1920, 1080] };
+  const [W, H] = SZ[size] || SZ.portrait;
+  const wrap = $("vwrap"); wrap.className = "";
+  wrap.innerHTML = '<canvas id="cv" class="hide"></canvas>';
+  const cv = $("cv"); cv.width = W; cv.height = H;
+  try {
+    await Promise.all([
+      document.fonts.load("700 40px Michroma"), document.fonts.load('700 40px "Bricolage Grotesque"'), document.fonts.load('400 40px "Instrument Sans"'), document.fonts.load('600 40px "Instrument Sans"'),
+      document.fonts.load('800 40px "Google Sans Flex"'),
+      document.fonts.load('500 40px "Google Sans Flex"')
+    ]);
+  } catch (e) {}
+  const segs = (plan.lines || []).slice(0, 7).map(String);
+  const head = String(plan.hook || "").trim() || segs[0] || "Haba";
+  const sub = [segs[0], segs[1]].find((x) => x && x !== head) || "";
+  const f = $("focus"), tag = f.options[f.selectedIndex].text.split("·")[0].trim().slice(0, 30);
+  const m = makeMotion(cv.getContext("2d"), W, H, segs, LOGO, null, VISUALS, null, null);
+  m.drawPoster({ head, sub, tag, verified: VERIFIED_AD, focus: f.value });
+  const blob = await new Promise((r) => cv.toBlob(r, "image/png"));
+  const url = URL.createObjectURL(blob);
+  wrap.innerHTML = `<img src="${url}" alt="Haba poster" style="width:100%;max-height:75vh;object-fit:contain;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.3);margin-top:8px"><a href="${url}" download="haba-poster.png" style="display:block;margin-top:10px;color:var(--accent);font-weight:600;">Download Poster (.png)</a>`;
+}
+
+// Logo Handling
+let LOGO = null, HERO = null, VISUALS = null, VERIFIED_AD = false, FLUID = true;
+const setLogo = (dataUrl) => new Promise((ok) => {
+  if (!dataUrl) { LOGO = null; $("logoPrev").classList.add("hide"); $("logoX").classList.add("hide"); return ok(true); }
+  const im = new Image();
+  im.onload = () => { LOGO = im; $("logoPrev").src = dataUrl; $("logoPrev").classList.remove("hide"); $("logoX").classList.remove("hide"); ok(true); };
+  im.onerror = () => { LOGO = null; ok(false); };
+  im.src = dataUrl;
+});
+
+$("logo").onchange = () => {
+  const f = $("logo").files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => setLogo(r.result);
+  r.readAsDataURL(f);
+};
+$("logoX").onclick = () => { setLogo(null); $("logo").value = ""; };
+
+// Generate Button Handler
+$("go").onclick = async () => {
+  const btn = $("go"); btn.disabled = true; $("result").classList.add("hide");
+  say($("mode").value === "poster" ? "Writing your poster copy..." : "Generating script and setting up mobile mockup...");
+  try {
+    VERIFIED_AD = isVerified();
+    const isPoster = $("mode").value === "poster";
+    const vBrief = VERIFIED_AD
+      ? `Advertise the Haba Verified Badge, sold for ${VERIFIED_PRICE} (South African rand, one-time) to secure your account and be trusted. Clearly state the price ${VERIFIED_PRICE} and the call to action "Get Verified". Cover these benefits: ` + VERIFIED_BENEFITS.map(([h, d]) => h + " (" + d + ")").join("; ") + ". Show the blue verified tick on a phone profile screen (screen: badge)."
+      : "";
+    $("offer").innerHTML = VERIFIED_AD ? verifiedHTML("Verified Badge Offer") : "";
+    $("offer").classList.toggle("hide", !VERIFIED_AD);
+    const r = await start({
+      focus: $("focus").value,
+      details: [vBrief, isPoster ? POSTER_BRIEF : FLOW_BRIEF, $("details").value].filter(Boolean).join(" "),
+      graphics: $("graphics").value,
+      iconNames: Object.keys(ICON),
+      visualsHint: "Also return plan.visuals: one object per line, {layout: phone|orbit|row|big|burst|corners|none, screen: chat|stories|live|shop|jobs|badge|lock|feed (only for phone), icons: [up to 4 iconNames]}. Show the phone for roughly a third of the lines, matching the feature being advertised, and use none for several lines. Be creative, vary layouts, match each line.",
+      audience: $("audience").value,
+      tone: $("tone").value,
+      platform: isPoster ? POSTER_PLATFORM[$("psize").value] : $("platform").value,
+      duration: isPoster ? "8" : $("duration").value,
+      mode: isPoster ? "motion" : $("mode").value
+    });
+
+    VISUALS = Array.isArray(r.data.plan.visuals) ? r.data.plan.visuals : null;
+    showPlan(r.data.plan);
+    $("result").classList.remove("hide");
+
+    if (isPoster) {
+      say("Designing your poster...");
+      await renderPoster(r.data.plan, $("psize").value);
+      say("Poster ready!");
+      btn.disabled = false;
+      return;
+    }
+
+    if ($("mode").value === "motion") {
+      let clips = null;
+      if ($("voice").value !== "none") {
+        say("Generating voiceover audio...");
+        try {
+          const spoken = r.data.plan.lines.slice(0, 7).map(String);
+          clips = (await voiceFn({ lines: [...spoken, "Connect. Create. Discover. Grow."], voice: $("voice").value })).data.clips;
+        } catch (e) { say("Voiceover failed, rendering without voice...", true); }
+      }
+      HERO = null; FLUID = $("mstyle").value === "fluid";
+      say("Rendering video... keep this screen open");
+      let wl = null; try { wl = await navigator.wakeLock.request("screen"); } catch (e) {}
+      try { await renderMotion(r.data.plan.lines, $("platform").value, clips, $("music").value); }
+      finally { try { wl && wl.release(); } catch (e) {} }
+      say("Video generated successfully!");
+      btn.disabled = false;
+      return;
+    }
+
+    // AI Cloud Fallback Status Loop
+    for (let i = 0; i < 60; i++) {
+      await new Promise(r => setTimeout(r, 4000));
+      const s = (await status({ requestId: r.data.requestId })).data;
+      if (s.status === "done" && s.url) {
+        $("vwrap").innerHTML = `<video src="${esc(s.url)}" controls playsinline></video><a href="${esc(s.url)}" target="_blank">Download AI Video</a>`;
+        say("AI Video Ready!"); btn.disabled = false; return;
+      }
+    }
+  } catch (e) {
+    say("Generation error. Please check your options and try again.", true);
+    btn.disabled = false;
+  }
+};
+</script>
+</body>
+</html>
