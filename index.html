@@ -799,7 +799,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
     const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, th.bg[0]); g.addColorStop(1, th.bg[1]); c.fillStyle = g; c.fillRect(0, 0, W, H);
     [[0.2, 0.25, 0.7, th.accent, 0.8, 0], [0.8, 0.3, 0.5, th.secondary, 0.6, 2], [0.5, 0.85, 0.9, th.accent, 0.7, 4], [0.1, 0.9, 0.6, th.secondary, 0.5, 1]].forEach(([fx, fy, sp, col, a, ph]) => {
       const x = W * (fx + 0.22 * Math.sin(t * 0.55 * sp + ph)), y = H * (fy + 0.2 * Math.cos(t * 0.45 * sp + ph * 1.7)), r = u * 0.85 * (0.8 + 0.25 * Math.sin(t * 0.7 + ph));
-      const k = c.createRadialGradient(x, y, 0, x, y, r); k.addColorStop(0, hexA(col, a)); k.addColorStop(1, hexA(col, 0)); c.fillStyle = k; c.fillRect(0, 0, W, H);
+      const k = c.createRadialGradient(x, y, 0, x, y, r); k.addColorStop(0, hexA(col, a)); k.addColorStop(1, hexA(col, 0)); c.fillStyle = k; c.fillRect(x - r, y - r, r * 2, r * 2);
     });
     const v = c.createRadialGradient(W / 2, H / 2, u * 0.3, W / 2, H / 2, Math.max(W, H) * 0.75); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.35)"); c.fillStyle = v; c.fillRect(0, 0, W, H);
   }
@@ -828,7 +828,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
     lines.push({ cur, cw });
     const nW = ws.length, stag = Math.max(0.07, Math.min(0.2, (SDv - 1.1) * 0.8 / nW)), lh = size * 1.25, y0 = box.cy - (lines.length - 1) * lh / 2;
     c.translate(box.cx, box.cy); c.rotate(box.rot || 0); c.translate(-box.cx, -box.cy); c.translate(-ee * W * 0.4, 0);
-    c.shadowColor = "rgba(0,0,0,.35)"; c.shadowBlur = size * 0.18;
+    c.shadowColor = "rgba(0,0,0,.3)"; c.shadowOffsetY = size * 0.04;
     let k = 0;
     lines.forEach((L, li) => {
       let x = box.cx - (L.cw - sp) / 2;
@@ -836,8 +836,10 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
         const hl = HL.has(o.w.toLowerCase().replace(/[^a-z]/g, "")) || k === nW - 1, p = clamp((t - 0.12 - k * stag) / 0.5), q = outC(p); k++;
         if (p > 0) {
           sfx(`w${idx}_${k}`, hl ? "pop" : "type");
-          c.globalAlpha = q * (1 - ee); c.filter = `blur(${(1 - q) * 16 + ee * 22}px)`;
-          c.fillStyle = hl ? lite(th.accent, 0.55) : "#fff"; c.fillText(o.w, x + (1 - q) * size * 1.4, y0 + li * lh); c.filter = "none";
+          const a0 = q * (1 - ee), bl = Math.min(1, (1 - q) + ee * 1.2), X = x + (1 - q) * size * 1.4, Y = y0 + li * lh;
+          c.fillStyle = hl ? lite(th.accent, 0.55) : "#fff";
+          if (bl > 0.04) { c.shadowColor = "transparent"; for (let g = 3; g >= 1; g--) { c.globalAlpha = a0 * 0.22; c.fillText(o.w, X + g * size * 0.22 * bl, Y); } c.shadowColor = "rgba(0,0,0,.3)"; }
+          c.globalAlpha = a0 * (1 - 0.35 * bl); c.fillText(o.w, X, Y);
         }
         x += o.ww + sp;
       });
@@ -847,7 +849,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
   const fscene = (idx, lt) => {
     const SDv = D[idx]; SD = SDv;
     const e = clamp((lt - (SDv - TRN)) / TRN), ee = e * e; let lay = spec(idx).layout; if (lay === "none" && idx % 2) lay = "tilt";
-    c.save(); c.globalAlpha = 1 - ee; c.translate(-ee * W * 0.3, 0); if (ee > 0) c.filter = `blur(${ee * u * 0.03}px)`;
+    c.save(); c.globalAlpha = 1 - ee; c.translate(-ee * W * 0.3, 0);
     if (lay === "tilt") tiltGrid(lt); else if (lay === "phone") phone(lt, idx, true); else vis(lt, idx, true);
     c.restore(); c.filter = "none";
     const box = lay === "phone" ? (wide ? { cx: W * 0.3, cy: H * 0.5, mw: W * 0.46, sc: 0.9 } : { cx: W / 2, cy: H * 0.21, mw: W * 0.84, sc: 0.8 })
@@ -857,9 +859,9 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
   const fintro = (t) => {
     flowBg(t); sfx("introhit", "hit");
     const s = outC(clamp((t - 0.2) / 0.9)), e = clamp((t - (INTRO - 0.5)) / 0.5), ee = e * e;
-    c.save(); c.translate(W / 2 - ee * W * 0.3, H * 0.46); c.scale(0.8 + 0.2 * s, 0.8 + 0.2 * s); c.globalAlpha = s * (1 - ee); c.filter = `blur(${(1 - s) * 28 + ee * 20}px)`;
+    c.save(); c.translate(W / 2 - ee * W * 0.3, H * 0.46); c.scale(0.8 + 0.2 * s, 0.8 + 0.2 * s); c.globalAlpha = s * (1 - ee);
     if (s > 0) sfx("intrologo", "pop");
-    logoMorph(0, 0, u * 0.34, 1); c.restore(); c.filter = "none";
+    logoMorph(0, 0, u * 0.34, 1); c.restore();
   };
   const fdraw = (t) => {
     if (t < INTRO) return fintro(t);
@@ -1082,7 +1084,9 @@ function scheduleMusic(ctx, dest, t0, dur, style) {
 // WebCodecs MP4 Exporter with Offline Audio Processing
 async function renderMotion(lines, platform, clips, music) {
   const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.0/+esm");
-  const [W, H] = platform === "youtube" ? [1280, 720] : platform === "facebook" ? [720, 720] : [720, 1280];
+  let [W, H] = platform === "youtube" ? [1280, 720] : platform === "facebook" ? [720, 720] : [720, 1280];
+  // phones: render at 75% size so the browser doesn't run out of memory / freeze
+  if (/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1) { W = Math.round(W * 0.75 / 2) * 2; H = Math.round(H * 0.75 / 2) * 2; }
   const FPS = 30, SR = 44100;
   
   const wrap = $("vwrap");
@@ -1144,7 +1148,7 @@ async function renderMotion(lines, platform, clips, music) {
     // Re-run motion draw timeline onto offline audio context to bake typing & pop SFX into video file
     const offlineMotion = makeMotion(cv.getContext("2d"), W, H, segs, LOGO, offlineSfxTrigger, icons, HERO, durs);
     const totalFrames = Math.ceil(dur * FPS);
-    for (let f = 0; f < totalFrames; f += 2) {
+    for (let f = 0; f < totalFrames; f += 6) {
       offlineMotion.draw(f / FPS);
     }
 
@@ -1184,8 +1188,9 @@ async function renderMotion(lines, platform, clips, music) {
     const f = new VideoFrame(cv, { timestamp: Math.round((i * 1e6) / FPS), duration: Math.round(1e6 / FPS) });
     venc.encode(f, { keyFrame: i % FPS === 0 });
     f.close();
+    while (venc.encodeQueueSize > 6) await new Promise((r) => setTimeout(r, 8));
     if (i % 6 === 0) {
-      say(`Rendering your video ad... ${Math.round((i / N) * 100)}%`);
+      say(`Rendering your video ad... ${Math.round((i / N) * 100)}% (keep this screen open)`);
       await new Promise(r => setTimeout(r, 0));
     }
   }
@@ -1288,8 +1293,10 @@ $("go").onclick = async () => {
         } catch (e) { say("Voiceover failed, rendering without voice...", true); }
       }
       HERO = null; FLUID = $("mstyle").value === "fluid";
-      say("Rendering video...");
-      await renderMotion(r.data.plan.lines, $("platform").value, clips, $("music").value);
+      say("Rendering video... keep this screen open");
+      let wl = null; try { wl = await navigator.wakeLock.request("screen"); } catch (e) {}
+      try { await renderMotion(r.data.plan.lines, $("platform").value, clips, $("music").value); }
+      finally { try { wl && wl.release(); } catch (e) {} }
       say("Video generated successfully!");
       btn.disabled = false;
       return;
