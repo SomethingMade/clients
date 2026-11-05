@@ -313,6 +313,7 @@ input[type=range] { padding: 0; border: 0; background: none; box-shadow: none; a
       <label>Motion Style</label>
       <select id="mstyle">
         <option value="pop">Creator Pop (springy pills, outlined type, sticker badges, whip transitions)</option>
+        <option value="pro">Pro Studio (bold editorial type, accent wipes, dark / light / colour scenes, no icons)</option>
         <option value="clean">Clean Glass (light, word-by-word text, frosted pill cards, no icons)</option>
         <option value="fluid">Fluid Glass (flowing gradient, blur-slide transitions)</option>
         <option value="classic">Classic (black &amp; white scenes)</option>
@@ -635,7 +636,7 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
   const u = Math.min(W, H), wide = W > H;
   const OR = "#ee6c3a", TE = "#4f9da6", HL = new Set(HIGHLIGHT_WORDS);
   const played = new Set(); let now = 0;
-  const fluid = typeof FLUID !== "undefined" && !!FLUID, popm = typeof POPM !== "undefined" && !!POPM, clean = typeof CLEANM !== "undefined" && !!CLEANM, TRN = 0.32;
+  const fluid = typeof FLUID !== "undefined" && !!FLUID, popm = typeof POPM !== "undefined" && !!POPM, clean = typeof CLEANM !== "undefined" && !!CLEANM, pro = typeof PROM !== "undefined" && !!PROM, TRN = 0.32;
   const sfx = (k, type) => { if (!played.has(k)) { played.add(k); if (sfxFn) sfxFn(type, now); } };
   const F = (wt, px, face, ls) => { c.font = `${wt} ${px}px ${face || TEXT}`; if ("letterSpacing" in c) c.letterSpacing = ls ? (ls * px).toFixed(2) + "px" : "0px"; };
   const dw = (w, x, y, col) => {
@@ -886,8 +887,9 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
     if (n >= 6) logoBg = `rgb(${Math.round(R / n)},${Math.round(G / n)},${Math.round(B / n)})`;
   } catch (e) {} }
   if (fluid) endDark = !th.light;
+  if (pro) endDark = true;
   const endCard = (t) => {
-    if (clean) cbg(t + SCENES, false); else if (fluid) flowBg(t + SCENES); else bg(t, endDark); sfx("end", "hit");
+    if (pro) proBg(t + SCENES, true, false); else if (clean) cbg(t + SCENES, false); else if (fluid) flowBg(t + SCENES); else bg(t, endDark); sfx("end", "hit");
     const s = backE(clamp(t / 0.6)), a = clamp((t - 0.4) / 0.4), fg = endDark ? "#fff" : "#000", lsz = u * 0.3, lcy = H * (wide ? 0.36 : 0.4), uy = lcy + lsz / 2 + u * 0.1;
     c.save(); c.translate(W / 2, lcy); c.scale(s, s); c.textAlign = "center"; c.textBaseline = "middle";
     if (logo) { logoMorph(0, 0, lsz, backE(clamp((t - 0.1) / 0.8))); } else { c.fillStyle = fg; c.font = `900 ${u * 0.16}px ${BRAND}`; c.fillText("Haba.", 0, 0); }
@@ -1470,10 +1472,87 @@ function makeMotion(c, W, H, segs, logo, sfxFn, visuals, hero, durs) {
     sfx("s" + idx, "whoosh"); cscene(idx, t - ST[idx]);
   };
 
+  // ==========================================
+  // PRO STUDIO STYLE: editorial type with masked line reveals, accent wipe transitions, dark / light / colour scenes, no icons
+  // ==========================================
+  const PA = brandColor(logo) || "#4f6bff", MONO = '"JetBrains Mono", ui-monospace, monospace', PM = u * 0.06;
+  const proBg = (t, dark, accent) => {
+    if (accent) { c.fillStyle = PA; c.fillRect(0, 0, W, H); c.fillStyle = grad(0, 0, W, H, "rgba(255,255,255,.2)", "rgba(0,0,0,.2)"); c.fillRect(0, 0, W, H); blob(W * 0.15, H * 0.9, u * 0.9, "rgba(255,255,255,0.16)"); return; }
+    c.fillStyle = dark ? "#0a0e1a" : "#f5f4f0"; c.fillRect(0, 0, W, H);
+    blob(W * 0.9, H * 0.08 + Math.sin(t * 0.6) * u * 0.03, u * 1.0, hexA(PA, dark ? 0.3 : 0.15));
+    blob(W * 0.05, H * 0.98, u * 0.7, hexA(PA, dark ? 0.12 : 0.06));
+    c.strokeStyle = dark ? "rgba(255,255,255,.045)" : "rgba(10,14,26,.05)"; c.lineWidth = 1; const g = u * 0.125; c.beginPath();
+    for (let x = g; x < W; x += g) { c.moveTo(x, 0); c.lineTo(x, H); } for (let y = g; y < H; y += g) { c.moveTo(0, y); c.lineTo(W, y); } c.stroke();
+  };
+  const proChrome = (t, idx, SDv, ink) => {
+    c.save(); c.globalAlpha = 0.9; c.textBaseline = "middle";
+    if (logo) logoMorph(PM + u * 0.035, PM * 1.1, u * 0.07, 1); else { c.fillStyle = ink; c.textAlign = "left"; F(800, u * 0.04, HEAD, -0.03); c.fillText("Haba.", PM, PM * 1.1); }
+    c.fillStyle = ink; c.globalAlpha = 0.6; c.textAlign = "right"; F(500, u * 0.024, MONO, 0.06); c.fillText(String(idx + 1).padStart(2, "0") + " / " + String(segs.length).padStart(2, "0"), W - PM, PM * 1.1);
+    c.globalAlpha = 1; c.fillStyle = ink === "#fff" ? "rgba(255,255,255,.18)" : "rgba(10,14,26,.12)"; c.fillRect(PM, H - PM * 0.9, W - PM * 2, 3);
+    c.fillStyle = ink === "#0a0e1a" ? PA : "#fff"; c.fillRect(PM, H - PM * 0.9, (W - PM * 2) * clamp(t / SDv), 3); c.restore();
+  };
+  // Lines slide up from behind a mask; highlight words take the accent colour
+  const proText = (idx, txt, t, SDv, x, cy, size, mw, align, ink, hi) => {
+    c.save(); c.textBaseline = "middle"; c.textAlign = "left"; F(800, size, HEAD, -0.04);
+    const sp = c.measureText(" ").width, ws = txt.split(/\s+/).filter(Boolean), L = []; let cur = [], cw = 0;
+    ws.forEach((w, i) => { const ww = c.measureText(w).width; if (cw + ww > mw && cur.length) { L.push({ cur, cw: cw - sp }); cur = []; cw = 0; } cur.push({ w, ww, hl: HL.has(w.toLowerCase().replace(/[^a-z]/g, "")) || i === ws.length - 1 }); cw += ww + sp; }); L.push({ cur, cw: cw - sp });
+    const lh = size * 1.1, y0 = cy - (L.length - 1) * lh / 2, ee = outC(clamp((t - (SDv - 0.3)) / 0.28));
+    L.forEach((ln, li) => {
+      const p = outC(clamp((t - 0.35 - li * 0.12) / 0.5)), yc = y0 + li * lh; if (p <= 0) return; sfx(`pl${idx}_${li}`, "type");
+      let px = align === "center" ? x - ln.cw / 2 : x;
+      c.save(); c.beginPath(); c.rect(0, yc - lh * 0.52, W, lh * 1.04); c.clip();
+      const dy = (1 - p) * lh * 1.1 - ee * lh * 1.1; ln.cur.forEach((o) => { c.fillStyle = o.hl ? hi : ink; c.fillText(o.w, px, yc + dy); px += o.ww + sp; });
+      c.restore();
+    });
+    c.restore(); return { top: y0 - lh * 0.5, bottom: y0 + (L.length - 0.5) * lh, lh, ee };
+  };
+  const proTag = (x, y, label, p, out, ink, line) => {
+    if (p <= 0) return; const q = outC(p); F(600, u * 0.03, HEAD, 0); const w = c.measureText(label).width + u * 0.06, h = u * 0.062;
+    c.save(); c.globalAlpha = q * (1 - out); c.translate(x, y + (1 - q) * h * 0.6); rr(c, 0, -h / 2, w, h, h / 2); c.strokeStyle = line; c.lineWidth = 2; c.stroke();
+    c.fillStyle = ink; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText(label, u * 0.03, h * 0.02); c.restore(); return w;
+  };
+  const proScene = (idx, t) => {
+    const SDv = D[idx], kind = idx % 3, txt = segs[idx], sz = u * (wide ? 0.085 : 0.105), mw = W - PM * 2.4;
+    if (kind === 0) {
+      proBg(t, true, false); const r = proText(idx, txt, t, SDv, PM * 1.2, H * 0.5, sz, mw, "left", "#fff", PA);
+      const bw = outC(clamp((t - 0.9) / 0.5)) * u * 0.24 * (1 - r.ee); c.fillStyle = PA; c.fillRect(PM * 1.2, r.bottom + u * 0.035, bw, u * 0.014); proChrome(t, idx, SDv, "#fff");
+    } else if (kind === 1) {
+      proBg(t, false, false); const nA = outC(clamp((t - 0.15) / 0.6)) * (1 - outC(clamp((t - (SDv - 0.3)) / 0.28)));
+      c.save(); c.globalAlpha = nA; c.textAlign = "right"; c.textBaseline = "middle"; F(800, u * 0.5, HEAD, -0.05); c.strokeStyle = hexA(PA, 0.35); c.lineWidth = 2.5; c.strokeText(String(idx + 1).padStart(2, "0"), W - PM * 0.6, H * 0.27); c.restore();
+      const bx = PM * 1.2, r = proText(idx, txt, t, SDv, bx + u * 0.04, H * 0.52, sz * 0.92, mw - u * 0.04, "left", "#0a0e1a", PA);
+      const bh = (r.bottom - r.top) * outC(clamp((t - 0.2) / 0.6)) * (1 - r.ee); c.fillStyle = PA; c.fillRect(bx, r.top + (r.bottom - r.top - bh) / 2, u * 0.012, bh);
+      const out = r.ee; let tx = bx + u * 0.04; labelsFor(txt).forEach((s, i) => { const w = proTag(tx, r.bottom + u * 0.09, s, clamp((t - 1 - i * 0.15) / 0.4), out, "#0a0e1a", "rgba(10,14,26,.35)"); if (w) tx += w + u * 0.02; });
+      proChrome(t, idx, SDv, "#0a0e1a");
+    } else {
+      proBg(t, false, true); const r = proText(idx, txt, t, SDv, W / 2, H * 0.5, sz * 1.08, mw, "center", "#fff", "#0a0e1a");
+      const lw = outC(clamp((t - 0.9) / 0.5)) * u * 0.3 * (1 - r.ee); c.fillStyle = "#fff"; c.fillRect(W / 2 - lw / 2, r.bottom + u * 0.04, lw, u * 0.012); proChrome(t, idx, SDv, "#fff");
+    }
+  };
+  const proIntro = (t) => {
+    proBg(t, true, false); sfx("introhit", "hit");
+    const s = outC(clamp((t - 0.1) / 0.8)), e = outC(clamp((t - (INTRO - 0.4)) / 0.4)), ring = outC(clamp((t - 0.1) / 1.2));
+    c.save(); c.globalAlpha = (1 - ring) * 0.8; c.strokeStyle = PA; c.lineWidth = u * 0.008; c.beginPath(); c.arc(W / 2, H * 0.46, u * (0.14 + ring * 0.5), 0, Math.PI * 2); c.stroke(); c.restore();
+    c.save(); c.translate(W / 2, H * 0.46); const sc = 0.8 + 0.2 * s; c.scale(sc, sc); c.globalAlpha = s * (1 - e); if (s > 0) sfx("intrologo", "pop");
+    if (logo) logoMorph(0, 0, u * 0.3, 1); else { c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle"; F(900, u * 0.16, HEAD, -0.04); c.fillText("Haba.", 0, 0); }
+    c.restore(); c.fillStyle = PA; c.globalAlpha = 1 - e; c.fillRect(W / 2 - u * 0.12 * s, H * 0.46 + u * 0.24, u * 0.24 * s, u * 0.01); c.globalAlpha = 1;
+  };
+  // Accent band wipes across the screen at the start of every scene, revealing the new scene behind it
+  const proDraw = (t) => {
+    if (t < INTRO) return proIntro(t);
+    let idx = 0; while (idx < segs.length && t >= ST[idx] + D[idx]) idx++;
+    if (idx >= segs.length) return endCard(t - SCENES);
+    const lt = t - ST[idx]; sfx("s" + idx, "whoosh");
+    if (lt >= 0.6) return proScene(idx, lt);
+    const prev = idx === 0 ? 0 : (idx - 1) % 3; if (prev === 1) proBg(lt, false, false); else proBg(lt, prev === 0, prev === 2);
+    const L = outC(clamp((lt - 0.12) / 0.42)) * W, R = outC(clamp(lt / 0.42)) * W;
+    c.save(); c.beginPath(); c.rect(0, 0, L, H); c.clip(); proScene(idx, lt); c.restore();
+    if (R > L) { c.fillStyle = idx % 3 === 2 ? "#0a0e1a" : PA; c.fillRect(L, 0, R - L, H); }
+  };
+
   return {
     drawPoster, total, SEG, ST, SCENES,
     draw(t) {
-      now = t; if (clean) return cdraw(t); if (popm) return pdraw(t); if (fluid) return fdraw(t); if (t < INTRO) return intro(t);
+      now = t; if (pro) return proDraw(t); if (clean) return cdraw(t); if (popm) return pdraw(t); if (fluid) return fdraw(t); if (t < INTRO) return intro(t);
       let idx = 0; while (idx < segs.length && t >= ST[idx] + D[idx]) idx++;
       if (idx >= segs.length) return endCard(t - SCENES);
       SD = D[idx]; const lt = t - ST[idx], kind = idx % 4, mode = idx % 2 ? "dark" : "light";
@@ -1731,7 +1810,7 @@ async function renderPoster(plan, size) {
 }
 
 // Logo Handling
-let LOGO = null, HERO = null, VISUALS = null, VERIFIED_AD = false, FLUID = true, POPM = true, CLEANM = false;
+let LOGO = null, HERO = null, VISUALS = null, VERIFIED_AD = false, FLUID = true, POPM = true, CLEANM = false, PROM = false;
 const setLogo = (dataUrl) => new Promise((ok) => {
   if (!dataUrl) { LOGO = null; $("logoPrev").classList.add("hide"); $("logoX").classList.add("hide"); return ok(true); }
   const im = new Image();
@@ -1795,7 +1874,7 @@ $("go").onclick = async () => {
           clips = (await voiceFn({ lines: [...spoken, "Connect. Create. Discover. Grow."], voice: $("voice").value })).data.clips;
         } catch (e) { say("Voiceover failed, rendering without voice...", true); }
       }
-      HERO = null; FLUID = $("mstyle").value === "fluid"; POPM = $("mstyle").value === "pop"; CLEANM = $("mstyle").value === "clean";
+      HERO = null; FLUID = $("mstyle").value === "fluid"; POPM = $("mstyle").value === "pop"; CLEANM = $("mstyle").value === "clean"; PROM = $("mstyle").value === "pro";
       say("Rendering video... keep this screen open");
       let wl = null; try { wl = await navigator.wakeLock.request("screen"); } catch (e) {}
       try { await renderMotion(r.data.plan.lines, $("platform").value, clips, $("music").value); }
