@@ -34,7 +34,7 @@ select option{color:#111}input{width:190px}input::placeholder{color:#8fa79d}
   <button id="google">Google</button>
 </div>
 <div class="row">
-  <select id="voice" aria-label="Voiceover"><option value="eve">Voiceover: Eve</option><option value="ara">Voiceover: Ara</option><option value="none">No voiceover</option></select>
+  <select id="voice" aria-label="Voiceover"><option value="rex">Voiceover: Rex (male)</option><option value="sal">Voiceover: Sal (male)</option><option value="leo">Voiceover: Leo (male)</option><option value="none">No voiceover</option></select>
   <select id="sfx" aria-label="Sound effects"><option value="on">Sound effects: On</option><option value="off">Sound effects: Off</option></select>
   <span id="vs" style="font-size:13px;color:#9fd8c0">Sign in to use voiceover</span>
   <button id="out" class="hide">Sign out</button>
@@ -197,7 +197,7 @@ function s7(t) {
   const q = bk(seg(t, 1.2, 1.9)), pulse = .5 + .5 * Math.sin(NOW * 4); c.save(); c.globalAlpha *= clamp(q); c.translate(W / 2, H * .75); c.scale(q, q);
   c.shadowColor = `rgba(52,211,153,${.4 + pulse * .4})`; c.shadowBlur = 40 + pulse * 40; rr(-320, -60, 640, 120, 60); c.fillStyle = MINT; c.fill(); c.shadowBlur = 0;
   F(700, 46, HEAD, -1); c.fillStyle = INK; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("Start coding free  →", 0, 3); c.restore();
-  const u = oe(seg(t, 1.8, 2.5)); c.save(); c.globalAlpha *= u; F(700, 24, MONO, 5); c.fillStyle = "#7f948b"; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillText("PRO WHEN YOU’RE READY  ·  GET VERIFIED ON HABA", W / 2, H * .9); c.restore();
+  const u = oe(seg(t, 1.8, 2.5)); c.save(); c.globalAlpha *= u; F(700, 24, MONO, 5); c.fillStyle = "#7f948b"; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillText("HABAAPP.CO.ZA  ·  PRO WHEN YOU’RE READY", W / 2, H * .9); c.restore();
 }
 
 // ---------- compositor ----------
@@ -223,8 +223,8 @@ const LINES = [
   "Haba Code. A full coding studio, with Grok on your side.",
   "Describe your site, and watch it build itself, on desktop and mobile.",
   "Free to start. Go Pro to unlock everything.",
-  "Get verified on Haba, pay R4.99 once, and Pro is yours for good.",
-  "Haba Code. Start building today."
+  "Get verified on Haba, pay four rand ninety-nine once, and Pro is yours for good.",
+  "Haba Code. Start building today at habaapp dot co dot z a."
 ];
 let VO = [], cache = {}, user = null, voiceFn = null, auth = null, t0 = performance.now(), recording = false, busy = false, outNode = null, actx = null, audioMode = false;
 
