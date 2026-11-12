@@ -95,136 +95,135 @@ function logo(x, y, s) {
 }
 const BADGE = new Path2D("M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568-.54.354-.972.853-1.246 1.44-.607-.223-1.264-.272-1.897-.14-.633.13-1.217.437-1.687.882-.444.47-.75 1.053-.882 1.687-.13.633-.083 1.29.14 1.897-.586.274-1.084.706-1.438 1.246-.354.54-.552 1.17-.57 1.816.018.646.216 1.276.57 1.816.354.54.852.972 1.438 1.246-.223.607-.27 1.264-.14 1.897.131.634.437 1.217.882 1.687.47.445 1.054.75 1.687.882.633.13 1.29.083 1.897-.14.274.586.706 1.084 1.246 1.438.54.354 1.17.552 1.813.57.646-.018 1.276-.216 1.816-.57.54-.354.972-.852 1.246-1.438.607.223 1.264.27 1.897.14.634-.131 1.217-.437 1.687-.882.445-.47.75-1.053.882-1.687.13-.633.083-1.29-.14-1.897.586-.274 1.084-.706 1.438-1.246.355-.54.552-1.17.57-1.816z"), TICK = new Path2D("M9.662 14.85l-3.429-3.428 1.293-1.293 2.136 2.136 4.6-4.6 1.293 1.293-5.893 5.892z");
 function badge(x, y, s) { c.save(); c.translate(x - s / 2, y - s / 2); c.scale(s / 22, s / 22); c.fillStyle = "#0A84FF"; c.fill(BADGE); c.fillStyle = "#fff"; c.fill(TICK); c.restore(); }
-function bg(t) {
-  const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, "#ffffff"); g.addColorStop(1, "#ecfaf3"); c.fillStyle = g; c.fillRect(0, 0, W, H);
-  const orb = (x, y, r, col, a) => { const q = c.createRadialGradient(x, y, 0, x, y, r); q.addColorStop(0, `rgba(${col},${a})`); q.addColorStop(1, `rgba(${col},0)`); c.fillStyle = q; c.fillRect(x - r, y - r, 2 * r, 2 * r); };
-  orb(W * .93 + Math.sin(t * .4) * 100, H * .5 + Math.cos(t * .5) * 90, 820, "52,211,153", .7);
-  orb(W * .72 + Math.cos(t * .3) * 130, H * 1.02 + Math.sin(t * .4) * 60, 720, "16,185,129", .55);
-  orb(W * .06 + Math.sin(t * .35) * 90, H * .96, 660, "110,231,183", .55);
-  orb(W * .32 + Math.cos(t * .5) * 80, H * 1.06, 520, "250,204,21", .22);
-}
 
 // ---------- scenes ----------
-function sA(t) {
-  const o = 1 - seg(t, 1.15, 1.5);
-  if (o > 0) { c.save(); c.globalAlpha *= o; line(["You", "have", "an"], H * .5 + 26, t, .1, 78, 500, DK, .3); c.restore(); }
-  if (t > 1.4) {
-    const txt = [..."Idea"], S = 420; F(600, S, HEAD, -S * .05); c.textAlign = "left"; c.textBaseline = "alphabetic";
-    const ws = txt.map(ch => c.measureText(ch).width), tot = ws.reduce((a, b) => a + b, 0); let x = (W - tot) / 2; const y = H * .66, z = 1 + .05 * (t - 1.4);
-    c.save(); c.translate(W / 2, H / 2); c.scale(z, z); c.translate(-W / 2, -H / 2);
-    txt.forEach((ch, i) => { const p = oe(seg(t, 1.4 + i * .06, 2.0 + i * .06)); c.save(); c.globalAlpha *= p; c.translate(x, y + (1 - p) * S * .5);
-      const g = c.createLinearGradient(0, -S * .75, 0, 12); g.addColorStop(0, INK); g.addColorStop(.6, "#0f3d2e"); g.addColorStop(1, "rgba(8,127,91,.5)"); c.fillStyle = g; c.fillText(ch, 0, 0); c.restore(); x += ws[i]; });
-    c.restore();
-  }
+function bg(t) {
+  c.fillStyle = "#070b0a"; c.fillRect(0, 0, W, H);
+  const orb = (x, y, r, col, a) => { const q = c.createRadialGradient(x, y, 0, x, y, r); q.addColorStop(0, `rgba(${col},${a})`); q.addColorStop(1, `rgba(${col},0)`); c.fillStyle = q; c.fillRect(x - r, y - r, 2 * r, 2 * r); };
+  orb(W * .85 + Math.sin(t * .4) * 120, H * .15, 900, "16,185,129", .32); orb(W * .08, H * .95 + Math.cos(t * .5) * 60, 800, "8,127,91", .38); orb(W * .5, H * .5, 700, "52,211,153", .07);
+  c.strokeStyle = "rgba(52,211,153,.07)"; c.lineWidth = 1; const o = (t * 30) % 90;
+  for (let x = -o; x < W; x += 90) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, H); c.stroke(); } for (let y = o; y < H; y += 90) { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
 }
-const LAB = [["install();", .2, .3], ["configure();", .74, .26], ["npm i ???", .24, .74], ["setup.exe", .68, .78], ["config.json", .86, .54], ["PATH=?", .12, .54]];
-function sB(t) {
-  LAB.forEach(([s, x, y], i) => { const p = oe(seg(t, .2 + i * .12, .7 + i * .12)); if (p <= 0) return; c.save(); c.globalAlpha *= p; F(500, 28, MONO, 0); c.fillStyle = "#17332a"; c.textAlign = "center"; c.fillText(s, W * x, H * y + Math.sin(NOW * 1.5 + i) * 6 + (1 - p) * 18); c.restore(); });
-  const p = bk(seg(t, .4, 1.1)); c.save(); c.globalAlpha *= clamp(p); c.translate(W / 2, H / 2); c.scale(p, p);
-  card(-330, -52, 660, 104, 52, .85); F(500, 40, HEAD, -1); c.fillStyle = INK; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("Now where do you build it?", 0, 3); c.restore();
+const WH = () => "#fff", VW = w => shine(w, "#34d399", "#ecfdf5", (NOW * .55) % 1.7 - .3);
+const pan = (x, y, w, h, r, f = "#0e1613", s = "rgba(52,211,153,.4)") => { c.save(); c.shadowColor = "rgba(16,185,129,.35)"; c.shadowBlur = 40; rr(x, y, w, h, r); c.fillStyle = f; c.fill(); c.shadowBlur = 0; c.strokeStyle = s; c.lineWidth = 2; c.stroke(); c.restore(); };
+const BX = 360, BY = 190, BW = 1200, BH = 700;
+function chrome(url) {
+  pan(BX, BY, BW, BH, 28); c.save(); c.fillStyle = "rgba(255,255,255,.06)"; c.fillRect(BX + 2, BY + 2, BW - 4, 68);
+  [0, 1, 2].forEach(i => { c.fillStyle = ["#ff6b6b", "#ffd24a", MINT][i]; c.beginPath(); c.arc(BX + 44 + i * 30, BY + 36, 9, 0, 7); c.fill(); });
+  rr(BX + 180, BY + 16, 700, 40, 20); c.fillStyle = "rgba(255,255,255,.08)"; c.fill(); F(500, 22, MONO, 0); c.fillStyle = "#9fd8c0"; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText(url, BX + 210, BY + 37); c.restore();
 }
-function sC(t) {
-  line(["Installs.", "Configs.", "Setups."], H * .45, t, .1, 130, 500, DK);
-  line(["All", "in", "the", "way."], H * .45 + 160, t, .9, 96, 500, (w, i) => (i === 3 ? "#98a2b3" : INK));
+function s0(t) {
+  const d = oe(seg(t, .1, 1.1)); c.save(); c.strokeStyle = MINT; c.lineWidth = 4; c.shadowColor = MINT; c.shadowBlur = 24; c.setLineDash([2 * (BW + BH) * d, 99999]); rr(BX, BY, BW, BH, 28); c.stroke(); c.restore();
+  const f = oe(seg(t, 1, 1.5)), u = "your-website"; c.save(); c.globalAlpha *= f; chrome("https://" + u.slice(0, Math.floor(seg(t, 1.4, 2.0) * u.length))); c.restore();
+  if (t > 1.3 && Math.floor(NOW * 2) % 2) { c.fillStyle = MINT; c.fillRect(BX + 50, BY + 110, 4, 44); }
+  line(["A", "blank", "page."], H * .58, t, 1.5, 120, 600, WH);
 }
-function sD(t) {
-  const p = bk(seg(t, .1, .7)); c.save(); c.globalAlpha *= clamp(p); c.translate(W / 2, H / 2 + 44); c.scale(p, p);
-  F(500, 170, HEAD, -6); c.fillStyle = INK; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillText("{suddenly}", 0, 0); c.restore();
-}
-function sE(t) {
-  const p = bk(seg(t, .05, .7)); c.save(); c.globalAlpha *= clamp(p); logo(W / 2, H * .27, 190 * clamp(p)); c.restore();
-  line(["Haba", "Code."], H * .64, t, .3, 200, 600, VG, .22);
-  const u = oe(seg(t, 1.2, 1.9)); c.save(); c.globalAlpha *= u; F(700, 26, MONO, 6); c.fillStyle = "#2f6b57"; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillText("A FULL CODING STUDIO  ·  IN YOUR BROWSER", W / 2, H * .8 + (1 - u) * 14); c.restore();
-  ["HTML", "CSS", "JS"].forEach((s, i) => { const q = bk(seg(t, 1.5 + i * .12, 2.1 + i * .12)); if (q <= 0) return; c.save(); c.translate(W / 2 + (i - 1) * 150, H * .88); c.scale(q, q); rr(-60, -26, 120, 52, 26); c.fillStyle = INK; c.fill(); F(700, 24, MONO, 1); c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(s, 0, 2); c.restore(); });
-}
-const CODE = [[["<h1>", "#be123c"], ["Hello Haba", "#12151c"], ["</h1>", "#be123c"]], [["<button>", "#be123c"], ["Click me", "#12151c"], ["</button>", "#be123c"]], [["button", "#6d28d9"], [" { padding: 8px }", "#b45309"]]];
-const CTOT = CODE.reduce((a, l) => a + l.reduce((b, s) => b + s[0].length, 0), 0);
-const UT = "Make it responsive";
-function sF(t) {
-  const bx = 140, by = 120, bw = 1640, bh = 840, pop = bk(seg(t, 0, .6));
-  c.save(); c.globalAlpha *= clamp(pop); c.translate(W / 2, H / 2); c.scale(lerp(.92, 1, clamp(pop)), lerp(.92, 1, clamp(pop))); c.translate(-W / 2, -H / 2);
-  card(bx, by, bw, bh, 30, .92);
-  [0, 1, 2].forEach(i => { c.fillStyle = ["#ff6b6b", "#ffd24a", MINT][i]; c.beginPath(); c.arc(bx + 40 + i * 30, by + 32, 9, 0, 7); c.fill(); });
-  F(600, 22, MONO, 0); c.textAlign = "left"; c.textBaseline = "middle"; c.fillStyle = INK; c.fillText("index.html", bx + 170, by + 34); c.fillStyle = "#98a2b3"; c.fillText("style.css", bx + 330, by + 34);
-  c.fillStyle = "rgba(18,21,28,.08)"; c.fillRect(bx, by + 64, bw, 2); c.fillRect(bx + 600, by + 64, 2, bh - 64); c.fillRect(bx + 1200, by + 64, 2, bh - 64);
-  // editor: typed code
-  const q = seg(t, .4, 1.9); let n = Math.floor(q * CTOT); F(500, 26, MONO, 0); c.textBaseline = "alphabetic";
-  CODE.forEach((ln, li) => { let x = bx + 40; ln.forEach(([s, col]) => { const k = Math.max(0, Math.min(s.length, n)); n -= s.length; c.fillStyle = col; c.fillText(s.slice(0, k), x, by + 130 + li * 52); x += c.measureText(s).width; }); });
-  if (q < 1 && Math.floor(NOW * 3) % 2) { c.fillStyle = GRN; c.fillRect(bx + 40 + 12 * q * 20, by + 150, 3, 4); }
-  // preview
-  const px = bx + 602, py = by + 66; c.fillStyle = "#fff"; c.fillRect(px, py, 598, bh - 66);
-  F(700, 20, MONO, 3); c.fillStyle = "#98a2b3"; c.fillText("LIVE PREVIEW", px + 30, py + 40);
-  const hp = oe(seg(t, .8, 1.2)), applied = t > 4.3, ap = bk(seg(t, 4.3, 4.8));
-  c.save(); c.globalAlpha *= hp; F(700, 58, HEAD, -2); c.fillStyle = INK; c.fillText("Hello Haba", px + 40, py + 170); c.restore();
-  const bp = oe(seg(t, 1.4, 1.8)); c.save(); c.globalAlpha *= bp;
-  if (!applied) { rr(px + 40, py + 220, 170, 56, 6); c.fillStyle = "#e5e7eb"; c.fill(); F(600, 24, HEAD, 0); c.fillStyle = INK; c.fillText("Click me", px + 66, py + 257); }
-  else { c.translate(px + 40 + 120, py + 248); c.scale(clamp(ap), clamp(ap)); c.shadowColor = "rgba(8,127,91,.4)"; c.shadowBlur = 24; rr(-120, -34, 240, 68, 34); c.fillStyle = GRN; c.fill(); c.shadowBlur = 0; F(700, 26, HEAD, 0); c.fillStyle = "#fff"; c.textAlign = "center"; c.fillText("Click me", 0, 9); }
-  c.restore();
-  // chat
-  const cx0 = bx + 1202; c.fillStyle = "#f6f7fa"; c.fillRect(cx0, by + 66, 438, bh - 66);
-  c.fillStyle = GRN; rr(cx0 + 24, by + 92, 30, 30, 9); c.fill(); F(700, 22, HEAD, 0); c.fillStyle = INK; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText("Grok", cx0 + 68, by + 108);
-  const ut = UT.slice(0, Math.floor(seg(t, 2.0, 3.0) * UT.length)), up = oe(seg(t, 1.9, 2.2));
-  if (up > 0) { c.save(); c.globalAlpha *= up; F(500, 24, HEAD, 0); const uw = Math.max(80, c.measureText(ut).width + 36); rr(cx0 + 414 - uw, by + 150, uw, 54, 18); c.fillStyle = INK; c.fill(); c.fillStyle = "#fff"; c.fillText(ut, cx0 + 414 - uw + 18, by + 178); c.restore(); }
-  const gp = bk(seg(t, 3.2, 3.7));
-  if (gp > 0) { c.save(); c.globalAlpha *= clamp(gp); c.translate(cx0 + 220, by + 335); c.scale(clamp(gp), clamp(gp)); c.translate(-196, -35); rr(0, 0, 392, 70, 12); c.fillStyle = "#fff"; c.fill(); c.strokeStyle = "#e0e4ec"; c.lineWidth = 2; c.stroke();
-    F(600, 22, MONO, 0); c.fillStyle = INK; c.fillText("style.css", 20, 36); c.fillStyle = "#15803d"; c.fillText("+14", 150, 36); c.fillStyle = "#c62828"; c.fillText("−2", 210, 36);
-    rr(272, 14, 100, 42, 21); c.fillStyle = applied ? "#e1f5ec" : GRN; c.fill(); F(700, 20, HEAD, 0); c.fillStyle = applied ? GRN : "#fff"; c.textAlign = "center"; c.fillText(applied ? "Applied ✓" : "Apply", 322, 36); c.restore(); }
-  c.restore();
-  const k = io(seg(t, 3.4, 4.2)), tx = cx0 + 220 + 126, ty = by + 335; ring(tx, ty, seg(t, 4.2, 4.9));
-  if (t > 3.3) cursor(lerp(W * .7, tx, k), lerp(H * .9, ty, k), 1 - .12 * Math.sin(clamp(seg(t, 4.2, 4.35)) * Math.PI));
-}
-function sG(t) {
-  line(["Free", "to", "start.", "Pro", "when", "you’re", "ready."], H * .15, t, .1, 84, 500, (w, i) => (i > 2 ? "#0b7a57" : INK));
-  const cw = 640, ch = 560, cy = 230;
-  [[190, 0], [1090, 1]].forEach(([x, pro]) => {
-    const p = bk(seg(t, .5 + pro * .3, 1.2 + pro * .3)); if (p <= 0) return;
-    c.save(); c.globalAlpha *= clamp(p); c.translate(x + cw / 2, cy + ch / 2); c.scale(p, p); c.translate(-cw / 2, -ch / 2); card(0, 0, cw, ch, 36, .92);
-    if (pro) { rr(0, 0, cw, ch, 36); const g = c.createLinearGradient(0, 0, cw, ch); g.addColorStop(0, "#f6d77a"); g.addColorStop(1, "#b7790a"); c.strokeStyle = g; c.lineWidth = 6; c.stroke(); }
-    c.textAlign = "left"; c.textBaseline = "alphabetic"; F(700, 26, MONO, 6); c.fillStyle = pro ? GOLD : "#667085"; c.fillText(pro ? "PRO" : "FREE", 48, 74);
-    F(600, 112, HEAD, -4); c.fillStyle = INK; c.fillText(pro ? "R4.99" : "R0", 48, 196); if (pro) { F(500, 30, HEAD, 0); c.fillStyle = "#667085"; c.fillText("once-off", 340, 196); badge(cw - 80, 66, 64); }
-    const ps = pro ? ["Unlimited Grok edits", "Unlimited projects", "Blue verified badge on Haba", "Permanent, no subscription"] : ["2 projects", "10 Grok edits a day", "Live preview & assets"];
-    ps.forEach((s, i) => { const a = oe(seg(t, 1.1 + pro * .3 + i * .15, 1.6 + pro * .3 + i * .15)); c.save(); c.globalAlpha *= a; F(700, 34, HEAD, 0); c.fillStyle = pro ? GOLD : GRN; c.fillText("✓", 48, 286 + i * 66); F(500, 34, HEAD, -1); c.fillStyle = INK; c.fillText(s, 100 + (1 - a) * 20, 286 + i * 66); c.restore(); });
-    c.restore();
+const BL = [["<nav>", 30, 90, 1140, 56], ["<hero>", 30, 166, 700, 260], ["<img>", 750, 166, 420, 260], ["<card>", 30, 446, 370, 150], ["<card>", 415, 446, 370, 150], ["<card>", 800, 446, 370, 150], ["<footer>", 30, 616, 1140, 50]];
+function s1(t) {
+  chrome("https://your-website");
+  BL.forEach(([n, x, y, w, h], i) => {
+    const p = bk(seg(t, .2 + i * .16, .9 + i * .16)), a = i * 2.4, X = lerp(BX + x + Math.cos(a) * 1400, BX + x, p), Y = lerp(BY + y + Math.sin(a) * 900, BY + y, p), snap = seg(t, .9 + i * .16, 1.2 + i * .16);
+    c.save(); c.globalAlpha *= clamp(p * 2); c.shadowColor = MINT; c.shadowBlur = 30 * (1 - snap) + 6; rr(X, Y, w, h, 14); c.fillStyle = `rgba(52,211,153,${.1 + .14 * (1 - snap)})`; c.fill(); c.shadowBlur = 0; c.strokeStyle = MINT; c.lineWidth = 2; c.setLineDash([14, 8]); c.stroke(); c.setLineDash([]);
+    F(600, 22, MONO, 0); c.fillStyle = "#9fd8c0"; c.textAlign = "left"; c.textBaseline = "top"; c.fillText(n, X + 18, Y + 16); c.restore();
   });
-  const q = bk(seg(t, 2.4, 3.0)), pulse = .5 + .5 * Math.sin(NOW * 4);
-  if (q > 0) { c.save(); c.globalAlpha *= clamp(q); c.translate(W / 2, 925); c.scale(q, q); c.shadowColor = `rgba(217,162,27,${.4 + pulse * .3})`; c.shadowBlur = 36 + pulse * 30; c.shadowOffsetY = 10; rr(-380, -50, 760, 100, 50);
-    const g = c.createLinearGradient(-380, 0, 380, 0); g.addColorStop(0, "#f6d77a"); g.addColorStop(.55, "#d9a21b"); g.addColorStop(1, "#b7790a"); c.fillStyle = g; c.fill(); c.shadowBlur = 0; c.shadowOffsetY = 0;
-    F(700, 40, HEAD, -1); c.fillStyle = "#2b1d00"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("Get verified on Haba · Go Pro", 0, 3); c.restore(); }
+  line(["Everything", "has", "to", "fit", "together."], H * .96, t, 2.3, 56, 500, () => "#cfe9de");
 }
-function sH(t) {
-  const p = bk(seg(t, .05, .7)); c.save(); c.globalAlpha *= clamp(p); logo(W / 2, H * .22, 130 * clamp(p)); c.restore();
-  line(["Build", "on", "Haba", "Code."], H * .52, t, .25, 190, 600, VG, .22);
-  const q = bk(seg(t, 1.2, 1.9)), pulse = .5 + .5 * Math.sin(NOW * 4); c.save(); c.globalAlpha *= clamp(q); c.translate(W / 2, H * .7); c.scale(q, q);
-  c.shadowColor = `rgba(8,127,91,${.4 + pulse * .3})`; c.shadowBlur = 40 + pulse * 40; c.shadowOffsetY = 12; rr(-310, -58, 620, 116, 58); c.fillStyle = INK; c.fill(); c.shadowBlur = 0; c.shadowOffsetY = 0;
-  F(600, 44, HEAD, -1); c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("Start coding free  →", 0, 3); c.restore();
-  const u = oe(seg(t, 1.8, 2.5)); c.save(); c.globalAlpha *= u; F(700, 24, MONO, 5); c.fillStyle = "#2f6b57"; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillText("HABA CODE  ·  FREE TO START  ·  PRO WITH A VERIFIED BADGE", W / 2, H * .86); c.restore();
+function s2(t) {
+  const W3 = ["INSTALL", "CONFIG", "SETUP"], out = 1 - seg(t, 1.9, 2.2);
+  c.save(); c.globalAlpha *= out; c.textBaseline = "alphabetic";
+  W3.forEach((w, i) => { const d = .1 + i * .5, p = oe(seg(t, d, d + .35)); if (p <= 0) return; const S = 190; F(800, S, HEAD, -8); const tw = c.measureText(w).width, y = H * .32 + i * 230, sc = lerp(2.4, 1, p);
+    c.save(); c.globalAlpha *= p; c.translate(W / 2, y - S * .35); c.scale(sc, sc); c.fillStyle = "#e5e7eb"; c.textAlign = "center"; c.fillText(w, 0, S * .35); c.restore();
+    c.fillStyle = "#ef4444"; c.fillRect(W / 2 - tw / 2 - 30, y - S * .38, (tw + 60) * oc(seg(t, d + .4, d + .7)), 16); });
+  c.restore();
+  line(["Just", "open", "a", "browser."], H * .56, t, 2.0, 150, 700, VW);
+}
+function s3(t) {
+  const lp = oe(seg(t, 0, .9)); c.save(); c.translate(W / 2, 175); c.rotate((1 - lp) * 6.28); c.translate(-W / 2, -175); logo(W / 2, 175, 100 * clamp(bk(seg(t, 0, .7)))); c.restore();
+  line(["Haba", "Code"], 335, t, .3, 84, 700, VW, .24);
+  const ix = 310, iw = 1300, ih = 560, iy = lerp(1100, 410, oe(seg(t, .4, 1.2)));
+  pan(ix, iy, iw, ih, 26); c.save(); c.translate(ix, iy); c.fillStyle = "rgba(255,255,255,.04)"; c.fillRect(0, 0, 220, ih); c.fillRect(iw - 380, 0, 380, ih);
+  ["index.html", "style.css", "script.js", "assets/"].forEach((s, i) => { F(i ? 500 : 700, 22, MONO, 0); c.fillStyle = i ? "#7f948b" : MINT; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText(s, 28, 44 + i * 46); });
+  const cols = ["#f472b6", "#a78bfa", "#fbbf24", "#34d399", "#60a5fa"];
+  for (let i = 0; i < 10; i++) { const g = oe(seg(t, 1.1 + i * .1, 1.6 + i * .1)), w = (140 + ((i * 97) % 380)) * g; c.save(); c.globalAlpha *= .85; rr(250 + (i % 3 === 1 ? 40 : 0), 36 + i * 48, Math.max(1, w), 16, 8); c.fillStyle = cols[i % 5]; c.fill(); c.restore(); }
+  const x0 = iw - 352; rr(x0, 24, 40, 40, 12); c.fillStyle = GRN; c.fill(); F(700, 22, HEAD, 0); c.fillStyle = "#fff"; c.textAlign = "center"; c.fillText("✦", x0 + 20, 45); c.textAlign = "left"; c.fillText("Grok", x0 + 54, 45);
+  const b = oe(seg(t, 1.6, 2.0)); c.save(); c.globalAlpha *= b; rr(x0 + 100, 100, 224, 56, 16); c.fillStyle = "rgba(255,255,255,.14)"; c.fill(); c.restore();
+  const r = bk(seg(t, 2.2, 2.7)); if (r > 0) { c.save(); c.globalAlpha *= clamp(r); rr(x0, 190, 324, 72, 14); c.fillStyle = "rgba(255,255,255,.07)"; c.fill(); F(600, 20, MONO, 0); c.fillStyle = "#fff"; c.fillText("index.html", x0 + 18, 226); c.fillStyle = MINT; c.fillText("+42", x0 + 148, 226); rr(x0 + 212, 206, 94, 40, 20); c.fillStyle = MINT; c.fill(); F(700, 20, HEAD, 0); c.fillStyle = INK; c.textAlign = "center"; c.fillText("Apply", x0 + 259, 227); c.restore(); }
+  c.restore();
+}
+function site(x, y, w, h, nar, t) {
+  c.save(); rr(x, y, w, h, 18); c.clip(); c.fillStyle = "#fff"; c.fillRect(x, y, w, h);
+  const dr = (k, fn) => { const p = bk(seg(t, 2.0 + k * .22, 2.8 + k * .22)); if (p <= 0) return; c.save(); c.globalAlpha *= clamp(p); c.translate(0, (1 - p) * -260); fn(); c.restore(); };
+  dr(0, () => { c.fillStyle = INK; c.fillRect(x, y, w, h * .09); c.fillStyle = "#ffb072"; c.beginPath(); c.arc(x + 24, y + h * .045, 10, 0, 7); c.fill(); F(700, nar ? 16 : 22, HEAD, 0); c.fillStyle = "#fff"; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText("Sweet Crumbs", x + 44, y + h * .047); });
+  dr(1, () => { const g = c.createLinearGradient(x, y, x + w, y + h * .5); g.addColorStop(0, "#ff9a62"); g.addColorStop(1, "#ff4d6d"); c.fillStyle = g; c.fillRect(x, y + h * .09, w, h * .36); const S = nar ? 38 : 50, y0 = y + h * .09; F(800, S, HEAD, -2); c.fillStyle = "#fff"; c.textBaseline = "alphabetic"; c.textAlign = "left"; c.fillText("Fresh bakes,", x + w * .06, y0 + S * 1.5); c.fillText("every day.", x + w * .06, y0 + S * 2.55); rr(x + w * .06, y0 + S * 3, w * (nar ? .5 : .24), S * .85, S * .42); c.fillStyle = "#fff"; c.fill(); F(700, S * .36, HEAD, 0); c.fillStyle = "#ff4d6d"; c.textBaseline = "middle"; c.fillText("Order now", x + w * .06 + S * .5, y0 + S * 3.42); });
+  dr(2, () => { const n = nar ? 2 : 3, cw = (w * .88 - (n - 1) * 16) / n, ch = nar ? h * .15 : h * .3; for (let i = 0; i < n; i++) { const cx = x + w * .06 + i * (cw + 16), cy = y + h * .49; rr(cx, cy, cw, ch, 14); c.fillStyle = ["#fff3d6", "#ffe1e8", "#e1f5ec"][i]; c.fill(); c.fillStyle = ["#ffd36b", "#ff9db1", "#6ee7b7"][i]; c.beginPath(); c.arc(cx + cw / 2, cy + ch * .42, Math.min(cw, ch) * .24, 0, 7); c.fill(); rr(cx + cw * .2, cy + ch * .78, cw * .6, 10, 5); c.fillStyle = "rgba(18,21,28,.25)"; c.fill(); } });
+  dr(3, () => { c.fillStyle = "#f3f4f6"; c.fillRect(x, y + h * .91, w, h * .09); });
+  c.restore();
+}
+function s4(t) {
+  const pp = bk(seg(t, 0, .5)), tx = "A website for my bakery", n = Math.floor(seg(t, .3, 1.6) * tx.length);
+  c.save(); c.globalAlpha *= clamp(pp); pan(W / 2 - 520, 90, 1040, 96, 48); F(500, 38, HEAD, -1); c.fillStyle = "#fff"; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText(tx.slice(0, n) + (n < tx.length && Math.floor(NOW * 3) % 2 ? "|" : ""), W / 2 - 470, 140);
+  c.fillStyle = MINT; c.beginPath(); c.arc(W / 2 + 470, 138, 32, 0, 7); c.fill(); c.strokeStyle = INK; c.lineWidth = 5; c.lineCap = c.lineJoin = "round"; c.beginPath(); c.moveTo(W / 2 + 470, 152); c.lineTo(W / 2 + 470, 124); c.moveTo(W / 2 + 457, 136); c.lineTo(W / 2 + 470, 123); c.lineTo(W / 2 + 483, 136); c.stroke(); c.restore();
+  const sp = seg(t, 1.8, 2.8); if (sp > 0 && sp < 1) for (let i = 0; i < 16; i++) { const a = i * .5 + .3, r = oc(sp) * (300 + (i % 4) * 90); c.fillStyle = `rgba(110,231,183,${1 - sp})`; c.beginPath(); c.arc(W / 2 + Math.cos(a) * r * 1.3, 190 + Math.abs(Math.sin(a)) * r, 6 + (i % 3) * 3, 0, 7); c.fill(); }
+  const dp = bk(seg(t, .6, 1.2)); c.save(); c.globalAlpha *= clamp(dp);
+  pan(220, 300, 980, 640, 24); [0, 1, 2].forEach(i => { c.fillStyle = ["#ff6b6b", "#ffd24a", MINT][i]; c.beginPath(); c.arc(256 + i * 26, 328, 8, 0, 7); c.fill(); }); site(234, 354, 952, 572, false, t);
+  pan(1330, 250, 330, 700, 44); site(1344, 290, 302, 640, true, t); c.restore();
+  F(700, 24, MONO, 5); c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillStyle = t > 3.9 ? MINT : "#9fd8c0"; c.fillText(t > 3.9 ? "SITE READY ✓" : "BUILDING YOUR SITE…", W / 2, 236);
+  c.fillStyle = "#7f948b"; F(700, 20, MONO, 4); c.fillText("DESKTOP", 710, 990); c.fillText("MOBILE", 1495, 990);
+}
+const FT = ["Unlimited Grok edits", "Unlimited projects", "Unlimited assets", "Blue verified badge", "Live preview", "No subscription"];
+function lock(x, y, s, u) { c.save(); c.translate(x, y); c.strokeStyle = c.fillStyle = u > .5 ? "#facc15" : "#7f948b"; c.lineWidth = s * .12; c.lineCap = "round"; rr(-s * .5, -s * .1, s, s * .75, s * .14); c.fill(); c.beginPath(); c.arc(0, -s * .1 - u * s * .18, s * .32, Math.PI, 0); c.stroke(); c.restore(); }
+function s5(t) {
+  line(["Unlock", "Pro."], H * .17, t, .1, 120, 700, VW);
+  const sx = lerp(-200, W + 200, io(seg(t, 1.2, 3.0)));
+  FT.forEach((s, i) => { const col = i % 3, row = (i / 3) | 0, x = 140 + col * 560, y = 290 + row * 250, p = bk(seg(t, .3 + i * .08, .9 + i * .08)), cx = x + 260, u = seg(sx, cx - 140, cx + 60); if (p <= 0) return;
+    const k = p * (1 + .05 * Math.sin(u * Math.PI)); c.save(); c.globalAlpha *= clamp(p); c.translate(cx, y + 105); c.scale(k, k); c.translate(-260, -105);
+    pan(0, 0, 520, 210, 28, u > .5 ? "#16180c" : "#0e1613", u > .5 ? "rgba(250,204,21,.7)" : "rgba(255,255,255,.12)"); lock(72, 105, 56, u > .5 ? 1 : 0);
+    F(600, 34, HEAD, -1); c.fillStyle = u > .5 ? "#fff" : "#7f948b"; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText(s, 130, 105); c.restore(); });
+  if (sx > -100 && sx < W + 100) { const g = c.createLinearGradient(sx - 120, 0, sx + 120, 0); g.addColorStop(0, "rgba(250,204,21,0)"); g.addColorStop(.5, "rgba(250,204,21,.3)"); g.addColorStop(1, "rgba(250,204,21,0)"); c.fillStyle = g; c.fillRect(sx - 120, 250, 240, 560); }
+}
+function s6(t) {
+  const fl = oe(seg(t, .1, 1.1)), cy = lerp(-300, H * .3, bk(seg(t, 0, .8))), sx = Math.cos((1 - fl) * Math.PI * 4);
+  [1.0, 1.2].forEach((d, k) => { const p = seg(t, d, d + .9); if (p > 0 && p < 1) { c.strokeStyle = k ? `rgba(250,204,21,${.6 * (1 - p)})` : `rgba(10,132,255,${.7 * (1 - p)})`; c.lineWidth = 6; c.beginPath(); c.arc(W / 2, H * .3, 170 + oc(p) * 700, 0, 7); c.stroke(); } });
+  c.save(); c.translate(W / 2, cy); c.scale(sx, 1); c.shadowColor = "rgba(10,132,255,.7)"; c.shadowBlur = 70; badge(0, 0, 340); c.restore();
+  const tt = Math.max(0, t - 1.0), cc = ["#facc15", "#34d399", "#0A84FF", "#fff"];
+  if (tt > 0) for (let i = 0; i < 46; i++) { const a = i * 2.399, v = 300 + (i * 53) % 500; c.save(); c.globalAlpha *= 1 - seg(t, 2.6, 3.6); c.translate(W / 2 + Math.cos(a) * v * tt * .8, H * .3 + Math.sin(a) * v * tt * .8 + 420 * tt * tt); c.rotate(i + tt * 4); c.fillStyle = cc[i % 4]; c.fillRect(-6, -4, 12 + (i % 3) * 4, 8); c.restore(); }
+  c.save(); c.globalAlpha *= oe(seg(t, 1.2, 1.6)); F(800, 200, HEAD, -8); c.fillStyle = "#facc15"; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillText("R" + (4.99 * oc(seg(t, 1.3, 2.3))).toFixed(2), W / 2, H * .75);
+  F(700, 28, MONO, 6); c.fillStyle = "#fff"; c.fillText("GET VERIFIED ON HABA  ·  UNLOCK PRO", W / 2, H * .83); c.fillStyle = "#7f948b"; c.fillText("ONCE-OFF  ·  NO SUBSCRIPTION", W / 2, H * .89); c.restore();
+}
+function s7(t) {
+  for (let i = 0; i < 40; i++) { const a = i / 40 * 6.283 + NOW * .08, r1 = 150 + oc(seg(t, 0, 1)) * (500 + (i % 5) * 120); c.strokeStyle = `rgba(52,211,153,${.08 + (i % 2) * .08})`; c.lineWidth = 3 + (i % 3) * 3; c.beginPath(); c.moveTo(W / 2 + Math.cos(a) * 150, H * .3 + Math.sin(a) * 90); c.lineTo(W / 2 + Math.cos(a) * r1, H * .3 + Math.sin(a) * r1 * .8); c.stroke(); }
+  logo(W / 2, H * .27, 150 * clamp(bk(seg(t, .1, .8))));
+  line(["Build", "your", "website", "free."], H * .58, t, .35, 170, 700, VW, .22);
+  const q = bk(seg(t, 1.2, 1.9)), pulse = .5 + .5 * Math.sin(NOW * 4); c.save(); c.globalAlpha *= clamp(q); c.translate(W / 2, H * .75); c.scale(q, q);
+  c.shadowColor = `rgba(52,211,153,${.4 + pulse * .4})`; c.shadowBlur = 40 + pulse * 40; rr(-320, -60, 640, 120, 60); c.fillStyle = MINT; c.fill(); c.shadowBlur = 0;
+  F(700, 46, HEAD, -1); c.fillStyle = INK; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("Start coding free  →", 0, 3); c.restore();
+  const u = oe(seg(t, 1.8, 2.5)); c.save(); c.globalAlpha *= u; F(700, 24, MONO, 5); c.fillStyle = "#7f948b"; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillText("PRO WHEN YOU’RE READY  ·  GET VERIFIED ON HABA", W / 2, H * .9); c.restore();
 }
 
 // ---------- compositor ----------
-const FN = [sA, sB, sC, sD, sE, sF, sG, sH], BASE = [2.9, 2.3, 3.6, 1.6, 3.4, 5.2, 5.0, 3.4];
+const FN = [s0, s1, s2, s3, s4, s5, s6, s7], BASE = [3.0, 3.6, 3.2, 3.6, 5.6, 4.2, 4.6, 3.6];
 let SC = [], ST = [];
 function retime(d = []) { let s = 0; SC = FN.map((f, i) => { const len = Math.max(BASE[i], d[i] ? d[i] + .45 : 0), r = [s, s + len, f]; ST[i] = s; s += len - .2; return r; }); T = SC[SC.length - 1][1]; }
 retime();
 function frame(t) {
   NOW = t; c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = "source-over"; c.filter = "none"; bg(t);
-  SC.forEach(([a, b, f], i) => {
-    if (t < a || t > b) return;
-    const last = i === SC.length - 1, lt = t - a, inn = i === 0 ? 1 : oc(seg(lt, 0, .3)), out = last ? 0 : seg(t, b - .3, b);
-    c.save(); c.globalAlpha = inn * (1 - out); const s = lerp(.97, 1, oe(seg(lt, 0, .6))) * (1 + .04 * io(out));
-    c.translate(W / 2, H / 2); c.scale(s, s); c.translate(-W / 2, -H / 2); f(lt); c.restore();
-  });
+  SC.forEach(([a, b, f], i) => { if (t < a || t > b) return; const lt = t - a, last = i === SC.length - 1; c.save(); c.globalAlpha = (i ? oc(seg(lt, 0, .25)) : 1) * (last ? 1 : 1 - seg(t, b - .25, b)); f(lt); c.restore(); });
+  SC.forEach(([a], i) => { if (!i) return; const u = (t - (a - .25)) / .6; if (u <= 0 || u >= 1) return; const e = lerp(-.35 * W, 1.35 * W, io(u)), pw = W * .55;
+    c.save(); const g = c.createLinearGradient(e - pw, 0, e, 0); g.addColorStop(0, "rgba(8,127,91,0)"); g.addColorStop(.7, "rgba(8,127,91,.95)"); g.addColorStop(1, "#6ee7b7"); c.fillStyle = g;
+    c.beginPath(); c.moveTo(e - pw, 0); c.lineTo(e + 120, 0); c.lineTo(e - 120, H); c.lineTo(e - pw - 240, H); c.closePath(); c.fill(); c.restore(); });
   c.save(); c.globalCompositeOperation = "overlay"; c.globalAlpha = .07; c.fillStyle = c.createPattern(grain, "repeat"); c.translate(Math.floor(Math.random() * 256), Math.floor(Math.random() * 256)); c.fillRect(-256, -256, W + 512, H + 512); c.restore();
-  c.fillStyle = "rgba(8,127,91,.9)"; c.fillRect(0, H - 6, W * clamp(t / T), 6);
+  c.fillStyle = "rgba(52,211,153,.9)"; c.fillRect(0, H - 6, W * clamp(t / T), 6);
 }
 </script>
 <script type="module">
 const $ = id => document.getElementById(id);
 const say = (t, e) => { $("msg").textContent = t || ""; $("msg").style.color = e ? "#ff8a8a" : "#9fd8c0"; };
 const LINES = [
-  "You have an idea.", "Now where do you build it?", "Installs, configs, setups. All in the way.", "Suddenly,",
-  "Meet Haba Code. A full coding studio in your browser, with live preview.",
-  "Ask Grok to build or fix your files, then apply the changes with one click.",
-  "Free to start. Want more? Get verified on Haba and go Pro, with unlimited Grok edits and unlimited projects.",
+  "Every website starts as a blank page.", "Menus, sections, buttons, forms. It all has to come together.", "No installs. No setup. Just open your browser.",
+  "Haba Code. A full coding studio, with Grok on your side.",
+  "Describe your site, and watch it build itself, on desktop and mobile.",
+  "Free to start. Go Pro to unlock everything.",
+  "Get verified on Haba, pay R4.99 once, and Pro is yours for good.",
   "Haba Code. Start building today."
 ];
 let VO = [], cache = {}, user = null, voiceFn = null, auth = null, t0 = performance.now(), recording = false, busy = false, outNode = null, actx = null, audioMode = false;
@@ -281,20 +280,17 @@ function sfx(ctx, out, type, at, g = 1) {
 // every sound is tied to a scene start (ST), so it follows the timeline even when the voiceover stretches scenes
 function events() {
   const E = [], a = (i, l, type, g = 1) => E.push([ST[i] + l, type, g]);
-  for (let i = 1; i < 8; i++) a(i, -.15, "whoosh", .9);
-  for (let k = 0; k < 3; k++) a(0, .1 + k * .12, "tick", .8); a(0, 1.15, "swish", .6); a(0, 1.4, "impact"); for (let k = 0; k < 4; k++) a(0, 1.4 + k * .06, "tick", .5);
-  a(1, .4, "pop"); for (let k = 0; k < 6; k++) a(1, .2 + k * .12, "tick", .55);
-  for (let k = 0; k < 3; k++) a(2, .1 + k * .12, "tick", .8); for (let k = 0; k < 4; k++) a(2, .9 + k * .12, "tick", .6);
-  a(3, .1, "thump");
-  a(4, .05, "pop"); a(4, .3, "chime", .7); for (let k = 0; k < 3; k++) a(4, 1.5 + k * .12, "pop", .5);
-  for (let k = 0; k < 28; k++) a(5, .4 + k * .054, "key", .5);
-  for (let k = 0; k < UT_N; k++) a(5, 2.0 + k * (1 / UT_N), "key", .6);
-  a(5, 3.2, "pop"); a(5, 4.2, "click"); a(5, 4.25, "chime", .6);
-  a(6, .5, "pop"); a(6, .8, "pop"); for (let k = 0; k < 7; k++) a(6, 1.1 + k * .15, "tick", .5); a(6, 2.4, "pop"); a(6, 2.5, "chime", .7);
-  a(7, .05, "pop"); for (let k = 0; k < 4; k++) a(7, .25 + k * .12, "pop", .6); a(7, 1.2, "pop"); a(7, 1.3, "chime");
+  for (let i = 1; i < 8; i++) a(i, -.15, "whoosh", .8);
+  a(0, .1, "swish", .6); for (let k = 0; k < 12; k++) a(0, 1.4 + k * .05, "key", .4); a(0, 1.5, "pop");
+  for (let i = 0; i < 7; i++) a(1, .9 + i * .16, "click", .5);
+  [.1, .6, 1.1].forEach(d => { a(2, d, "impact", .8); a(2, d + .5, "swish", .5); }); a(2, 2.0, "chime", .7);
+  a(3, .2, "pop"); a(3, .9, "chime", .7); for (let k = 0; k < 8; k++) a(3, 1.1 + k * .1, "tick", .5); a(3, 2.3, "click");
+  for (let k = 0; k < 23; k++) a(4, .3 + k * .057, "key", .55); a(4, 1.8, "whoosh", .7); for (let k = 0; k < 4; k++) a(4, 2.1 + k * .22, "pop", .6); a(4, 3.9, "chime", .7);
+  [1.9, 2.1, 2.3].forEach(d => a(5, d, "click", .7)); a(5, 2.5, "chime", .8);
+  a(6, .1, "whoosh"); a(6, 1.0, "impact"); a(6, 1.05, "chime"); for (let k = 0; k < 10; k++) a(6, 1.3 + k * .1, "tick", .5);
+  a(7, .1, "impact", .8); a(7, .3, "chime"); a(7, 1.3, "pop");
   return E;
 }
-const UT_N = 18;
 function mix(ctx, dest, base) {
   const out = ctx.createGain(), bus = ctx.createGain(); out.connect(dest); bus.connect(out); bus.gain.value = .55;
   VO.forEach((b, i) => { if (!b) return; const s = ctx.createBufferSource(), at = base + ST[i] + .1; s.buffer = b; s.connect(out); s.start(at); bus.gain.setTargetAtTime(.22, Math.max(base, at - .05), .05); bus.gain.setTargetAtTime(.55, at + b.duration, .2); });
@@ -340,7 +336,7 @@ async function exportRT() { // fallback without WebCodecs: real-time recording
 // ---------- controls ----------
 $("replay").onclick = restart; $("voice").onchange = restart; $("sfx").onchange = restart;
 $("cp").onclick = async e => {
-  const txt = "Haba Code. A full coding studio in your browser, with Grok to build and fix your files. Free to start. Get verified on Haba to go Pro: unlimited Grok edits and unlimited projects. Start building today. #HabaCode #Haba #BuildOnHaba";
+  const txt = "Build your website on Haba Code. Tell Grok what you want and watch your site come to life, right in your browser. Free to start. Get verified on Haba to go Pro: unlimited Grok edits and unlimited projects. #HabaCode #BuildAWebsite #GoPro";
   try { await navigator.clipboard.writeText(txt); e.target.textContent = "Copied ✓"; } catch (x) { e.target.textContent = "Copy failed"; }
   setTimeout(() => (e.target.textContent = "Copy caption"), 1600);
 };
