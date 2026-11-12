@@ -3,27 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Haba Ads · Advertise on Haba</title>
+<title>Haba Code · Ad</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0}
-html,body{height:100%;background:#0b0813;color:#f4f4f5;font-family:"Inter Tight",system-ui,sans-serif}
+html,body{height:100%;background:#0a0f0d;color:#f4f4f5;font-family:"Inter Tight",system-ui,sans-serif}
 body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 12px)}
-.stage{width:min(100%,calc((100vh - 110px) * 16 / 9));aspect-ratio:16/9;border-radius:18px;overflow:hidden;box-shadow:0 0 0 1px #ffffff18,0 30px 90px #8b3dff55;background:#fff}
+.stage{width:min(100%,calc((100vh - 110px) * 16 / 9));aspect-ratio:16/9;border-radius:18px;overflow:hidden;box-shadow:0 0 0 1px #ffffff18,0 30px 90px #10b98155;background:#fff}
 canvas{width:100%;height:100%;display:block}
-.bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.bar,.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
 button{font:700 14px "Inter Tight",system-ui,sans-serif;padding:12px 20px;border-radius:999px;border:1px solid #ffffff2a;background:#ffffff10;color:#f4f4f5;cursor:pointer;transition:.2s}
 button:hover{background:#ffffff20}
 button.p{background:#f4f4f5;color:#09090b;border-color:#f4f4f5}
-button.p:hover{box-shadow:0 0 30px #a855f7aa}
+button.p:hover{box-shadow:0 0 30px #34d399aa}
 button:disabled{opacity:.5;cursor:wait}
 .hide{display:none!important}
-.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
 select,input{font:600 14px "Inter Tight",system-ui,sans-serif;padding:11px 14px;border-radius:999px;border:1px solid #ffffff2a;background:#ffffff10;color:#f4f4f5;outline:none}
-select option{color:#111}input{width:190px}input::placeholder{color:#9a90b3}
-#msg{min-height:18px;font-size:13px;color:#b9a6d6;text-align:center}
+select option{color:#111}input{width:190px}input::placeholder{color:#8fa79d}
+#msg{min-height:18px;font-size:13px;color:#9fd8c0;text-align:center}
 </style>
 </head>
 <body>
@@ -35,16 +34,9 @@ select option{color:#111}input{width:190px}input::placeholder{color:#9a90b3}
   <button id="google">Google</button>
 </div>
 <div class="row">
-  <select id="voice" aria-label="Voiceover">
-    <option value="eve">Voiceover: Eve</option>
-    <option value="ara">Voiceover: Ara</option>
-    <option value="none">No voiceover</option>
-  </select>
-  <select id="sfx" aria-label="Sound effects">
-    <option value="on">Sound effects: On</option>
-    <option value="off">Sound effects: Off</option>
-  </select>
-  <span id="vs" style="font-size:13px;color:#b9a6d6">Sign in to use voiceover</span>
+  <select id="voice" aria-label="Voiceover"><option value="eve">Voiceover: Eve</option><option value="ara">Voiceover: Ara</option><option value="none">No voiceover</option></select>
+  <select id="sfx" aria-label="Sound effects"><option value="on">Sound effects: On</option><option value="off">Sound effects: Off</option></select>
+  <span id="vs" style="font-size:13px;color:#9fd8c0">Sign in to use voiceover</span>
   <button id="out" class="hide">Sign out</button>
 </div>
 <div id="msg"></div>
@@ -55,11 +47,10 @@ select option{color:#111}input{width:190px}input::placeholder{color:#9a90b3}
 </div>
 
 <script>
-const W = 1920, H = 1080; let T = 28;
-const cv = document.getElementById("cv"), c = cv.getContext("2d");
-cv.width = W; cv.height = H;
+const W = 1920, H = 1080; let T = 24;
+const cv = document.getElementById("cv"), c = cv.getContext("2d"); cv.width = W; cv.height = H;
 let NOW = 0;
-const HEAD = '"Inter Tight","Plus Jakarta Sans",system-ui,sans-serif', MONO = '"JetBrains Mono",ui-monospace,monospace', INK = "#1b1033";
+const HEAD = '"Inter Tight",system-ui,sans-serif', MONO = '"JetBrains Mono",ui-monospace,monospace', INK = "#12151c", GRN = "#087f5b", MINT = "#34d399", GOLD = "#9a6700";
 const FIL = "filter" in CanvasRenderingContext2D.prototype;
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v)), lerp = (a, b, t) => a + (b - a) * t;
 const oc = t => 1 - Math.pow(1 - clamp(t), 3), oe = t => { t = clamp(t); return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t); };
@@ -68,20 +59,14 @@ const bk = t => { t = clamp(t); const s = 1.6; return 1 + (s + 1) * Math.pow(t -
 const seg = (t, a, b) => clamp((t - a) / (b - a));
 const rr = (x, y, w, h, r) => { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); };
 const F = (w, s, fam = HEAD, ls = 0) => { c.font = `${w} ${s}px ${fam}`; c.letterSpacing = ls + "px"; };
-const num = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 let seed = 11; const R = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 const grain = document.createElement("canvas"); grain.width = grain.height = 256;
 { const g = grain.getContext("2d"), d = g.createImageData(256, 256); for (let i = 0; i < d.data.length; i += 4) { const v = R() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; } g.putImageData(d, 0, 0); }
 
 // ---------- helpers ----------
 const DK = () => INK;
-function shine(w, a, b, p) {
-  const g = c.createLinearGradient(0, 0, w, 0);
-  [[0, a], [clamp(p - .2), a], [clamp(p), b], [clamp(p + .2), a], [1, a]].forEach(([o, col]) => g.addColorStop(o, col));
-  return g;
-}
-const VG = w => shine(w, "#5b21d6", "#d2b4ff", (NOW * .55) % 1.7 - .3);
-// kinetic word line: staggered blur-rise, centred, auto-fit
+function shine(w, a, b, p) { const g = c.createLinearGradient(0, 0, w, 0); [[0, a], [clamp(p - .2), a], [clamp(p), b], [clamp(p + .2), a], [1, a]].forEach(([o, col]) => g.addColorStop(o, col)); return g; }
+const VG = w => shine(w, GRN, "#6ee7b7", (NOW * .55) % 1.7 - .3);
 function line(words, y, t, d0, size, wt, fill, gap = .28) {
   F(wt, size, HEAD, -size * .035); c.textAlign = "left"; c.textBaseline = "alphabetic";
   let ws = words.map(w => c.measureText(w).width), tot = ws.reduce((a, b) => a + b, 0) + size * gap * (words.length - 1);
@@ -93,26 +78,8 @@ function line(words, y, t, d0, size, wt, fill, gap = .28) {
     x += ws[i] + size * gap;
   });
 }
-const PAL = [["#ffffff", "#eadfff", "#6a2bd9"], ["#b37bff", "#6b2bd9", "#fff"], ["#ff9a62", "#ff4d6d", "#fff"], ["#4f9bff", "#1d4ed8", "#fff"], ["#fff3d6", "#ffd36b", "#5a3a00"], ["#2a1458", "#0f0720", "#fff"]];
-function glyph(k, s) {
-  c.lineWidth = s * .09; c.lineCap = "round"; c.lineJoin = "round";
-  if (k === 0) { rr(-s * .3, -s * .16, s * .6, s * .44, s * .08); c.stroke(); c.beginPath(); c.arc(0, -s * .16, s * .15, Math.PI, 0); c.stroke(); }
-  if (k === 1) [.25, .42, .58].forEach((h, i) => { rr(-s * .27 + i * s * .2, s * .26 - h * s, s * .14, h * s, s * .04); c.fill(); });
-  if (k === 2) { c.beginPath(); c.moveTo(0, s * .24); c.bezierCurveTo(-s * .44, -s * .05, -s * .22, -s * .32, 0, -s * .1); c.bezierCurveTo(s * .22, -s * .32, s * .44, -s * .05, 0, s * .24); c.fill(); }
-  if (k === 3) { rr(-s * .3, -s * .24, s * .6, s * .38, s * .1); c.stroke(); c.beginPath(); c.moveTo(-s * .1, s * .14); c.lineTo(-s * .18, s * .29); c.lineTo(s * .02, s * .14); c.stroke(); }
-  if (k === 4) { c.beginPath(); c.arc(-s * .14, -s * .14, s * .08, 0, 7); c.stroke(); c.beginPath(); c.arc(s * .14, s * .14, s * .08, 0, 7); c.stroke(); c.beginPath(); c.moveTo(s * .2, -s * .2); c.lineTo(-s * .2, s * .2); c.stroke(); }
-  if (k === 5) { c.beginPath(); c.moveTo(-s * .28, -s * .08); c.lineTo(s * .1, -s * .26); c.lineTo(s * .1, s * .26); c.lineTo(-s * .28, s * .08); c.closePath(); c.stroke(); c.beginPath(); c.moveTo(-s * .2, s * .1); c.lineTo(-s * .14, s * .3); c.stroke(); c.beginPath(); c.arc(s * .1, 0, s * .2, -.9, .9); c.stroke(); }
-}
-function tile(x, y, s, k, rot = 0, a = 1) {
-  const col = PAL[k % 6]; if (a <= 0) return;
-  c.save(); c.globalAlpha *= clamp(a); c.translate(x, y); c.rotate(rot);
-  c.shadowColor = "rgba(90,40,170,.28)"; c.shadowBlur = s * .4; c.shadowOffsetY = s * .14; rr(-s / 2, -s / 2, s, s, s * .26);
-  const g = c.createLinearGradient(-s / 2, -s / 2, s / 2, s / 2); g.addColorStop(0, col[0]); g.addColorStop(1, col[1]); c.fillStyle = g; c.fill();
-  c.shadowColor = "transparent"; c.shadowBlur = 0; c.shadowOffsetY = 0; c.strokeStyle = "rgba(255,255,255,.6)"; c.lineWidth = 2; c.stroke();
-  c.fillStyle = c.strokeStyle = col[2]; glyph(k % 6, s); c.restore();
-}
-function card(x, y, w, h, r = 28, a = .78) {
-  c.save(); c.shadowColor = "rgba(90,40,170,.22)"; c.shadowBlur = 50; c.shadowOffsetY = 18; rr(x, y, w, h, r); c.fillStyle = `rgba(255,255,255,${a})`; c.fill();
+function card(x, y, w, h, r = 28, a = .8) {
+  c.save(); c.shadowColor = "rgba(8,127,91,.22)"; c.shadowBlur = 50; c.shadowOffsetY = 18; rr(x, y, w, h, r); c.fillStyle = `rgba(255,255,255,${a})`; c.fill();
   c.shadowColor = "transparent"; c.strokeStyle = "rgba(255,255,255,.9)"; c.lineWidth = 2; c.stroke(); c.restore();
 }
 function cursor(x, y, k = 1) {
@@ -120,139 +87,122 @@ function cursor(x, y, k = 1) {
   c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 34); c.lineTo(9, 26); c.lineTo(15, 40); c.lineTo(22, 37); c.lineTo(16, 24); c.lineTo(28, 24); c.closePath();
   c.fillStyle = "#fff"; c.fill(); c.shadowColor = "transparent"; c.strokeStyle = INK; c.lineWidth = 2.5; c.stroke(); c.restore();
 }
-function ring(x, y, p, col = "139,61,255") { if (p <= 0 || p >= 1) return; c.strokeStyle = `rgba(${col},${.6 * (1 - p)})`; c.lineWidth = 5; c.beginPath(); c.arc(x, y, 20 + oc(p) * 90, 0, 7); c.stroke(); }
-
-// ---------- background: violet mesh ----------
+function ring(x, y, p, col = "8,127,91") { if (p <= 0 || p >= 1) return; c.strokeStyle = `rgba(${col},${.6 * (1 - p)})`; c.lineWidth = 5; c.beginPath(); c.arc(x, y, 20 + oc(p) * 90, 0, 7); c.stroke(); }
+function logo(x, y, s) {
+  c.save(); c.translate(x, y); c.scale(s / 28, s / 28); c.translate(-14, -14); c.shadowColor = "rgba(8,127,91,.45)"; c.shadowBlur = 40; rr(0, 0, 28, 28, 8); c.fillStyle = INK; c.fill(); c.shadowBlur = 0;
+  c.lineWidth = 2; c.lineCap = c.lineJoin = "round"; c.strokeStyle = "#fff"; c.beginPath(); c.moveTo(10, 10.5); c.lineTo(6.5, 14); c.lineTo(10, 17.5); c.moveTo(18, 10.5); c.lineTo(21.5, 14); c.lineTo(18, 17.5); c.stroke();
+  c.strokeStyle = MINT; c.beginPath(); c.moveTo(15.4, 9.5); c.lineTo(12.6, 18.5); c.stroke(); c.restore();
+}
+const BADGE = new Path2D("M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568-.54.354-.972.853-1.246 1.44-.607-.223-1.264-.272-1.897-.14-.633.13-1.217.437-1.687.882-.444.47-.75 1.053-.882 1.687-.13.633-.083 1.29.14 1.897-.586.274-1.084.706-1.438 1.246-.354.54-.552 1.17-.57 1.816.018.646.216 1.276.57 1.816.354.54.852.972 1.438 1.246-.223.607-.27 1.264-.14 1.897.131.634.437 1.217.882 1.687.47.445 1.054.75 1.687.882.633.13 1.29.083 1.897-.14.274.586.706 1.084 1.246 1.438.54.354 1.17.552 1.813.57.646-.018 1.276-.216 1.816-.57.54-.354.972-.852 1.246-1.438.607.223 1.264.27 1.897.14.634-.131 1.217-.437 1.687-.882.445-.47.75-1.053.882-1.687.13-.633.083-1.29-.14-1.897.586-.274 1.084-.706 1.438-1.246.355-.54.552-1.17.57-1.816z"), TICK = new Path2D("M9.662 14.85l-3.429-3.428 1.293-1.293 2.136 2.136 4.6-4.6 1.293 1.293-5.893 5.892z");
+function badge(x, y, s) { c.save(); c.translate(x - s / 2, y - s / 2); c.scale(s / 22, s / 22); c.fillStyle = "#0A84FF"; c.fill(BADGE); c.fillStyle = "#fff"; c.fill(TICK); c.restore(); }
 function bg(t) {
-  const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, "#ffffff"); g.addColorStop(1, "#f4ecff"); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, "#ffffff"); g.addColorStop(1, "#ecfaf3"); c.fillStyle = g; c.fillRect(0, 0, W, H);
   const orb = (x, y, r, col, a) => { const q = c.createRadialGradient(x, y, 0, x, y, r); q.addColorStop(0, `rgba(${col},${a})`); q.addColorStop(1, `rgba(${col},0)`); c.fillStyle = q; c.fillRect(x - r, y - r, 2 * r, 2 * r); };
-  orb(W * .93 + Math.sin(t * .4) * 100, H * .5 + Math.cos(t * .5) * 90, 820, "168,70,255", .85);
-  orb(W * .72 + Math.cos(t * .3) * 130, H * 1.02 + Math.sin(t * .4) * 60, 720, "196,120,255", .75);
-  orb(W * .06 + Math.sin(t * .35) * 90, H * .96, 660, "150,130,255", .55);
-  orb(W * .32 + Math.cos(t * .5) * 80, H * 1.06, 520, "255,150,230", .38);
+  orb(W * .93 + Math.sin(t * .4) * 100, H * .5 + Math.cos(t * .5) * 90, 820, "52,211,153", .7);
+  orb(W * .72 + Math.cos(t * .3) * 130, H * 1.02 + Math.sin(t * .4) * 60, 720, "16,185,129", .55);
+  orb(W * .06 + Math.sin(t * .35) * 90, H * .96, 660, "110,231,183", .55);
+  orb(W * .32 + Math.cos(t * .5) * 80, H * 1.06, 520, "250,204,21", .22);
 }
 
 // ---------- scenes ----------
 function sA(t) {
   const o = 1 - seg(t, 1.15, 1.5);
-  if (o > 0) { c.save(); c.globalAlpha *= o; line(["You", "have", "a"], H * .5 + 26, t, .1, 78, 500, DK, .3); c.restore(); }
+  if (o > 0) { c.save(); c.globalAlpha *= o; line(["You", "have", "an"], H * .5 + 26, t, .1, 78, 500, DK, .3); c.restore(); }
   if (t > 1.4) {
-    const txt = [..."Business"], S = 340; F(600, S, HEAD, -S * .05); c.textAlign = "left"; c.textBaseline = "alphabetic";
-    const ws = txt.map(ch => c.measureText(ch).width), tot = ws.reduce((a, b) => a + b, 0); let x = (W - tot) / 2; const y = H * .64, z = 1 + .05 * (t - 1.4);
+    const txt = [..."Idea"], S = 420; F(600, S, HEAD, -S * .05); c.textAlign = "left"; c.textBaseline = "alphabetic";
+    const ws = txt.map(ch => c.measureText(ch).width), tot = ws.reduce((a, b) => a + b, 0); let x = (W - tot) / 2; const y = H * .66, z = 1 + .05 * (t - 1.4);
     c.save(); c.translate(W / 2, H / 2); c.scale(z, z); c.translate(-W / 2, -H / 2);
-    txt.forEach((ch, i) => {
-      const p = oe(seg(t, 1.4 + i * .05, 2.0 + i * .05)); c.save(); c.globalAlpha *= p; c.translate(x, y + (1 - p) * S * .5);
-      const g = c.createLinearGradient(0, -S * .75, 0, 12); g.addColorStop(0, INK); g.addColorStop(.6, "#2a1458"); g.addColorStop(1, "rgba(140,80,240,.5)"); c.fillStyle = g; c.fillText(ch, 0, 0); c.restore(); x += ws[i];
-    });
+    txt.forEach((ch, i) => { const p = oe(seg(t, 1.4 + i * .06, 2.0 + i * .06)); c.save(); c.globalAlpha *= p; c.translate(x, y + (1 - p) * S * .5);
+      const g = c.createLinearGradient(0, -S * .75, 0, 12); g.addColorStop(0, INK); g.addColorStop(.6, "#0f3d2e"); g.addColorStop(1, "rgba(8,127,91,.5)"); c.fillStyle = g; c.fillText(ch, 0, 0); c.restore(); x += ws[i]; });
     c.restore();
   }
 }
-const LAB = [["reach();", .2, .3], ["customers();", .74, .26], ["sales();", .24, .74], ["grow();", .68, .78], ["brand.shine();", .86, .54], ["launch();", .12, .54]];
+const LAB = [["install();", .2, .3], ["configure();", .74, .26], ["npm i ???", .24, .74], ["setup.exe", .68, .78], ["config.json", .86, .54], ["PATH=?", .12, .54]];
 function sB(t) {
-  LAB.forEach(([s, x, y], i) => { const p = oe(seg(t, .2 + i * .12, .7 + i * .12)); if (p <= 0) return; c.save(); c.globalAlpha *= p; F(500, 26, MONO, 0); c.fillStyle = "#2a1a4a"; c.textAlign = "center"; c.fillText(s, W * x, H * y + Math.sin(NOW * 1.5 + i) * 6 + (1 - p) * 18); c.restore(); });
+  LAB.forEach(([s, x, y], i) => { const p = oe(seg(t, .2 + i * .12, .7 + i * .12)); if (p <= 0) return; c.save(); c.globalAlpha *= p; F(500, 28, MONO, 0); c.fillStyle = "#17332a"; c.textAlign = "center"; c.fillText(s, W * x, H * y + Math.sin(NOW * 1.5 + i) * 6 + (1 - p) * 18); c.restore(); });
   const p = bk(seg(t, .4, 1.1)); c.save(); c.globalAlpha *= clamp(p); c.translate(W / 2, H / 2); c.scale(p, p);
-  card(-190, -52, 380, 104, 18, .8); rr(-176, -38, 76, 76, 12); c.strokeStyle = INK; c.lineWidth = 2.5; c.stroke();
-  c.beginPath(); c.moveTo(-154, 0); c.lineTo(-122, 0); c.moveTo(-134, -12); c.lineTo(-122, 0); c.lineTo(-134, 12); c.stroke();
-  F(500, 40, HEAD, -1); c.fillStyle = INK; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText("Now what?", -84, 3); c.restore();
+  card(-330, -52, 660, 104, 52, .85); F(500, 40, HEAD, -1); c.fillStyle = INK; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("Now where do you build it?", 0, 3); c.restore();
 }
-const TC = [[.12, .2, 130, 0, -.2, 1], [.86, .17, 160, 1, .2, 1.6], [.9, .74, 120, 2, .3, 1.2], [.17, .8, 150, 3, -.3, 1.8], [.5, .12, 100, 4, .4, .7], [.55, .88, 110, 5, -.2, 1.4]];
 function sC(t) {
-  ["$", "%", "#", "@", "$", "#"].forEach((s, i) => { F(500, 34, MONO); c.fillStyle = "rgba(60,30,110,.45)"; c.textAlign = "center"; c.fillText(s, W * (.08 + i * .17) + Math.sin(NOW + i) * 20, H * (.3 + (i % 3) * .22) - t * 6); });
-  TC.forEach(([fx, fy, s, k, r, par], i) => { const p = bk(seg(t, .1 + i * .1, .8 + i * .1)); tile(W * fx + Math.sin(NOW * .7 + i) * 22 - t * 14 * par, H * fy + Math.cos(NOW * .8 + i) * 18, s * clamp(p), k, r + Math.sin(NOW + i) * .06, p); });
-  const wp = (txt, tx, ty, d) => { const p = oe(seg(t, d, d + .9)); c.save(); c.globalAlpha *= p; F(500, 82, HEAD, -3); c.fillStyle = INK; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillText(txt, tx + (1 - p) * (tx < W / 2 ? -360 : 360), ty); c.restore(); };
-  wp("Creators", W * .3, H * .42, .3); wp("&", W * .5, H * .54, .5); wp("Companies", W * .68, H * .66, .7);
+  line(["Installs.", "Configs.", "Setups."], H * .45, t, .1, 130, 500, DK);
+  line(["All", "in", "the", "way."], H * .45 + 160, t, .9, 96, 500, (w, i) => (i === 3 ? "#98a2b3" : INK));
 }
 function sD(t) {
-  line(["Endless", "places"], H * .47, t, .2, 112, 500, DK); line(["to be seen."], H * .47 + 128, t, .5, 112, 500, DK);
-  for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283 + NOW * .22, p = bk(seg(t, .2 + i * .08, .8 + i * .08)); tile(W / 2 + Math.cos(a) * 720, H / 2 + Math.sin(a) * 370 + Math.sin(NOW * 1.5 + i) * 10, 116 * clamp(p), i, Math.sin(NOW + i) * .15, p); }
-}
-function sE(t) {
   const p = bk(seg(t, .1, .7)); c.save(); c.globalAlpha *= clamp(p); c.translate(W / 2, H / 2 + 44); c.scale(p, p);
   F(500, 170, HEAD, -6); c.fillStyle = INK; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillText("{suddenly}", 0, 0); c.restore();
 }
+function sE(t) {
+  const p = bk(seg(t, .05, .7)); c.save(); c.globalAlpha *= clamp(p); logo(W / 2, H * .27, 190 * clamp(p)); c.restore();
+  line(["Haba", "Code."], H * .64, t, .3, 200, 600, VG, .22);
+  const u = oe(seg(t, 1.2, 1.9)); c.save(); c.globalAlpha *= u; F(700, 26, MONO, 6); c.fillStyle = "#2f6b57"; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillText("A FULL CODING STUDIO  ·  IN YOUR BROWSER", W / 2, H * .8 + (1 - u) * 14); c.restore();
+  ["HTML", "CSS", "JS"].forEach((s, i) => { const q = bk(seg(t, 1.5 + i * .12, 2.1 + i * .12)); if (q <= 0) return; c.save(); c.translate(W / 2 + (i - 1) * 150, H * .88); c.scale(q, q); rr(-60, -26, 120, 52, 26); c.fillStyle = INK; c.fill(); F(700, 24, MONO, 1); c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(s, 0, 2); c.restore(); });
+}
+const CODE = [[["<h1>", "#be123c"], ["Hello Haba", "#12151c"], ["</h1>", "#be123c"]], [["<button>", "#be123c"], ["Click me", "#12151c"], ["</button>", "#be123c"]], [["button", "#6d28d9"], [" { padding: 8px }", "#b45309"]]];
+const CTOT = CODE.reduce((a, l) => a + l.reduce((b, s) => b + s[0].length, 0), 0);
+const UT = "Make it responsive";
 function sF(t) {
-  const fl = (w, i) => (i === 0 ? "#b9a6d6" : INK);
-  const cs = [[.1, .12, 400, 170, 0], [.7, .08, 330, 200, 1], [.66, .76, 440, 140, 2]];
-  cs.forEach(([fx, fy, w, h, i]) => {
-    const p = bk(seg(t, .1 + i * .15, .8 + i * .15)); if (p <= 0) return;
-    c.save(); c.globalAlpha *= clamp(p); c.translate(W * fx + w / 2, H * fy + h / 2 + Math.sin(NOW * 1.2 + i) * 8); c.scale(p, p); c.translate(-w / 2, -h / 2); card(0, 0, w, h);
-    if (i === 0) { c.fillStyle = "#c9b6ee"; c.beginPath(); c.arc(70, 85, 40, 0, 7); c.fill(); F(600, 30, HEAD, -1); c.fillStyle = INK; c.textAlign = "left"; c.textBaseline = "alphabetic"; c.fillText("Your customer", 130, 80); rr(130, 100, 150, 14, 7); c.fillStyle = "#e2d6f7"; c.fill(); }
-    if (i === 1) { rr(24, 24, w - 48, h - 48, 18); const g = c.createLinearGradient(0, 0, w, h); g.addColorStop(0, "#3b1a77"); g.addColorStop(1, "#a855f7"); c.fillStyle = g; c.fill(); F(700, 26, MONO, 3); c.fillStyle = "#fff"; c.textAlign = "left"; c.fillText("YOUR AD", 48, 86); rr(48, 112, 120, 36, 18); c.fillStyle = "rgba(255,255,255,.85)"; c.fill(); }
-    if (i === 2) { F(600, 34, HEAD, -1); c.fillStyle = "rgba(27,16,51,.55)"; c.textAlign = "left"; c.textBaseline = "alphabetic"; c.fillText("Your brand, unseen.", 40, 82); rr(40, 98, 200, 14, 7); c.fillStyle = "#e2d6f7"; c.fill(); }
+  const bx = 140, by = 120, bw = 1640, bh = 840, pop = bk(seg(t, 0, .6));
+  c.save(); c.globalAlpha *= clamp(pop); c.translate(W / 2, H / 2); c.scale(lerp(.92, 1, clamp(pop)), lerp(.92, 1, clamp(pop))); c.translate(-W / 2, -H / 2);
+  card(bx, by, bw, bh, 30, .92);
+  [0, 1, 2].forEach(i => { c.fillStyle = ["#ff6b6b", "#ffd24a", MINT][i]; c.beginPath(); c.arc(bx + 40 + i * 30, by + 32, 9, 0, 7); c.fill(); });
+  F(600, 22, MONO, 0); c.textAlign = "left"; c.textBaseline = "middle"; c.fillStyle = INK; c.fillText("index.html", bx + 170, by + 34); c.fillStyle = "#98a2b3"; c.fillText("style.css", bx + 330, by + 34);
+  c.fillStyle = "rgba(18,21,28,.08)"; c.fillRect(bx, by + 64, bw, 2); c.fillRect(bx + 600, by + 64, 2, bh - 64); c.fillRect(bx + 1200, by + 64, 2, bh - 64);
+  // editor: typed code
+  const q = seg(t, .4, 1.9); let n = Math.floor(q * CTOT); F(500, 26, MONO, 0); c.textBaseline = "alphabetic";
+  CODE.forEach((ln, li) => { let x = bx + 40; ln.forEach(([s, col]) => { const k = Math.max(0, Math.min(s.length, n)); n -= s.length; c.fillStyle = col; c.fillText(s.slice(0, k), x, by + 130 + li * 52); x += c.measureText(s).width; }); });
+  if (q < 1 && Math.floor(NOW * 3) % 2) { c.fillStyle = GRN; c.fillRect(bx + 40 + 12 * q * 20, by + 150, 3, 4); }
+  // preview
+  const px = bx + 602, py = by + 66; c.fillStyle = "#fff"; c.fillRect(px, py, 598, bh - 66);
+  F(700, 20, MONO, 3); c.fillStyle = "#98a2b3"; c.fillText("LIVE PREVIEW", px + 30, py + 40);
+  const hp = oe(seg(t, .8, 1.2)), applied = t > 4.3, ap = bk(seg(t, 4.3, 4.8));
+  c.save(); c.globalAlpha *= hp; F(700, 58, HEAD, -2); c.fillStyle = INK; c.fillText("Hello Haba", px + 40, py + 170); c.restore();
+  const bp = oe(seg(t, 1.4, 1.8)); c.save(); c.globalAlpha *= bp;
+  if (!applied) { rr(px + 40, py + 220, 170, 56, 6); c.fillStyle = "#e5e7eb"; c.fill(); F(600, 24, HEAD, 0); c.fillStyle = INK; c.fillText("Click me", px + 66, py + 257); }
+  else { c.translate(px + 40 + 120, py + 248); c.scale(clamp(ap), clamp(ap)); c.shadowColor = "rgba(8,127,91,.4)"; c.shadowBlur = 24; rr(-120, -34, 240, 68, 34); c.fillStyle = GRN; c.fill(); c.shadowBlur = 0; F(700, 26, HEAD, 0); c.fillStyle = "#fff"; c.textAlign = "center"; c.fillText("Click me", 0, 9); }
+  c.restore();
+  // chat
+  const cx0 = bx + 1202; c.fillStyle = "#f6f7fa"; c.fillRect(cx0, by + 66, 438, bh - 66);
+  c.fillStyle = GRN; rr(cx0 + 24, by + 92, 30, 30, 9); c.fill(); F(700, 22, HEAD, 0); c.fillStyle = INK; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText("Grok", cx0 + 68, by + 108);
+  const ut = UT.slice(0, Math.floor(seg(t, 2.0, 3.0) * UT.length)), up = oe(seg(t, 1.9, 2.2));
+  if (up > 0) { c.save(); c.globalAlpha *= up; F(500, 24, HEAD, 0); const uw = Math.max(80, c.measureText(ut).width + 36); rr(cx0 + 414 - uw, by + 150, uw, 54, 18); c.fillStyle = INK; c.fill(); c.fillStyle = "#fff"; c.fillText(ut, cx0 + 414 - uw + 18, by + 178); c.restore(); }
+  const gp = bk(seg(t, 3.2, 3.7));
+  if (gp > 0) { c.save(); c.globalAlpha *= clamp(gp); c.translate(cx0 + 220, by + 335); c.scale(clamp(gp), clamp(gp)); c.translate(-196, -35); rr(0, 0, 392, 70, 12); c.fillStyle = "#fff"; c.fill(); c.strokeStyle = "#e0e4ec"; c.lineWidth = 2; c.stroke();
+    F(600, 22, MONO, 0); c.fillStyle = INK; c.fillText("style.css", 20, 36); c.fillStyle = "#15803d"; c.fillText("+14", 150, 36); c.fillStyle = "#c62828"; c.fillText("−2", 210, 36);
+    rr(272, 14, 100, 42, 21); c.fillStyle = applied ? "#e1f5ec" : GRN; c.fill(); F(700, 20, HEAD, 0); c.fillStyle = applied ? GRN : "#fff"; c.textAlign = "center"; c.fillText(applied ? "Applied ✓" : "Apply", 322, 36); c.restore(); }
+  c.restore();
+  const k = io(seg(t, 3.4, 4.2)), tx = cx0 + 220 + 126, ty = by + 335; ring(tx, ty, seg(t, 4.2, 4.9));
+  if (t > 3.3) cursor(lerp(W * .7, tx, k), lerp(H * .9, ty, k), 1 - .12 * Math.sin(clamp(seg(t, 4.2, 4.35)) * Math.PI));
+}
+function sG(t) {
+  line(["Free", "to", "start.", "Pro", "when", "you’re", "ready."], H * .15, t, .1, 84, 500, (w, i) => (i > 2 ? "#0b7a57" : INK));
+  const cw = 640, ch = 560, cy = 230;
+  [[190, 0], [1090, 1]].forEach(([x, pro]) => {
+    const p = bk(seg(t, .5 + pro * .3, 1.2 + pro * .3)); if (p <= 0) return;
+    c.save(); c.globalAlpha *= clamp(p); c.translate(x + cw / 2, cy + ch / 2); c.scale(p, p); c.translate(-cw / 2, -ch / 2); card(0, 0, cw, ch, 36, .92);
+    if (pro) { rr(0, 0, cw, ch, 36); const g = c.createLinearGradient(0, 0, cw, ch); g.addColorStop(0, "#f6d77a"); g.addColorStop(1, "#b7790a"); c.strokeStyle = g; c.lineWidth = 6; c.stroke(); }
+    c.textAlign = "left"; c.textBaseline = "alphabetic"; F(700, 26, MONO, 6); c.fillStyle = pro ? GOLD : "#667085"; c.fillText(pro ? "PRO" : "FREE", 48, 74);
+    F(600, 112, HEAD, -4); c.fillStyle = INK; c.fillText(pro ? "R4.99" : "R0", 48, 196); if (pro) { F(500, 30, HEAD, 0); c.fillStyle = "#667085"; c.fillText("once-off", 340, 196); badge(cw - 80, 66, 64); }
+    const ps = pro ? ["Unlimited Grok edits", "Unlimited projects", "Blue verified badge on Haba", "Permanent, no subscription"] : ["2 projects", "10 Grok edits a day", "Live preview & assets"];
+    ps.forEach((s, i) => { const a = oe(seg(t, 1.1 + pro * .3 + i * .15, 1.6 + pro * .3 + i * .15)); c.save(); c.globalAlpha *= a; F(700, 34, HEAD, 0); c.fillStyle = pro ? GOLD : GRN; c.fillText("✓", 48, 286 + i * 66); F(500, 34, HEAD, -1); c.fillStyle = INK; c.fillText(s, 100 + (1 - a) * 20, 286 + i * 66); c.restore(); });
     c.restore();
   });
-  c.save(); c.strokeStyle = "rgba(27,16,51,.3)"; c.lineWidth = 2; c.setLineDash([oe(seg(t, .5, 1.6)) * 900, 900]);
-  c.beginPath(); c.moveTo(W * .1 + 400, H * .12 + 85); c.bezierCurveTo(W * .4, H * .05, W * .5, H * .22, W * .7, H * .08 + 100); c.stroke();
-  c.setLineDash([oe(seg(t, .9, 2)) * 1400, 1400]); c.beginPath(); c.moveTo(W * .7 + 165, H * .08 + 200); c.bezierCurveTo(W * .9, H * .4, W * .85, H * .6, W * .66 + 220, H * .76); c.stroke(); c.restore();
-  line(["reaching", "people", "feels"], H * .5, t, .3, 92, 500, DK); line(["harder", "than", "imagining"], H * .5 + 116, t, .6, 92, 500, fl);
+  const q = bk(seg(t, 2.4, 3.0)), pulse = .5 + .5 * Math.sin(NOW * 4);
+  if (q > 0) { c.save(); c.globalAlpha *= clamp(q); c.translate(W / 2, 925); c.scale(q, q); c.shadowColor = `rgba(217,162,27,${.4 + pulse * .3})`; c.shadowBlur = 36 + pulse * 30; c.shadowOffsetY = 10; rr(-380, -50, 760, 100, 50);
+    const g = c.createLinearGradient(-380, 0, 380, 0); g.addColorStop(0, "#f6d77a"); g.addColorStop(.55, "#d9a21b"); g.addColorStop(1, "#b7790a"); c.fillStyle = g; c.fill(); c.shadowBlur = 0; c.shadowOffsetY = 0;
+    F(700, 40, HEAD, -1); c.fillStyle = "#2b1d00"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("Get verified on Haba · Go Pro", 0, 3); c.restore(); }
 }
-const PT = "Promote my shop to people who would love it";
-function sG(t) {
-  const m = io(seg(t, 2.0, 2.7)), btn = oc(seg(t, .9, 1.4)) * 200, tot = 560 + (btn > 0 ? btn + 14 : 0);
-  const bw = lerp(tot, 1080, m), bh = lerp(104, 330, m), bl = W / 2 - bw / 2, bt = H / 2 - bh / 2, pop = bk(seg(t, 0, .7));
-  c.save(); c.globalAlpha *= clamp(pop); c.translate(W / 2, H / 2); c.scale(lerp(.9, 1, clamp(pop)), lerp(.9, 1, clamp(pop))); c.translate(-W / 2, -H / 2);
-  c.save(); c.shadowColor = "rgba(139,61,255,.35)"; c.shadowBlur = 60; c.shadowOffsetY = 16; rr(bl, bt, m > 0 ? bw : 560, bh, lerp(52, 44, m));
-  const g = c.createLinearGradient(bl, bt, bl + bw, bt + bh); g.addColorStop(0, m > 0 ? "#fbf7ff" : "#f2e4ff"); g.addColorStop(1, m > 0 ? "#f1e6ff" : "#e4c8ff"); c.fillStyle = g; c.fill(); c.restore();
-  rr(bl, bt, m > 0 ? bw : 560, bh, lerp(52, 44, m)); c.strokeStyle = "rgba(255,255,255,.95)"; c.lineWidth = 2.5; c.stroke();
-  if (m < .5) { c.save(); c.globalAlpha *= 1 - m * 2; F(500, 38, HEAD, -1); c.fillStyle = INK; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("But what if you could", bl + 280, H / 2 + 2); c.restore(); }
-  if (btn > 1 && m < .5) { c.save(); c.globalAlpha *= 1 - m * 2; const bx = bl + 574; rr(bx, H / 2 - 40, btn, 80, 40); c.fillStyle = INK; c.fill(); F(600, 32, HEAD, -1); c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle"; if (btn > 120) c.fillText("Advertise", bx + btn / 2, H / 2 + 2); c.restore(); }
-  if (m > .5) {
-    c.save(); c.globalAlpha *= (m - .5) * 2; const n = Math.floor(seg(t, 2.6, 3.5) * PT.length);
-    F(500, 40, HEAD, -1); c.fillStyle = INK; c.textAlign = "left"; c.textBaseline = "alphabetic"; c.fillText(PT.slice(0, n) + (Math.floor(NOW * 2.5) % 2 ? "" : "|"), bl + 48, bt + 90);
-    ["Feed", "Explore", "Comments", "Video"].forEach((s, i, a) => {
-      const p = oe(seg(t, 2.8 + i * .08, 3.2 + i * .08)); F(600, 26, HEAD, 0); const w = c.measureText(s).width + 50, x = bl + 48 + a.slice(0, i).reduce((q, z) => q + c.measureText(z).width + 62, 0);
-      c.save(); c.globalAlpha *= p; rr(x, bt + bh - 96, w, 54, 27); c.strokeStyle = "rgba(27,16,51,.25)"; c.lineWidth = 2; c.stroke(); c.fillStyle = INK; c.textBaseline = "middle"; c.fillText(s, x + 25, bt + bh - 68); c.restore();
-    });
-    const sx = bl + bw - 90, sy = bt + bh - 70, sk = 1 + .12 * Math.sin(seg(t, 3.7, 4.0) * Math.PI); c.translate(sx, sy); c.scale(sk, sk);
-    const sg = c.createLinearGradient(-34, -34, 34, 34); sg.addColorStop(0, "#a855f7"); sg.addColorStop(1, "#6d28d9"); c.fillStyle = sg; c.beginPath(); c.arc(0, 0, 36, 0, 7); c.fill();
-    c.strokeStyle = "#fff"; c.lineWidth = 5; c.lineCap = "round"; c.lineJoin = "round"; c.beginPath(); c.moveTo(0, 14); c.lineTo(0, -14); c.moveTo(-13, -2); c.lineTo(0, -15); c.lineTo(13, -2); c.stroke(); c.restore();
-  }
-  c.restore();
-  const bx0 = bl + 574 + 100, k1 = io(seg(t, .6, 1.6)), k2 = io(seg(t, 3.0, 3.6));
-  let cx = lerp(W * .78, bx0, k1), cy = lerp(H * .78, H / 2 + 10, k1);
-  if (t > 1.9) { cx = lerp(bx0, W / 2 + 480, io(seg(t, 2.0, 2.8))); cy = lerp(H / 2 + 10, H / 2 + 60, io(seg(t, 2.0, 2.8))); }
-  if (t > 3.0) { cx = lerp(W / 2 + 480, W / 2 + 450, k2); cy = lerp(H / 2 + 60, H / 2 + 95, k2); }
-  ring(bx0, H / 2 + 10, seg(t, 1.7, 2.4)); ring(W / 2 + 450, H / 2 + 95, seg(t, 3.7, 4.4));
-  if (t > .5) cursor(cx, cy, 1 - .12 * Math.sin(clamp(seg(t, 1.65, 1.85)) * Math.PI) - .12 * Math.sin(clamp(seg(t, 3.65, 3.85)) * Math.PI));
-}
-const SH = [
-  { bg: ["#ffb072", "#ff4d6d", "#7c3aed"], h: ["Your brand,", "in the feed."], b: "Shop now", tag: "FEED", k: 2 },
-  { bg: ["#04081c", "#14308a", "#ff7a2a"], h: ["Seen on", "Explore."], b: "Learn more", tag: "EXPLORE", k: 3 },
-  { bg: ["#150000", "#8a0a14", "#ff2d3d"], h: ["Video ads", "that move."], b: "Watch now", tag: "VIDEO", k: 5 }];
 function sH(t) {
-  const i = Math.min(2, Math.floor(t / 1.15)), lt = t - i * 1.15, s = SH[i];
-  c.save(); c.globalAlpha = 1; const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, s.bg[0]); g.addColorStop(.55, s.bg[1]); g.addColorStop(1, s.bg[2]); c.fillStyle = g; c.fillRect(0, 0, W, H);
-  for (let j = 0; j < 7; j++) { const x = ((j * 330 + NOW * 40) % (W + 400)) - 200, y = 150 + (j * 137) % 700; const q = c.createRadialGradient(x, y, 0, x, y, 260); q.addColorStop(0, "rgba(255,255,255,.22)"); q.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = q; c.fillRect(x - 260, y - 260, 520, 520); }
-  c.strokeStyle = "rgba(255,255,255,.07)"; c.lineWidth = 1; for (let x = 0; x < W; x += 120) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, H); c.stroke(); } for (let y = 0; y < H; y += 120) { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
-  const p = oe(seg(lt, 0, .55)), z = lerp(1.14, 1, p), dw = 1180, dh = 660;
-  c.translate(W / 2, H / 2); c.scale(z, z); c.shadowColor = "rgba(0,0,0,.5)"; c.shadowBlur = 90; c.shadowOffsetY = 30; rr(-dw / 2, -dh / 2, dw, dh, 44); c.fillStyle = "#0a0a12"; c.fill(); c.shadowColor = "transparent";
-  c.strokeStyle = "rgba(255,255,255,.35)"; c.lineWidth = 3; c.stroke();
-  F(700, 22, MONO, 5); c.fillStyle = "rgba(255,255,255,.6)"; c.textAlign = "left"; c.textBaseline = "alphabetic"; c.fillText("SPONSORED  ·  " + s.tag, -dw / 2 + 80, -dh / 2 + 90);
-  [0, 1].forEach(r => { const q = oe(seg(lt, .15 + r * .12, .7 + r * .12)); c.save(); c.globalAlpha *= q; F(600, 104, HEAD, -4); c.fillStyle = "#fff"; c.fillText(s.h[r], -dw / 2 + 80, -30 + r * 120 + (1 - q) * 40); c.restore(); });
-  const bq = bk(seg(lt, .5, 1)); c.save(); c.globalAlpha *= clamp(bq); c.translate(-dw / 2 + 80, dh / 2 - 100); c.scale(bq, bq); rr(0, 0, 250, 70, 35); c.fillStyle = "#fff"; c.fill(); F(700, 28, HEAD, -.5); c.fillStyle = "#0a0a12"; c.textBaseline = "middle"; c.fillText(s.b + "  →", 34, 36); c.restore();
-  tile(dw / 2 - 230, -20 + Math.sin(NOW * 1.6) * 12, 250 * clamp(bk(seg(lt, .2, .9))), s.k, .15 + Math.sin(NOW) * .05);
-  c.restore();
-}
-function sI(t) {
-  const o = 1 - seg(t, .95, 1.25);
-  if (o > 0) { c.save(); c.globalAlpha *= o; line(["Your", "brand"], H * .52, t, .1, 120, 500, (w, i) => (i === 1 ? "#b9a6d6" : INK)); c.restore(); }
-  if (t > 1.2) line(["finally", "in", "action"], H * .52, t - 1.2, 0, 120, 500, DK);
-}
-function sJ(t) {
-  const p = bk(seg(t, .05, .7)); c.save(); c.globalAlpha *= clamp(p); c.translate(W / 2, H * .22); c.scale(p, p);
-  c.shadowColor = "rgba(139,61,255,.5)"; c.shadowBlur = 60; rr(-60, -60, 120, 120, 34); const g = c.createLinearGradient(-60, -60, 60, 60); g.addColorStop(0, "#3b1a77"); g.addColorStop(1, "#14082e"); c.fillStyle = g; c.fill(); c.shadowBlur = 0;
-  F(700, 90, HEAD, -3); c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("h", 0, -4); c.restore();
-  line(["Advertise", "on", "Haba."], H * .5, t, .25, 190, 600, VG, .22);
+  const p = bk(seg(t, .05, .7)); c.save(); c.globalAlpha *= clamp(p); logo(W / 2, H * .22, 130 * clamp(p)); c.restore();
+  line(["Build", "on", "Haba", "Code."], H * .52, t, .25, 190, 600, VG, .22);
   const q = bk(seg(t, 1.2, 1.9)), pulse = .5 + .5 * Math.sin(NOW * 4); c.save(); c.globalAlpha *= clamp(q); c.translate(W / 2, H * .7); c.scale(q, q);
-  c.shadowColor = `rgba(139,61,255,${.4 + pulse * .3})`; c.shadowBlur = 40 + pulse * 40; c.shadowOffsetY = 12; rr(-270, -58, 540, 116, 58); c.fillStyle = INK; c.fill(); c.shadowBlur = 0; c.shadowOffsetY = 0;
-  F(600, 44, HEAD, -1); c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("Create your ad  →", 0, 3); c.restore();
-  const u = oe(seg(t, 1.8, 2.5)); c.save(); c.globalAlpha *= u; F(700, 24, MONO, 6); c.fillStyle = "#5b3a9e"; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillText("HABA BUSINESS  ·  HABAAPP.CO.ZA", W / 2, H * .86); c.restore();
+  c.shadowColor = `rgba(8,127,91,${.4 + pulse * .3})`; c.shadowBlur = 40 + pulse * 40; c.shadowOffsetY = 12; rr(-310, -58, 620, 116, 58); c.fillStyle = INK; c.fill(); c.shadowBlur = 0; c.shadowOffsetY = 0;
+  F(600, 44, HEAD, -1); c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("Start coding free  →", 0, 3); c.restore();
+  const u = oe(seg(t, 1.8, 2.5)); c.save(); c.globalAlpha *= u; F(700, 24, MONO, 5); c.fillStyle = "#2f6b57"; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillText("HABA CODE  ·  FREE TO START  ·  PRO WITH A VERIFIED BADGE", W / 2, H * .86); c.restore();
 }
 
 // ---------- compositor ----------
-const FN = [sA, sB, sC, sD, sE, sF, sG, sH, sI, sJ], BASE = [2.9, 2.3, 3.8, 2.8, 1.6, 3.0, 4.4, 3.4, 2.0, 3.6];
+const FN = [sA, sB, sC, sD, sE, sF, sG, sH], BASE = [2.9, 2.3, 3.6, 1.6, 3.4, 5.2, 5.0, 3.4];
 let SC = [], ST = [];
-// scene i lasts at least as long as its voiceover line, so narration and visuals stay in sync
 function retime(d = []) { let s = 0; SC = FN.map((f, i) => { const len = Math.max(BASE[i], d[i] ? d[i] + .45 : 0), r = [s, s + len, f]; ST[i] = s; s += len - .2; return r; }); T = SC[SC.length - 1][1]; }
 retime();
 function frame(t) {
@@ -264,20 +214,22 @@ function frame(t) {
     c.translate(W / 2, H / 2); c.scale(s, s); c.translate(-W / 2, -H / 2); f(lt); c.restore();
   });
   c.save(); c.globalCompositeOperation = "overlay"; c.globalAlpha = .07; c.fillStyle = c.createPattern(grain, "repeat"); c.translate(Math.floor(Math.random() * 256), Math.floor(Math.random() * 256)); c.fillRect(-256, -256, W + 512, H + 512); c.restore();
-  c.fillStyle = "rgba(139,61,255,.9)"; c.fillRect(0, H - 6, W * clamp(t / T), 6);
+  c.fillStyle = "rgba(8,127,91,.9)"; c.fillRect(0, H - 6, W * clamp(t / T), 6);
 }
 </script>
 <script type="module">
 const $ = id => document.getElementById(id);
-const say = (t, e) => { $("msg").textContent = t || ""; $("msg").style.color = e ? "#ff8a8a" : "#b9a6d6"; };
+const say = (t, e) => { $("msg").textContent = t || ""; $("msg").style.color = e ? "#ff8a8a" : "#9fd8c0"; };
 const LINES = [
-  "You have a business.", "Now what?", "Creators and companies, all wanting to be seen.", "Endless places to advertise.", "Suddenly,",
-  "reaching real people feels harder than you imagined.", "But what if you could? Just say what you want to promote, and hit send.",
-  "Your ad, live on Haba. In the feed. On Explore. In video.", "Your brand, finally in action.", "Advertise on Haba. Create your ad today."
+  "You have an idea.", "Now where do you build it?", "Installs, configs, setups. All in the way.", "Suddenly,",
+  "Meet Haba Code. A full coding studio in your browser, with live preview.",
+  "Ask Grok to build or fix your files, then apply the changes with one click.",
+  "Free to start. Want more? Get verified on Haba and go Pro, with unlimited Grok edits and unlimited projects.",
+  "Haba Code. Start building today."
 ];
 let VO = [], cache = {}, user = null, voiceFn = null, auth = null, t0 = performance.now(), recording = false, busy = false, outNode = null, actx = null, audioMode = false;
 
-// ---------- Firebase (same project + habaAdVoice function as the old studio) ----------
+// ---------- Firebase (same project + habaAdVoice function as Haba Ads) ----------
 let fb = null;
 try {
   const V = "https://www.gstatic.com/firebasejs/10.8.1/";
@@ -291,7 +243,6 @@ try {
   $("login").classList.remove("hide");
 } catch (e) { $("vs").textContent = "Voiceover unavailable (offline)"; }
 
-// ---------- voiceover: fetch, decode, retime scenes ----------
 async function ensureVoice() {
   const v = $("voice").value;
   if (v === "none" || !user || !voiceFn) { VO = []; retime(); if (v !== "none" && !user) say("Sign in to add the voiceover. Playing without voice.", 1); return; }
@@ -307,7 +258,8 @@ async function ensureVoice() {
   }
   VO = cache[v] || []; retime(VO.map(b => (b ? b.duration : 0)));
 }
-// ---------- sound effects (synthesised, no files) ----------
+
+// ---------- sound effects (synthesised) ----------
 const hasVO = () => VO.some(Boolean), sfxOn = () => $("sfx").value === "on", hasAudio = () => hasVO() || sfxOn();
 const NZ = new WeakMap();
 const noise = ctx => { let b = NZ.get(ctx); if (!b) { b = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; NZ.set(ctx, b); } return b; };
@@ -328,23 +280,21 @@ function sfx(ctx, out, type, at, g = 1) {
 }
 // every sound is tied to a scene start (ST), so it follows the timeline even when the voiceover stretches scenes
 function events() {
-  const E = [], a = (i, l, type, g = 1) => E.push([ST[i] + l, type, g]), words = (i, d0, n, type = "tick", g = .8) => { for (let k = 0; k < n; k++) a(i, d0 + k * .12, type, g); };
-  for (let i = 1; i < 10; i++) a(i, -.15, "whoosh", .9);
-  words(0, .1, 3); a(0, 1.15, "swish", .6); a(0, 1.4, "impact"); for (let k = 0; k < 8; k++) a(0, 1.4 + k * .05, "tick", .5);
-  for (let k = 0; k < 6; k++) a(1, .2 + k * .12, "tick", .55); a(1, .4, "pop");
-  for (let k = 0; k < 6; k++) a(2, .1 + k * .1, "pop", .5); [.3, .5, .7].forEach(l => a(2, l, "swish", .6));
-  words(3, .2, 2); a(3, .5, "tick"); for (let k = 0; k < 8; k++) a(3, .2 + k * .08, "pop", .45);
-  a(4, .1, "thump");
-  for (let k = 0; k < 3; k++) a(5, .1 + k * .15, "pop"); a(5, .5, "swish", .6); a(5, .9, "swish", .6); words(5, .3, 3); words(5, .6, 3);
-  a(6, 0, "pop"); a(6, .9, "pop"); a(6, 1.7, "click"); a(6, 2.0, "whoosh", .7);
-  for (let k = 0; k < PT.length; k++) if (PT[k] !== " ") a(6, 2.6 + k * (.9 / PT.length), "key", .6);
-  for (let k = 0; k < 4; k++) a(6, 2.8 + k * .08, "tick"); a(6, 3.7, "click"); a(6, 3.72, "chime", .7);
-  for (let k = 0; k < 3; k++) { a(7, k * 1.15 + .15, "swish", .5); a(7, k * 1.15 + .27, "swish", .5); a(7, k * 1.15 + .5, "pop", .8); if (k) { a(7, k * 1.15, "impact", .8); a(7, k * 1.15 - .1, "whoosh", .7); } }
-  words(8, .1, 2); a(8, 1.2, "swish"); words(8, 1.2, 3);
-  a(9, .05, "pop"); words(9, .25, 3, "pop", .7); a(9, 1.2, "pop"); a(9, 1.3, "chime"); a(9, 1.8, "tick");
+  const E = [], a = (i, l, type, g = 1) => E.push([ST[i] + l, type, g]);
+  for (let i = 1; i < 8; i++) a(i, -.15, "whoosh", .9);
+  for (let k = 0; k < 3; k++) a(0, .1 + k * .12, "tick", .8); a(0, 1.15, "swish", .6); a(0, 1.4, "impact"); for (let k = 0; k < 4; k++) a(0, 1.4 + k * .06, "tick", .5);
+  a(1, .4, "pop"); for (let k = 0; k < 6; k++) a(1, .2 + k * .12, "tick", .55);
+  for (let k = 0; k < 3; k++) a(2, .1 + k * .12, "tick", .8); for (let k = 0; k < 4; k++) a(2, .9 + k * .12, "tick", .6);
+  a(3, .1, "thump");
+  a(4, .05, "pop"); a(4, .3, "chime", .7); for (let k = 0; k < 3; k++) a(4, 1.5 + k * .12, "pop", .5);
+  for (let k = 0; k < 28; k++) a(5, .4 + k * .054, "key", .5);
+  for (let k = 0; k < UT_N; k++) a(5, 2.0 + k * (1 / UT_N), "key", .6);
+  a(5, 3.2, "pop"); a(5, 4.2, "click"); a(5, 4.25, "chime", .6);
+  a(6, .5, "pop"); a(6, .8, "pop"); for (let k = 0; k < 7; k++) a(6, 1.1 + k * .15, "tick", .5); a(6, 2.4, "pop"); a(6, 2.5, "chime", .7);
+  a(7, .05, "pop"); for (let k = 0; k < 4; k++) a(7, .25 + k * .12, "pop", .6); a(7, 1.2, "pop"); a(7, 1.3, "chime");
   return E;
 }
-// one mix for preview, offline export and fallback recording: voice + effects (effects duck under the voice)
+const UT_N = 18;
 function mix(ctx, dest, base) {
   const out = ctx.createGain(), bus = ctx.createGain(); out.connect(dest); bus.connect(out); bus.gain.value = .55;
   VO.forEach((b, i) => { if (!b) return; const s = ctx.createBufferSource(), at = base + ST[i] + .1; s.buffer = b; s.connect(out); s.start(at); bus.gain.setTargetAtTime(.22, Math.max(base, at - .05), .05); bus.gain.setTargetAtTime(.55, at + b.duration, .2); });
@@ -360,9 +310,7 @@ const save = (blob, name) => { const a = document.createElement("a"); a.href = U
 async function exportMP4() {
   const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.0/+esm");
   const FPS = 30, SR = 44100, dur = T + .3; let ab = null, err = null;
-  if (hasAudio()) {
-    const o = new OfflineAudioContext(2, Math.ceil(dur * SR), SR), m = o.createDynamicsCompressor(); m.connect(o.destination); mix(o, m, 0); ab = await o.startRendering();
-  }
+  if (hasAudio()) { const o = new OfflineAudioContext(2, Math.ceil(dur * SR), SR), m = o.createDynamicsCompressor(); m.connect(o.destination); mix(o, m, 0); ab = await o.startRendering(); }
   const mux = new Muxer({ target: new ArrayBufferTarget(), video: { codec: "avc", width: W, height: H, frameRate: FPS }, ...(ab ? { audio: { codec: "aac", numberOfChannels: 2, sampleRate: SR } } : {}), fastStart: "in-memory" });
   if (ab) {
     const ae = new AudioEncoder({ output: (c, m) => mux.addAudioChunk(c, m), error: e => (err = e) }); ae.configure({ codec: "mp4a.40.2", sampleRate: SR, numberOfChannels: 2, bitrate: 128000 });
@@ -378,21 +326,21 @@ async function exportMP4() {
     if (i % 10 === 0) { say(`Rendering video… ${Math.round(i / N * 100)}% (keep this tab open)`); await new Promise(r => setTimeout(r)); }
   }
   await ve.flush(); ve.close(); mux.finalize(); if (err) throw err;
-  save(new Blob([mux.target.buffer], { type: "video/mp4" }), "advertise-on-haba.mp4");
+  save(new Blob([mux.target.buffer], { type: "video/mp4" }), "haba-code-ad.mp4");
 }
-async function exportRT() { // fallback for browsers without WebCodecs: real-time recording with the voice mixed in
+async function exportRT() { // fallback without WebCodecs: real-time recording
   const ac = new AudioContext(), dest = ac.createMediaStreamDestination(), stream = cv.captureStream(30); dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
   const mime = ["video/mp4;codecs=avc1", "video/webm;codecs=vp9,opus", "video/webm"].find(m => MediaRecorder.isTypeSupported(m)) || "", ch = [];
   const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 12e6 }), done = new Promise(r => (rec.onstop = r)); rec.ondataavailable = e => e.data.size && ch.push(e.data);
   await ac.resume(); const base = ac.currentTime + .1; mix(ac, dest, base);
   busy = false; recording = true; t0 = performance.now() + 100; rec.start(); await new Promise(r => setTimeout(r, (T + .5) * 1000)); rec.stop(); await done;
-  const type = (mime || "video/webm").split(";")[0]; save(new Blob(ch, { type }), "advertise-on-haba." + (type.includes("mp4") ? "mp4" : "webm"));
+  const type = (mime || "video/webm").split(";")[0]; save(new Blob(ch, { type }), "haba-code-ad." + (type.includes("mp4") ? "mp4" : "webm"));
 }
 
 // ---------- controls ----------
 $("replay").onclick = restart; $("voice").onchange = restart; $("sfx").onchange = restart;
 $("cp").onclick = async e => {
-  const txt = "Advertise on Haba. Put your brand in front of real people. Boost a post, run a campaign or promote your shop, in minutes. Create your ad today. #HabaAds #AdvertiseOnHaba #HabaBusiness";
+  const txt = "Haba Code. A full coding studio in your browser, with Grok to build and fix your files. Free to start. Get verified on Haba to go Pro: unlimited Grok edits and unlimited projects. Start building today. #HabaCode #Haba #BuildOnHaba";
   try { await navigator.clipboard.writeText(txt); e.target.textContent = "Copied ✓"; } catch (x) { e.target.textContent = "Copy failed"; }
   setTimeout(() => (e.target.textContent = "Copy caption"), 1600);
 };
