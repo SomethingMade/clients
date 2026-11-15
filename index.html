@@ -6,7 +6,7 @@
 <title>Haba · Ad</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0}
 html,body{height:100%;background:#0a0f0d;color:#f4f4f5;font-family:"Inter Tight",system-ui,sans-serif}
@@ -55,7 +55,7 @@ select option{color:#111}input{width:190px}input::placeholder{color:#8fa79d}
 const W = 1080, H = 1350; let T = 24;
 const cv = document.getElementById("cv"), c = cv.getContext("2d"); cv.width = W; cv.height = H;
 let NOW = 0;
-let HEAD = '"Inter Tight",system-ui,sans-serif', MONO = '"JetBrains Mono",ui-monospace,monospace', INK = "#12151c", GRN = "#087f5b", MINT = "#34d399", GOLD = "#9a6700";
+let HEAD = '"Inter Tight",system-ui,sans-serif', INK = "#12151c", GRN = "#087f5b", MINT = "#34d399", LIME = "#6ee7b7", GREY = "#8a9a93";
 const FIL = "filter" in CanvasRenderingContext2D.prototype;
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v)), lerp = (a, b, t) => a + (b - a) * t;
 const oc = t => 1 - Math.pow(1 - clamp(t), 3), oe = t => { t = clamp(t); return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t); };
@@ -69,13 +69,10 @@ const grain = document.createElement("canvas"); grain.width = grain.height = 256
 { const g = grain.getContext("2d"), d = g.createImageData(256, 256); for (let i = 0; i < d.data.length; i += 4) { const v = R() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; } g.putImageData(d, 0, 0); }
 
 // ---------- helpers ----------
-const DK = () => INK;
-function shine(w, a, b, p) { const g = c.createLinearGradient(0, 0, w, 0); [[0, a], [clamp(p - .2), a], [clamp(p), b], [clamp(p + .2), a], [1, a]].forEach(([o, col]) => g.addColorStop(o, col)); return g; }
-const VG = w => shine(w, GRN, "#6ee7b7", (NOW * .55) % 1.7 - .3);
 function line(words, y, t, d0, size, wt, fill, gap = .28) {
   F(wt, size, HEAD, -size * .035); c.textAlign = "left"; c.textBaseline = "alphabetic";
   let ws = words.map(w => c.measureText(w).width), tot = ws.reduce((a, b) => a + b, 0) + size * gap * (words.length - 1);
-  if (tot > W * .8) { size *= W * .8 / tot; F(wt, size, HEAD, -size * .035); ws = words.map(w => c.measureText(w).width); tot = ws.reduce((a, b) => a + b, 0) + size * gap * (words.length - 1); }
+  if (tot > W * .86) { size *= W * .86 / tot; F(wt, size, HEAD, -size * .035); ws = words.map(w => c.measureText(w).width); tot = ws.reduce((a, b) => a + b, 0) + size * gap * (words.length - 1); }
   let x = (W - tot) / 2;
   words.forEach((w, i) => {
     const p = oe(seg(t, d0 + i * .12, d0 + i * .12 + .85));
@@ -83,23 +80,13 @@ function line(words, y, t, d0, size, wt, fill, gap = .28) {
     x += ws[i] + size * gap;
   });
 }
-function card(x, y, w, h, r = 28, a = .8) {
-  c.save(); c.shadowColor = "rgba(8,127,91,.22)"; c.shadowBlur = 50; c.shadowOffsetY = 18; rr(x, y, w, h, r); c.fillStyle = `rgba(255,255,255,${a})`; c.fill();
-  c.shadowColor = "transparent"; c.strokeStyle = "rgba(255,255,255,.9)"; c.lineWidth = 2; c.stroke(); c.restore();
-}
 function cursor(x, y, k = 1) {
   c.save(); c.translate(x, y); c.scale(k, k); c.shadowColor = "rgba(0,0,0,.3)"; c.shadowBlur = 10; c.shadowOffsetY = 4;
   c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 34); c.lineTo(9, 26); c.lineTo(15, 40); c.lineTo(22, 37); c.lineTo(16, 24); c.lineTo(28, 24); c.closePath();
   c.fillStyle = "#fff"; c.fill(); c.shadowColor = "transparent"; c.strokeStyle = INK; c.lineWidth = 2.5; c.stroke(); c.restore();
 }
 function ring(x, y, p, col = "8,127,91") { if (p <= 0 || p >= 1) return; c.strokeStyle = `rgba(${col},${.6 * (1 - p)})`; c.lineWidth = 5; c.beginPath(); c.arc(x, y, 20 + oc(p) * 90, 0, 7); c.stroke(); }
-function logo(x, y, s) {
-  c.save(); c.translate(x, y); c.scale(s / 28, s / 28); c.translate(-14, -14); c.shadowColor = "rgba(8,127,91,.45)"; c.shadowBlur = 40; rr(0, 0, 28, 28, 8); c.fillStyle = INK; c.fill(); c.shadowBlur = 0;
-  c.lineWidth = 2; c.lineCap = c.lineJoin = "round"; c.strokeStyle = "#fff"; c.beginPath(); c.moveTo(10, 10.5); c.lineTo(6.5, 14); c.lineTo(10, 17.5); c.moveTo(18, 10.5); c.lineTo(21.5, 14); c.lineTo(18, 17.5); c.stroke();
-  c.strokeStyle = MINT; c.beginPath(); c.moveTo(15.4, 9.5); c.lineTo(12.6, 18.5); c.stroke(); c.restore();
-}
-const BADGE = new Path2D("M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568-.54.354-.972.853-1.246 1.44-.607-.223-1.264-.272-1.897-.14-.633.13-1.217.437-1.687.882-.444.47-.75 1.053-.882 1.687-.13.633-.083 1.29.14 1.897-.586.274-1.084.706-1.438 1.246-.354.54-.552 1.17-.57 1.816.018.646.216 1.276.57 1.816.354.54.852.972 1.438 1.246-.223.607-.27 1.264-.14 1.897.131.634.437 1.217.882 1.687.47.445 1.054.75 1.687.882.633.13 1.29.083 1.897-.14.274.586.706 1.084 1.246 1.438.54.354 1.17.552 1.813.57.646-.018 1.276-.216 1.816-.57.54-.354.972-.852 1.246-1.438.607.223 1.264.27 1.897.14.634-.131 1.217-.437 1.687-.882.445-.47.75-1.053.882-1.687.13-.633.083-1.29-.14-1.897.586-.274 1.084-.706 1.438-1.246.355-.54.552-1.17.57-1.816z"), TICK = new Path2D("M9.662 14.85l-3.429-3.428 1.293-1.293 2.136 2.136 4.6-4.6 1.293 1.293-5.893 5.892z");
-function badge(x, y, s) { c.save(); c.translate(x - s / 2, y - s / 2); c.scale(s / 22, s / 22); c.fillStyle = "#0A84FF"; c.fill(BADGE); c.fillStyle = "#fff"; c.fill(TICK); c.restore(); }
+function kf(t, K) { if (t <= K[0][0]) return [K[0][1], K[0][2]]; for (let i = 1; i < K.length; i++) if (t <= K[i][0]) { const p = io(seg(t, K[i - 1][0], K[i][0])); return [lerp(K[i - 1][1], K[i][1], p), lerp(K[i - 1][2], K[i][2], p)]; } const L = K[K.length - 1]; return [L[1], L[2]]; }
 
 // ---------- theme + uploaded logo ----------
 let SLATE = "#223a37", ARGB = "52,211,153", ARGB2 = "16,185,129", SRGB = "10,132,255", LOGO = null, LOGO_BG = null;
@@ -131,126 +118,112 @@ document.getElementById("logoFile").onchange = e => { const f = e.target.files[0
 document.getElementById("logoClear").onclick = () => { resetTheme(); document.getElementById("logoPrev").classList.add("hide"); document.getElementById("logoClear").classList.add("hide"); try { localStorage.removeItem("habaLogo"); } catch (e) {} };
 try { const sv = localStorage.getItem("habaLogo"); if (sv) loadLogo(sv, false); } catch (e) {}
 
-// ---------- scenes (Haba ad, portrait 9:16) ----------
-let LIME = "#6ee7b7", GREY = "#8a9a93";
-function bg() { c.fillStyle = "#030405"; c.fillRect(0, 0, W, H); const g = c.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, 1100); g.addColorStop(0, `rgba(${ARGB},.14)`); g.addColorStop(1, `rgba(${ARGB},0)`); c.fillStyle = g; c.fillRect(0, 0, W, H); }
-function bgs() { c.fillStyle = SLATE; c.fillRect(0, 0, W, H); const g = c.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, 1200); g.addColorStop(0, "rgba(255,255,255,.05)"); g.addColorStop(1, "rgba(0,0,0,.35)"); c.fillStyle = g; c.fillRect(0, 0, W, H); }
+// ---------- shared drawing ----------
+function bg() { c.fillStyle = "#000"; c.fillRect(0, 0, W, H); }
 function wt(s, x, y, size, col, p, wgt = 700, al = "center") { p = clamp(p); if (p <= 0) return; F(wgt, size, HEAD, -size * .03); c.textAlign = al; c.textBaseline = "middle"; c.save(); c.globalAlpha *= p; if (FIL) c.filter = `blur(${(1 - p) * 16}px)`; c.fillStyle = col; c.fillText(s, x, y + (1 - p) * 24); c.restore(); }
-function glass(x, y, w, h, r = 36, a = .07) {
-  c.save(); c.shadowColor = "rgba(0,0,0,.6)"; c.shadowBlur = 60; c.shadowOffsetY = 20; rr(x, y, w, h, r); c.fillStyle = `rgba(255,255,255,${a})`; c.fill(); c.shadowColor = "transparent"; c.lineWidth = 3; c.globalCompositeOperation = "lighter";
-  c.strokeStyle = "rgba(255,40,90,.5)"; rr(x - 3, y, w, h, r); c.stroke(); c.strokeStyle = "rgba(40,200,255,.5)"; rr(x + 3, y, w, h, r); c.stroke(); c.globalCompositeOperation = "source-over";
-  c.strokeStyle = "rgba(255,255,255,.5)"; c.lineWidth = 2.5; rr(x, y, w, h, r); c.stroke(); c.restore();
-}
 function hmark(x, y, s, rot = 0, a = 1) {
   a = clamp(a); if (a <= 0 || s <= 0) return; c.save(); c.translate(x, y); c.rotate(rot); c.globalAlpha *= a;
-  if (LOGO) { // uploaded logo, curved corners
+  if (LOGO) {
     const q = s * 1.05, r = q * .26, X = -q / 2, Y = -q / 2, sc = Math.max(q / LOGO.width, q / LOGO.height);
     [[-5, "rgba(255,40,90,.45)"], [5, "rgba(40,200,255,.45)"]].forEach(([dx, col]) => { c.save(); c.globalCompositeOperation = "lighter"; rr(X + dx, Y, q, q, r); c.fillStyle = col; c.fill(); c.restore(); });
-    c.save(); c.shadowColor = `rgba(${ARGB},.8)`; c.shadowBlur = s * .6; rr(X, Y, q, q, r); c.fillStyle = LOGO_BG || "#0d1211"; c.fill(); c.restore();
+    c.save(); c.shadowColor = `rgba(${ARGB},.35)`; c.shadowBlur = s * .2; rr(X, Y, q, q, r); c.fillStyle = LOGO_BG || "#0d1211"; c.fill(); c.restore();
     c.save(); rr(X, Y, q, q, r); c.clip(); c.drawImage(LOGO, -LOGO.width * sc / 2, -LOGO.height * sc / 2, LOGO.width * sc, LOGO.height * sc); c.restore();
     c.lineWidth = Math.max(2, s * .02); c.strokeStyle = "rgba(255,255,255,.35)"; rr(X, Y, q, q, r); c.stroke(); c.restore(); return;
   }
   c.scale(s / 100, s / 100);
   const bub = f => { rr(-50, -50, 100, 90, 30); c.fillStyle = f; c.fill(); c.beginPath(); c.moveTo(-32, 36); c.lineTo(-40, 64); c.lineTo(-6, 40); c.closePath(); c.fill(); };
   [[-6, "rgba(255,40,90,.45)"], [6, "rgba(40,200,255,.45)"]].forEach(([dx, col]) => { c.save(); c.globalCompositeOperation = "lighter"; c.translate(dx, 0); bub(col); c.restore(); });
-  const g = c.createLinearGradient(-50, -50, 50, 50); g.addColorStop(0, LIME); g.addColorStop(1, GRN); c.shadowColor = `rgba(${ARGB},.8)`; c.shadowBlur = 70; bub(g); c.shadowBlur = 0;
+  const g = c.createLinearGradient(-50, -50, 50, 50); g.addColorStop(0, LIME); g.addColorStop(1, GRN); c.shadowColor = `rgba(${ARGB},.35)`; c.shadowBlur = 24; bub(g); c.shadowBlur = 0;
   c.font = '800 66px "Inter Tight",system-ui,sans-serif'; c.letterSpacing = "0px"; c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("h", 0, -2); c.restore();
 }
-function avatar(x, y, r, k, ch) { const g = c.createLinearGradient(x - r, y - r, x + r, y + r), P = [[MINT, "#0a84ff"], ["#f59e0b", "#ef4444"], ["#a78bfa", "#ec4899"]][k % 3]; g.addColorStop(0, P[0]); g.addColorStop(1, P[1]); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); F(700, r * .9, HEAD, 0); c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(ch, x, y + 3); }
-function heart(x, y, s, col, fill) { c.save(); c.translate(x, y); c.scale(s / 32, s / 32); c.beginPath(); c.moveTo(0, 10); c.bezierCurveTo(-18, -2, -14, -16, -6, -14); c.bezierCurveTo(-2, -13, 0, -9, 0, -8); c.bezierCurveTo(0, -9, 2, -13, 6, -14); c.bezierCurveTo(14, -16, 18, -2, 0, 10); c.closePath(); if (fill) { c.fillStyle = col; c.fill(); } else { c.strokeStyle = col; c.lineWidth = 2.4; c.lineJoin = "round"; c.stroke(); } c.restore(); }
-function replyI(x, y, s, col) { c.save(); c.translate(x, y); c.scale(s / 32, s / 32); c.strokeStyle = col; c.lineWidth = 2.4; c.lineJoin = c.lineCap = "round"; rr(-14, -12, 28, 20, 8); c.stroke(); c.beginPath(); c.moveTo(-6, 8); c.lineTo(-8, 15); c.lineTo(1, 8); c.stroke(); c.restore(); }
-function repostI(x, y, s, col) { c.save(); c.translate(x, y); c.scale(s / 32, s / 32); c.strokeStyle = col; c.lineWidth = 2.4; c.lineCap = c.lineJoin = "round"; c.beginPath(); c.moveTo(-12, 2); c.lineTo(-12, -6); c.quadraticCurveTo(-12, -11, -7, -11); c.lineTo(10, -11); c.moveTo(6, -15); c.lineTo(10, -11); c.lineTo(6, -7); c.moveTo(12, -2); c.lineTo(12, 6); c.quadraticCurveTo(12, 11, 7, 11); c.lineTo(-10, 11); c.moveTo(-6, 7); c.lineTo(-10, 11); c.lineTo(-6, 15); c.stroke(); c.restore(); }
-function kf(t, K) { if (t <= K[0][0]) return [K[0][1], K[0][2]]; for (let i = 1; i < K.length; i++) if (t <= K[i][0]) { const p = io(seg(t, K[i - 1][0], K[i][0])); return [lerp(K[i - 1][1], K[i][1], p), lerp(K[i - 1][2], K[i][2], p)]; } const L = K[K.length - 1]; return [L[1], L[2]]; }
 
-function personI(x, y, s, col) { c.save(); c.translate(x, y); c.scale(s / 32, s / 32); c.strokeStyle = col; c.lineWidth = 2.4; c.lineCap = c.lineJoin = "round"; c.beginPath(); c.arc(-4, -7, 7, 0, 7); c.moveTo(-17, 15); c.quadraticCurveTo(-17, 3, -4, 3); c.quadraticCurveTo(9, 3, 9, 15); c.moveTo(13, -8); c.lineTo(13, 2); c.moveTo(8, -3); c.lineTo(18, -3); c.stroke(); c.restore(); }
-const bgl=()=>{c.fillStyle="#fff";c.fillRect(0,0,W,H);const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,`rgba(${ARGB},.6)`);g.addColorStop(.45,"rgba(255,255,255,0)");g.addColorStop(1,`rgba(${ARGB},.7)`);c.fillStyle=g;c.fillRect(0,0,W,H)};
-const bgd=t=>{c.fillStyle="#04100c";c.fillRect(0,0,W,H);const x=W*(.2+.1*Math.sin(t)),g=c.createRadialGradient(x,H,0,x,H,1500);g.addColorStop(0,`rgba(${ARGB2},.95)`);g.addColorStop(1,"rgba(0,0,0,0)");c.fillStyle=g;c.fillRect(0,0,W,H)};
-const hr=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)).join();
-function lg(x,y,w,h,r,tint="255,255,255",ta=.18,bb=true){ // Apple-style liquid glass: soft shadow, backdrop blur, sheen, specular rim
-  const P=()=>{c.roundRect?c.roundRect(x,y,w,h,r):c.rect(x,y,w,h)};
-  c.save();c.beginPath();c.rect(-9e3,-9e3,18e3,18e3);P();c.clip("evenodd");c.shadowColor="rgba(0,0,0,.32)";c.shadowBlur=bb?60:34;c.shadowOffsetY=bb?24:14;rr(x,y,w,h,r);c.fillStyle="#000";c.fill();c.restore();
-  if(bb&&FIL){c.save();rr(x,y,w,h,r);c.clip();c.setTransform(1,0,0,1,0,0);c.filter="blur(22px) saturate(1.7) brightness(1.08)";c.drawImage(cv,0,0);c.restore()}
-  c.save();rr(x,y,w,h,r);c.clip();let g=c.createLinearGradient(x,y,x+w*.6,y+h);g.addColorStop(0,"rgba(255,255,255,.34)");g.addColorStop(.5,"rgba(255,255,255,.08)");g.addColorStop(1,"rgba(255,255,255,.2)");c.fillStyle=g;c.fillRect(x,y,w,h);
-  c.fillStyle=`rgba(${tint},${ta})`;c.fillRect(x,y,w,h);g=c.createLinearGradient(0,y,0,y+h*.45);g.addColorStop(0,"rgba(255,255,255,.28)");g.addColorStop(1,"rgba(255,255,255,0)");c.fillStyle=g;c.fillRect(x,y,w,h*.45);
-  c.lineWidth=14;c.strokeStyle="rgba(255,255,255,.12)";rr(x,y,w,h,r);c.stroke();c.restore();
-  g=c.createLinearGradient(x,y,x+w,y+h);g.addColorStop(0,"rgba(255,255,255,.95)");g.addColorStop(.3,"rgba(255,255,255,.15)");g.addColorStop(.7,"rgba(255,255,255,.15)");g.addColorStop(1,"rgba(255,255,255,.7)");c.lineWidth=2.5;c.strokeStyle=g;rr(x,y,w,h,r);c.stroke();
+// ---------- real SVG icons (Lucide, 24px grid) ----------
+const rc=(x,y,w,h)=>`M${x+2} ${y}h${w-4}a2 2 0 0 1 2 2v${h-4}a2 2 0 0 1-2 2h${4-w}a2 2 0 0 1-2-2v${4-h}a2 2 0 0 1 2-2z`,ci=(x,y,r)=>`M${x-r} ${y}a${r} ${r} 0 1 0 ${2*r} 0a${r} ${r} 0 1 0 ${-2*r} 0`;
+const D={
+ message:["M7.9 20A9 9 0 1 0 4 16.1L2 22Z"],
+ at:[ci(12,12,4),"M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"],
+ hash:["M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"],
+ badge:["M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z","m9 12 2 2 4-4"],
+ heart:["M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"],
+ camera:["M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z",ci(12,13,3)],
+ phone:["M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"],
+ mail:[rc(2,4,20,16),"m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"],
+ pin:["M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z",ci(12,10,3)],
+ music:["M9 18V5l12-2v13",ci(6,18,3),ci(18,16,3)],
+ image:[rc(3,3,18,18),ci(9,9,2),"m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"],
+ video:["m22 8-6 4 6 4V8Z",rc(2,6,14,12)],
+ file:["M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z","M14 2v4a2 2 0 0 0 2 2h4","M10 9H8M16 13H8M16 17H8"],
+ dot:[ci(12,12,10),ci(12,12,1)],
+ arrow:["M5 12h14M12 5l7 7-7 7"],
+ search:[ci(11,11,8),"m21 21-4.3-4.3"],
+ zap:["M13 2 3 14h9l-1 8 10-12h-9l1-8z"],
+ shield:["M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z","m9 12 2 2 4-4"],
+ gift:[rc(3,8,18,4),"M12 8v13","M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7","M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"]
+},ICO={};for(const k in D)ICO[k]=D[k].map(q=>new Path2D(q));
+function ico(n,x,y,s,col,lw=2){if(s<=0)return;c.save();c.translate(x-s/2,y-s/2);c.scale(s/24,s/24);c.strokeStyle=col;c.lineWidth=lw;c.lineCap=c.lineJoin="round";ICO[n].forEach(q=>c.stroke(q));c.restore()}
+const flat=col=>{c.fillStyle=col;c.fillRect(0,0,W,H)};
+
+// ---------- scenes: black / white backgrounds only ----------
+const PI=["message","phone","camera","mail","pin","music","image","video"];
+function a0(t){ // black: phone slides in, zoom into Haba icon
+  flat("#000");const e=oc(seg(t,0,1)),u=io(seg(t,.9,2.3)),al=1-seg(t,1.8,2.4);
+  c.save();c.globalAlpha*=al;c.translate(W/2,H/2);c.scale(1+4*u,1+4*u);c.rotate(-.5+.3*e);c.translate((1-e)*420,(1-e)*300);
+  rr(-420,-700,840,1400,110);c.fillStyle="#0b0b0b";c.fill();c.strokeStyle="#fff";c.lineWidth=5;c.stroke();
+  for(let j=-2;j<=2;j++)for(let i=-1;i<=1;i++){if(!i&&!j)continue;const x=i*230,y=j*230;rr(x-75,y-75,150,150,38);c.fillStyle="#fff";c.fill();ico(PI[(i+1+(j+2)*3)%8],x,y,80,"#000",1.8)}
+  hmark(0,0,150*(1+.12*Math.sin(seg(t,.8,1.4)*Math.PI)),0,1);ring(0,0,seg(t,.9,1.7),"255,255,255");c.restore();
+  wt("Need to chat?",W/2,H/2,112,"#fff",seg(t,1.7,2.4));
 }
-const wpill=(x,y,w,h)=>lg(x,y,w,h,h/2,"255,255,255",.42);
-const txt=(s,x,y,size,col,wg=600,al="left")=>{F(wg,size,HEAD,-1);c.fillStyle=col;c.textAlign=al;c.textBaseline="middle";c.fillText(s,x,y)};
-const typed=(s,t,t0,r=14)=>{const n=clamp(Math.floor((t-t0)*r),0,s.length);return s.slice(0,n)+(n<s.length&&((t*4)|0)%2?"▍":"")};
-const mag=(x,y,col)=>{c.strokeStyle=col;c.lineWidth=7;c.lineCap="round";c.beginPath();c.arc(x,y,21,0,7);c.moveTo(x+15,y+15);c.lineTo(x+32,y+32);c.stroke()};
-const slide=(p,f)=>{if(p<=0)return;c.save();c.translate(0,(1-clamp(p))*140);c.globalAlpha*=clamp(p);f();c.restore()};
-function n0(t){ // kinetic text, logo pops
-  bgl();c.save();c.globalAlpha*=1-seg(t,1.4,1.8);line(["Chat","starts","here."],H/2,t,.15,150,700,(w,i)=>i<2?INK:GRN);c.restore();
-  const p=bk(seg(t,1.7,2.4));hmark(W/2,H/2,300*p,(1-p)*-2,p);ring(W/2,H/2,seg(t,1.8,2.6),ARGB);
+function a1(t){ // white: introducing + logo
+  flat("#fff");wt("Introducing",W/2,H/2,124,GRN,seg(t,.1,.7)*(1-seg(t,1.2,1.6)));
+  const p=bk(seg(t,1.5,2.2));hmark(W/2,H/2-80,250*p,(1-p)*-2,p);ring(W/2,H/2-80,seg(t,1.6,2.4),ARGB2);
+  wt("Haba",W/2,H/2+170,170,INK,seg(t,2.0,2.6));
 }
-function n1(t){ // UI pills on dark
-  bgd(t);const cy=H/2;
-  slide(bk(seg(t,.1,.7)),()=>{wpill(70,cy-250,940,150);hmark(170,cy-175,90,0,1);txt("Say something…",260,cy-177,50,INK);c.fillStyle=MINT;c.beginPath();c.arc(925,cy-175,48,0,7);c.fill();c.fillStyle="#03110b";c.beginPath();c.moveTo(908,cy-195);c.lineTo(946,cy-175);c.lineTo(908,cy-155);c.closePath();c.fill()});
-  slide(bk(seg(t,.5,1.1)),()=>{wpill(70,cy-60,150,150);c.strokeStyle=INK;c.lineWidth=7;c.lineJoin="round";c.beginPath();c.moveTo(112,cy+8);c.lineTo(145,cy-22);c.lineTo(178,cy+8);c.moveTo(122,cy+2);c.lineTo(122,cy+38);c.lineTo(168,cy+38);c.lineTo(168,cy+2);c.stroke();
-    wpill(250,cy-60,760,150);mag(320,cy+12,GREY);txt(typed("Find your people",t,1.5,12),375,cy+15,52,INK)});
-  ring(925,cy-175,seg(t,2.7,3.4),ARGB);if(t>2.2&&t<3.5){const p=kf(t,[[2.2,1150,cy+330],[2.8,925,cy-165],[3.3,990,cy-60]]);cursor(p[0],p[1],1.4)}
+function a2(t){ // black: kinetic tagline
+  flat("#000");line(["Your","all-in-one","spot"],H/2-70,t,.1,130,700,()=>"#fff");
+  line(["for","every","conversation"],H/2+100,t,1.0,100,600,(w,i)=>i==2?LIME:"#fff");
 }
-const CH=[["Thabo N.","Are we still on for Saturday?"],["Naledi M.","Voice note · 0:42"],["Sipho K.","Sent you the photos"],["Lerato D.","Haha, that’s so true"],["Kagiso P.","Did you see this?"],["Zanele B.","Posted a new status"],["Mpho R.","Reposted your post"],["Ayanda S.","Welcome to Haba!"]];
-function n2(t){ // blurred chat list scroll -> profile card
-  bgd(t);const u=seg(t,0,2.2),off=2600*(1-oc(u)),bl=(1-u)*(1-u)*20,la=1-seg(t,2.4,3.0);
-  if(la>0){c.save();c.globalAlpha*=la;if(FIL)c.filter=`blur(${bl}px)`;for(let j=0;j<24;j++){const y=200+j*210-off;if(y<-200||y>H)continue;const [n,m]=CH[j%8];avatar(130,y+80,64,j,n[0]);txt(n,240,y+52,52,"#fff",700);txt(m,240,y+116,38,"#9fb5ac",500)}c.restore()}
-  const p=bk(seg(t,2.5,3.2));if(p>0){const cy=H/2,liked=t>3.9;c.save();c.translate(W/2,cy);c.scale(p,p);c.globalAlpha*=clamp(p);lg(-340,-440,680,880,56,"255,255,255",.1);avatar(0,-220,130,1,"N");
-    F(700,64,HEAD,-1.5);const nw=c.measureText("Naledi M.").width;txt("Naledi M.",-nw/2-30,-40,64,"#fff",700);badge(nw/2+10,-40,56,0);txt("@naledi",0,30,38,"#9fb5ac",500,"center");
-    heart(-140,230,86*(1+.4*Math.sin(seg(t,3.9,4.3)*Math.PI)),liked?"#ff3b6b":"#fff",liked);replyI(0,232,86,"#fff");repostI(140,232,86,"#fff");c.restore();
-    ring(W/2-140,cy+230,seg(t,3.9,4.5),"255,59,107");if(t>3.2&&t<4.5){const q=kf(t,[[3.2,W/2+330,cy+520],[3.85,W/2-125,cy+245],[4.4,W/2-40,cy+360]]);cursor(q[0],q[1],1.4)}}
+const GL=["at","hash","badge","heart"],SZ=[240,300,380,300];
+function a3(t){ // white: tracked box with SVG icons
+  flat("#fff");const k=clamp(Math.floor(t/.8),0,3),lt=t-k*.8,s=lerp(k?SZ[k-1]:200,SZ[k],oc(seg(lt,0,.3))),cx=W/2,cy=H/2;
+  c.save();c.globalAlpha*=oc(seg(t,0,.4));c.strokeStyle="rgba(0,0,0,.2)";c.lineWidth=2;
+  [cx-s/2,cx+s/2].forEach(x=>{c.beginPath();c.moveTo(x,0);c.lineTo(x,H);c.stroke()});[cy-s/2,cy+s/2].forEach(y=>{c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke()});
+  c.fillStyle="#000";c.fillRect(cx-s/2,cy-s/2,s,s);ico(GL[k],cx,cy,s*.55*bk(seg(lt,0,.35)),"#fff",1.6);
+  c.fillStyle=GRN;[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([x,y])=>c.fillRect(cx+x*s/2-8,cy+y*s/2-8,16,16));c.restore();
 }
-function n3(t){ // tilted topic grid
-  bgl();const T3=["Football","Amapiano","Gospel","Business","News","Comedy","Fashion","Tech","Food","Memes","Study","Jobs"],C=["#34d399","#fbbf24","#f472b6","#60a5fa","#a78bfa","#fb923c"],mv=t*90,e=oc(seg(t,0,.8));
-  c.save();c.translate(W/2,H/2);c.rotate(-.42);c.transform(1,0,-.35,1,0,0);c.scale(.6+.4*e,.6+.4*e);
-  for(let r=-4;r<=4;r++)for(let q=-3;q<=3;q++){const i=((r*3+q)%12+12)%12,x=q*470-mv+(r%2?235:0)-210,y=r*320-135;lg(x,y,420,270,34,hr(C[i%6]),.62,false);c.save();c.shadowColor="rgba(0,0,0,.35)";c.shadowBlur=12;txt(T3[i],x+30,y+215,54,"#fff",700);c.restore();c.fillStyle="rgba(255,255,255,.9)";c.beginPath();c.arc(x+350,y+210,36,0,7);c.fill();c.fillStyle=INK;c.beginPath();c.moveTo(x+340,y+195);c.lineTo(x+366,y+210);c.lineTo(x+340,y+225);c.closePath();c.fill()}
-  c.restore();wt("A space for every vibe.",W/2,H-250,84,INK,seg(t,1.6,2.3));
+const LI=[["Chats.","message"],["Posts.","file"],["Status.","dot"],["Videos.","video"]];
+function a4(t){ // black: list selection with icons
+  flat("#000");const p=[0,1,2].reduce((a,i)=>a+io(seg(t,.6+i*.9,1+i*.9)),0),sl=(1-oc(seg(t,0,.6)))*500;
+  c.save();c.globalAlpha*=clamp(t/.4);c.translate(0,sl);
+  LI.forEach(([s,ic],i)=>{const y=H/2+(i-p)*170,a=1-clamp(Math.abs(i-p));F(700,120,HEAD,-4);c.textAlign="left";c.textBaseline="middle";const w=c.measureText(s).width,X=280;
+    c.fillStyle="#555";c.fillText(s,X,y);ico(ic,170,y,84,"#555",1.8);
+    if(a>0){c.save();c.globalAlpha*=a;c.fillStyle=MINT;c.fillRect(X+w+30,y-55,(W-X-w-30)*oc(a),110);c.fillStyle="#fff";c.fillText(s,X,y);ico(ic,170,y,84,"#fff",1.8);ico("arrow",80,y,70,MINT,2.4);c.restore()}});
+  c.restore();
 }
-function n4(t){ // orbit -> search
-  bgl();const p=bk(seg(t,0,.7)),ex=io(seg(t,1.9,2.9))*1.8,ca=1-seg(t,2.2,2.8);
-  c.save();c.globalAlpha*=ca;[[420,.3],[290,.4]].forEach(([r,a])=>{c.fillStyle=`rgba(${ARGB},${a})`;c.beginPath();c.arc(W/2,H/2,r*p,0,7);c.fill()});
-  for(let i=0;i<8;i++){const a=i/8*6.283+t*.5,r=430*p*(1+ex);if(FIL&&ex>0)c.filter=`blur(${ex*6}px)`;avatar(W/2+Math.cos(a)*r,H/2+Math.sin(a)*r*1.15,64,i,"TNSLKZMA"[i])}c.filter="none";c.restore();
-  wt("Find your people.",W/2,H/2,90,INK,seg(t,.3,.9)*(1-seg(t,1.9,2.3)));
-  const q=bk(seg(t,2.3,2.9));if(q>0){c.save();c.translate(W/2,H/2);c.scale(q,q);wpill(-420,-75,840,150);mag(-340,0,GREY);txt(typed("Find your vibe.",t,3.0,12),-285,3,56,INK);c.restore()}
-}
-function n5(t){ // phone mockup
-  bgd(t);const p=bk(seg(t,0,.9)),fy=Math.sin(t*1.6)*10;c.save();c.translate(330,H/2+fy+(1-clamp(p))*500);c.scale(.72,.72);c.rotate(.05*(1-oc(seg(t,0,1.4)))-.03);c.globalAlpha*=clamp(p);
-  c.shadowColor=`rgba(${ARGB},.35)`;c.shadowBlur=90;rr(-250,-520,500,1040,76);c.fillStyle="#0b0f0e";c.fill();c.shadowBlur=0;c.strokeStyle="#3a4642";c.lineWidth=6;c.stroke();
-  rr(-232,-502,464,1004,62);c.fillStyle="#fff";c.fill();rr(-70,-486,140,40,20);c.fillStyle="#000";c.fill();txt("Home",-200,-410,52,INK,700);
-  const g=c.createLinearGradient(-200,-350,200,200);g.addColorStop(0,MINT);g.addColorStop(1,GRN);rr(-200,-350,400,560,40);c.fillStyle=g;c.fill();lg(-200,-350,400,560,40,"255,255,255",.04,false);hmark(0,-170,170,0,1);txt("Welcome to Haba",0,-30,44,"#fff",700,"center");txt("Chat. Post. Be heard.",0,24,32,"#ffffffcc",500,"center");
-  rr(-120,80,240,76,38);c.fillStyle="#fff";c.fill();txt("Join free",0,119,38,INK,700,"center");lg(-200,236,400,220,40,"20,40,34",.85,false);txt("Your people are here.",0,346,34,"#fff",600,"center");c.restore();
-  wt("Your people.",805,625,72,"#fff",seg(t,1.2,1.9));wt("Your world.",805,715,72,MINT,seg(t,1.6,2.3));
-}
-function n6(t){ // neon rings + cards + text swap
-  bgd(t);const cy=290;c.save();for(let k=0;k<4;k++){const r=125+k*42+Math.sin(t*3+k)*6,a=seg(t,k*.1,k*.1+.5);c.strokeStyle=k%2?`rgba(255,45,120,${.9*a})`:`rgba(${ARGB},${.9*a})`;c.lineWidth=8;c.shadowColor=c.strokeStyle;c.shadowBlur=36;c.beginPath();c.arc(W/2,cy,r,0,7);c.stroke()}c.restore();
-  const p=bk(seg(t,.1,.8));hmark(W/2,cy,170*p,0,p);
-  [["Status","#34d399"],["Chats","#60a5fa"],["Posts","#f472b6"]].forEach(([n,col],k)=>{const u=bk(seg(t,.6+k*.2,1.2+k*.2));if(u<=0)return;const x=70+k*320+(1-clamp(u))*500,g=c.createLinearGradient(x,610,x+300,930);g.addColorStop(0,col);g.addColorStop(1,"#10151a");c.save();c.globalAlpha*=clamp(u);lg(x,610,300,320,44,hr(col),.4);c.fillStyle="rgba(255,255,255,.92)";c.beginPath();c.arc(x+82,712,40,0,7);c.fill();c.fillStyle=col;c.beginPath();c.arc(x+82,712,16,0,7);c.fill();c.save();c.shadowColor="rgba(0,0,0,.3)";c.shadowBlur=10;txt(n,x+30,870,50,"#fff",700);c.restore();c.restore()});
-  const a=1-seg(t,2.5,2.9),b=seg(t,2.9,3.5);wt("Live chats.",W/2,1060,96,"#fff",seg(t,1.2,1.8)*a);wt("Real moments.",W/2,1180,96,MINT,seg(t,1.5,2.1)*a);wt("Millions of voices.",W/2,1060,90,"#fff",b);wt("Endless conversations.",W/2,1180,76,MINT,seg(t,3.1,3.7));
+const WD=[["Fast.","zap",.2,1.4],["Safe.","shield",1.4,2.6],["Free.","gift",2.6,4.6]];
+function a5(t){ // white: big words + SVG icons
+  flat("#fff");WD.forEach(([s,ic,a,b],i)=>{const p=Math.min(seg(t,a,a+.35),i==2?1:1-seg(t,b-.3,b));if(p<=0)return;
+    c.save();c.globalAlpha*=p;ico(ic,W/2,H*.32,260*bk(seg(t,a,a+.5)),INK,1.4);c.restore();wt(s,W/2,H*.56,300,INK,p)});
 }
 function s5(t) { // outro + url
   const p = bk(seg(t, 0, .8)); hmark(W / 2, 640, 320 * p, (1 - p) * -2, p); ring(W / 2, 640, seg(t, .1, .9), ARGB);
   wt("Haba", W / 2, 930, 170, "#fff", seg(t, .5, 1.1)); wt("Join the conversation.", W / 2, 1080, 62, LIME, seg(t, 1.0, 1.6), 600);
   const u = bk(seg(t, 1.4, 2.0)); c.save(); c.globalAlpha *= clamp(u); c.translate(0, (1 - clamp(u)) * 60);
-  rr(W / 2 - 426, 1260, 840, 130, 65); c.fillStyle = "#22d3ee"; c.fill(); rr(W / 2 - 414, 1260, 840, 130, 65); c.fillStyle = "#ff2d55"; c.fill(); rr(W / 2 - 420, 1260, 840, 130, 65); c.fillStyle = "#fff"; c.fill();
-  c.strokeStyle = GREY; c.lineWidth = 6; c.beginPath(); c.arc(W / 2 - 345, 1322, 17, 0, 7); c.moveTo(W / 2 - 333, 1334); c.lineTo(W / 2 - 317, 1350); c.stroke();
+  rr(W / 2 - 420, 1260, 840, 130, 65); c.fillStyle = "#fff"; c.fill();
+  ico("search", W / 2 - 335, 1325, 56, INK, 2.2);
   const n = clamp(Math.floor((t - 2.0) * 13), 0, 13); F(600, 52, HEAD, -1); c.fillStyle = INK; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText("habaapp.co.za".slice(0, n) + (n < 13 && ((t * 4) | 0) % 2 ? "▍" : ""), W / 2 - 285, 1326); hmark(W / 2 + 345, 1325, 72, 0, 1); c.restore();
   if (t > 2.0) { const q = kf(t, [[2.0, W / 2 + 420, 1560], [3.0, W / 2 + 340, 1350]]); cursor(q[0], q[1], 1.4); }
 }
+function s7(t) { bg(); c.save(); c.translate(0, -380); s5(t); c.restore(); }
 
-function s7(t){bg();c.save();c.translate(0,-380);s5(t);c.restore()}
 // ---------- compositor ----------
-const FN = [n0, n1, n2, n3, n4, n5, n6, s7], BASE = [3.2, 3.6, 4.8, 3.8, 4.6, 3.8, 4.4, 4.6];
+const FN = [a0, a1, a2, a3, a4, a5, s7], BASE = [3.6, 4.2, 3.8, 3.6, 4.6, 4.4, 4.6];
 let SC = [], ST = [];
 function retime(d = []) { let s = 0; SC = FN.map((f, i) => { const len = Math.max(BASE[i], d[i] ? d[i] + .45 : 0), r = [s, s + len, f]; ST[i] = s; s += len - .2; return r; }); T = SC[SC.length - 1][1]; }
 retime();
 function frame(t) {
   NOW = t; c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = "source-over"; c.filter = "none"; bg(t);
   SC.forEach(([a, b, f], i) => { if (t < a || t > b) return; const lt = t - a, last = i === SC.length - 1, nx = last ? 1e9 : SC[i + 1][0]; if (t >= nx) return;
-    const o = last ? 0 : seg(t, nx - .28, nx), n = i ? 1 - seg(lt, 0, .35) : 0, k = 1 + .35 * io(o) + .3 * n * n, m = Math.max(io(o), n * n); c.save(); c.translate(W / 2, H / 2); c.scale(k, k); c.translate(-W / 2, -H / 2); if (FIL && m > .01) c.filter = `blur(${m * 18}px)`; f(lt); c.restore(); });
-  SC.forEach(([a], i) => { if (!i) return; const u = (t - (a - .25)) / .6; if (u <= 0 || u >= 1) return; const e = lerp(-.35 * W, 1.35 * W, io(u)), pw = W * .55;
-    c.save(); const g = c.createLinearGradient(e - pw, 0, e, 0); g.addColorStop(0, `rgba(${ARGB2},0)`); g.addColorStop(.7, `rgba(${ARGB2},.95)`); g.addColorStop(1, LIME); c.fillStyle = g;
-    c.beginPath(); c.moveTo(e - pw, 0); c.lineTo(e + 120, 0); c.lineTo(e - 120, H); c.lineTo(e - pw - 240, H); c.closePath(); c.fill(); c.restore(); });
-  c.save(); c.globalCompositeOperation = "overlay"; c.globalAlpha = .07; c.fillStyle = c.createPattern(grain, "repeat"); c.translate(Math.floor(Math.random() * 256), Math.floor(Math.random() * 256)); c.fillRect(-256, -256, W + 512, H + 512); c.restore();
+    const o = last ? 0 : seg(t, nx - .28, nx), n = i ? 1 - seg(lt, 0, .35) : 0, k = 1 + .35 * io(o) + .3 * n * n, m = Math.max(io(o), n * n); c.save(); c.translate(W / 2, H / 2); c.scale(k, k); c.translate(-W / 2, -H / 2); if (FIL && m > .01) c.filter = `blur(${m * 10}px)`; f(lt); c.restore(); });
   c.fillStyle = `rgba(${ARGB},.9)`; c.fillRect(0, H - 6, W * clamp(t / T), 6);
 }
 </script>
@@ -258,13 +231,12 @@ function frame(t) {
 const $ = id => document.getElementById(id);
 const say = (t, e) => { $("msg").textContent = t || ""; $("msg").style.color = e ? "#ff8a8a" : "#9fd8c0"; };
 const LINES = [
-  "Chat starts here.",
-  "Say it in seconds. Search for anyone.",
-  "Your chats. Your people. All in one place.",
-  "A space for every vibe.",
-  "Find your people.",
-  "Haba. Your people. Your world.",
-  "Live chats. Real moments. Millions of voices.",
+  "Need to chat?",
+  "Introducing Haba.",
+  "Your all-in-one spot for every conversation.",
+  "Post it. Tag it. Get verified.",
+  "Chats. Posts. Status. Videos.",
+  "Fast. Safe. Free.",
   "Haba. Join the conversation at habaapp dot co dot z a."
 ];
 let VO = [], cache = {}, user = null, voiceFn = null, auth = null, t0 = performance.now(), recording = false, busy = false, outNode = null, actx = null, audioMode = false;
@@ -321,15 +293,14 @@ function sfx(ctx, out, type, at, g = 1) {
 // every sound is tied to a scene start (ST), so it follows the timeline even when the voiceover stretches scenes
 function events() {
   const E = [], a = (i, l, type, g = 1) => E.push([ST[i] + l, type, g]);
-  for (let i = 1; i < 8; i++) a(i, -.15, "whoosh", .8);
-  a(0, .2, "swish", .6); a(0, 1.7, "pop", .8); a(0, 1.75, "chime", .7);
-  a(1, .1, "pop", .7); a(1, .5, "pop", .7); for (let k = 0; k < 16; k++) a(1, 1.5 + k * .083, "key", .5); a(1, 2.8, "click", .9);
-  a(2, .1, "swish", .6); a(2, 2.5, "impact", .7); a(2, 3.85, "click", .9); a(2, 3.9, "chime", .7);
-  a(3, .3, "swish", .6); a(3, 1.6, "pop", .6);
-  a(4, .2, "pop", .7); a(4, 2.0, "whoosh", .7); a(4, 2.3, "pop", .7); for (let k = 0; k < 15; k++) a(4, 3.0 + k * .083, "key", .4);
-  a(5, .3, "impact", .7); a(5, .35, "chime", .8);
-  a(6, .1, "impact", .6); for (let k = 0; k < 3; k++) a(6, .6 + k * .2, "pop", .6); a(6, 2.9, "chime", .7);
-  a(7, .05, "whoosh", .7); a(7, .3, "impact", .8); a(7, .35, "chime", .8); a(7, .5, "swish", .5); for (let k = 0; k < 13; k++) a(7, 2.0 + k * .077, "key", .5); a(7, 3.0, "click", .8);
+  for (let i = 1; i < 7; i++) a(i, -.15, "whoosh", .8);
+  a(0, .2, "swish", .6); a(0, .95, "whoosh", .5); a(0, 1.9, "pop", .6);
+  a(1, .2, "swish", .6); a(1, 1.5, "impact", .7); a(1, 1.55, "chime", .8);
+  a(2, .2, "swish", .6); a(2, 1.0, "swish", .5);
+  for (let k = 0; k < 4; k++) a(3, .1 + k * .8, "click", .8);
+  a(4, .2, "swish", .5); for (let k = 0; k < 3; k++) a(4, .8 + k * .9, "click", .8);
+  a(5, .3, "pop", .6); a(5, 1.4, "pop", .6); a(5, 2.6, "pop", .6);
+  a(6, .05, "whoosh", .7); a(6, .3, "impact", .8); a(6, .35, "chime", .8); a(6, .5, "swish", .5); for (let k = 0; k < 13; k++) a(6, 2.0 + k * .077, "key", .5); a(6, 3.0, "click", .8);
   return E;
 }
 function mix(ctx, dest, base) {
@@ -397,7 +368,7 @@ function loop() {
   if (!busy) frame(recording || audioMode ? Math.min(el, T) : Math.min(el % (T + .9), T));
   requestAnimationFrame(loop);
 }
-Promise.race([Promise.all([document.fonts.load('600 100px "Inter Tight"'), document.fonts.load('700 26px "JetBrains Mono"')]), new Promise(r => setTimeout(r, 2500))]).finally(() => { t0 = performance.now(); loop(); });
+Promise.race([Promise.all([document.fonts.load('600 100px "Inter Tight"'), document.fonts.load('800 100px "Inter Tight"')]), new Promise(r => setTimeout(r, 2500))]).finally(() => { t0 = performance.now(); loop(); });
 </script>
 </body>
 </html>
