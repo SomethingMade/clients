@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Haba · Ad</title>
+<title>Haba · Verified Badge Ad</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap" rel="stylesheet">
@@ -277,50 +277,86 @@ function chat(t, cf) {
   if (cf.hdr) header(t, cf, P); if (cf.comp != null) composer(t, cf, P);
 }
 
-// ---------- the conversations ----------
-const S0I = [
-  { p: PE.T, text: "Sawubona", at: .3 }, { p: PE.K, text: "Dumela", at: .7 }, { p: PE.Z, text: "Molo", at: 1.1 }, { p: PE.P, text: "Hallo", at: 1.5 }, { p: PE.N, text: "Avuxeni", at: 1.9 },
-  { side: 1, text: "Hello", at: 2.8, typ: 2.3, size: 140 }];
-const S1I = [{ side: 1, text: "Hey, who are you?", at: 1.7, typ: 1.0 }, { p: HB, text: "Meet Haba.", at: 2.8, typ: 2.1, size: 96, big: 1 }];
-const S2I = [
-  { p: PE.M, text: "Supper is at 6!", at: .3 }, { p: PE.W, text: "Standup moved to 9.", at: .75 }, { p: PE.F, text: "Did you see the post?", at: 1.2 }, { p: PE.C, text: "Notes are up.", at: 1.65 },
-  { p: HB, text: "Every conversation.\nOne place.", at: 2.6, typ: 2.0, size: 72, big: 1 }];
-const S3I = [
-  { text: "Still on for Saturday?", at: .95, typ: .45 },
-  { side: 1, text: "Absolutely. See you there.", at: 2.0, typ: 1.3, st: [[2.2, "Delivered"], [2.9, "Read"]], re: { at: 3.1 } },
-  { kind: "voice", at: 3.8, typ: 3.3, dur: 1.5, time: "0:08" },
-  { side: 1, text: "Bringing the whole crew.", at: 4.7, typ: 4.15 }];
-const S4I = [
-  { kind: "chip", ic: "message", text: "Chats", at: .4, act: [.5, 1.3] },
-  { kind: "chip", ic: "image", text: "Posts", at: 1.25, side: 1, neutral: 1, act: [1.35, 2.15] },
-  { kind: "chip", ic: "dot", text: "Status", at: 2.1, act: [2.2, 3.0] },
-  { kind: "chip", ic: "video", text: "Videos", at: 2.95, side: 1, neutral: 1, act: [3.05, 0] }];
-const S5I = [
-  { side: 1, text: "Fast.", size: 120, at: .3, ico: "zap" }, { text: "Safe.", size: 120, at: 1.1, ico: "shield" }, { side: 1, text: "Free.", size: 120, at: 1.9, ico: "gift" }];
-const S6I = [{ p: HB, text: "Join the conversation.", at: 1.6, typ: .9, size: 62 }, { side: 1, text: "habaapp.co.za", at: 2.4, size: 56 }];
-const C0 = { dark: 1, x0: 60, x1: 1020, top: 0, bot: 1080, hdr: { name: "Say hello", sub: "6 online", live: 1 }, comp: 952, ts: 40, mx: 700, mxb: 860, gap: 16, items: S0I };
-const C1 = { dark: 0, x0: 60, x1: 1020, top: 470, bot: 1080, comp: 952, ts: 42, mx: 700, mxb: 860, gap: 16, items: S1I };
-const C2 = { dark: 1, x0: 60, x1: 1020, top: 0, bot: 1050, hdr: { name: "All chats", sub: "4 new messages", live: 1 }, ts: 40, mx: 700, mxb: 860, gap: 16, items: S2I };
-const C3 = { dark: 0, card: { x: 50, y: 290, w: 980, h: 750 }, x0: 100, x1: 980, top: 290, bot: 1040, hdr: { name: "Thandi", sub: "online", live: 1, av: PE.T }, comp: 932, ts: 38, mx: 640, mxb: 800, gap: 16, items: S3I };
-const C4 = { dark: 1, x0: 60, x1: 1020, top: 0, bot: 1050, hdr: { name: "Haba", sub: "online", live: 1, vf: 1 }, ts: 40, mx: 700, mxb: 860, cw: 640, gap: 22, vc: 1, items: S4I };
-const C5 = { dark: 0, x0: 60, x1: 1020, top: 40, bot: 1040, ts: 40, mx: 700, mxb: 860, gap: 80, vc: 1, items: S5I };
-const C6 = { dark: 1, x0: 60, x1: 1020, top: 470, bot: 830, ts: 40, mx: 700, mxb: 860, gap: 20, items: S6I };
-const CH_ALL = [C0, C1, C2, C3, C4, C5, C6];
-
-function a0(t) { flat("#000"); glow(W / 2, H * .55, 800, ARGB, .16 * oc(seg(t, 0, 1.2))); chat(t, C0); }
-function a1(t) { // light: you open a chat with Haba
-  flat("#fff"); const e = oe(seg(t, .1, .7)), p = sp(seg(t, .1, 1.2));
-  hmark(W / 2, 215 + (1 - oc(seg(t, .1, 1.1))) * 60, 210 * (.55 + .45 * p), e, false, seg(t, 1, 1.9));
-  F(700, 64, HEAD, -2); const nw = c.measureText("Haba").width, tw = nw + 68, na = oe(seg(t, .7, 1.4)); txt("Haba", W / 2 - tw / 2, 372, 64, INK, na, { w: 700, al: "left" });
-  if (na > 0) { c.save(); c.globalAlpha *= na; ico("badge", W / 2 - tw / 2 + nw + 42, 374, 46, `rgb(${ARGB2})`, 2.2); c.restore(); }
-  txt("habaapp.co.za", W / 2, 426, 30, "#8e8e93", oe(seg(t, .9, 1.6)), { w: 500, ls: -.2 }); chat(t, C1);
+// ---------- VERIFIED BADGE AD: new scenes ----------
+const CREAM = "#f6f4ee";
+function vb(x, y, s, a = 1, sh = 0, wh = false) { // the verified badge, filled
+  a = clamp(a); if (a <= 0 || s <= 0) return; c.save(); c.globalAlpha *= a; c.save(); c.shadowColor = `rgba(${ARGB2},.55)`; c.shadowBlur = s * .5; c.shadowOffsetY = s * .12;
+  c.translate(x - s / 2, y - s / 2); c.scale(s / 24, s / 24); const g = c.createLinearGradient(0, 0, 24, 24); g.addColorStop(0, `rgb(${ARGB})`); g.addColorStop(1, `rgb(${SRGB})`);
+  c.fillStyle = wh ? "#fff" : g; c.fill(ICO.badge[0]); c.shadowColor = "rgba(0,0,0,0)"; c.strokeStyle = wh ? `rgb(${ARGB2})` : onAcc(); c.lineWidth = 2.4; c.lineCap = c.lineJoin = "round"; c.stroke(ICO.badge[1]);
+  if (sh > 0 && sh < 1) { c.save(); c.clip(ICO.badge[0]); const bx = lerp(-8, 32, sh), gg = c.createLinearGradient(bx - 4, 0, bx + 4, 0); gg.addColorStop(0, "rgba(255,255,255,0)"); gg.addColorStop(.5, "rgba(255,255,255,.75)"); gg.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = gg; c.fillRect(-5, -5, 34, 34); c.restore(); }
+  c.restore(); c.restore();
 }
+function burst(bx, by, t, t0) {
+  for (let k = 0; k < 2; k++) { const p = seg(t, t0 + k * .15, t0 + k * .15 + .9); if (p > 0 && p < 1) { c.save(); c.globalAlpha *= (1 - p) * .7; c.strokeStyle = `rgb(${ARGB2})`; c.lineWidth = 8 * (1 - p) + 1; c.beginPath(); c.arc(bx, by, lerp(30, 190, oc(p)), 0, 7); c.stroke(); c.restore(); } }
+  const p = seg(t, t0, t0 + .8); if (p > 0 && p < 1) { c.save(); c.strokeStyle = `rgb(${ARGB})`; c.lineCap = "round"; c.lineWidth = 7; c.globalAlpha *= 1 - p;
+    for (let i = 0; i < 10; i++) { const an = i / 10 * 6.283, r0 = lerp(60, 120, oc(p)), r1 = r0 + 40 * Math.sin(p * 3.14); c.beginPath(); c.moveTo(bx + Math.cos(an) * r0, by + Math.sin(an) * r0); c.lineTo(bx + Math.cos(an) * r1, by + Math.sin(an) * r1); c.stroke(); } c.restore(); }
+}
+function pcard(x, y, w, h, nm, hd, vt, a, dk) { // profile card; vt = badge progress (0 = none)
+  c.save(); c.globalAlpha *= clamp(a); c.shadowColor = "rgba(0,0,0,.35)"; c.shadowBlur = 60; c.shadowOffsetY = 24; rr(x, y, w, h, 48); c.fillStyle = dk ? "#15171d" : "#fff"; c.fill(); c.shadowColor = "rgba(0,0,0,0)";
+  c.lineWidth = 2; c.strokeStyle = dk ? "rgba(255,255,255,.1)" : "rgba(0,0,0,.06)"; c.stroke(); avatar(PE.T, x + w / 2, y + h * .3, h * .3, 1);
+  F(700, Math.min(46, w * .1), HEAD, -1); const m = c.measureText(nm).width, e = oc(vt), nx = x + w / 2 - 30 * e; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = dk ? "#fff" : INK; c.fillText(nm, nx, y + h * .62);
+  F(500, 30, HEAD, 0); c.fillStyle = "#8e8e93"; c.fillText(hd, x + w / 2, y + h * .74);
+  rr(x + w * .2, y + h * .84, w * .6, h * .09, h * .045); c.fillStyle = dk ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.06)"; c.fill(); F(600, 28, HEAD, 0); c.fillStyle = dk ? "#fff" : INK; c.fillText("Follow", x + w / 2, y + h * .885);
+  const bx = nx + m / 2 + 36, by = y + h * .62; if (vt > 0) vb(bx, by, 54 * (1 + 2.2 * (1 - oc(vt))), vt * 4, seg(vt, .5, 1)); c.restore(); return [bx, by];
+}
+// scene 0: two identical accounts, which is real?
+function a0(t) {
+  flat("#000"); glow(W / 2, H * .55, 800, ARGB, .16 * oc(seg(t, 0, 1.2)));
+  maskLine("Anyone can be", W / 2, 120, 92, "#fff", oe(seg(t, .1, 1))); maskLine("anyone online.", W / 2, 225, 92, gradH, oe(seg(t, .35, 1.25)));
+  [[70, "@thandi.m", .5], [560, "@thandi_m", .9]].forEach(([x, hd, s]) => { const p = seg(t, s, s + .7); c.save(); c.translate(0, (1 - oc(p)) * 70 + Math.sin(t * 1.6 + x) * 5); pcard(x, 340, 450, 520, "Thandi M.", hd, 0, oe(p), true); c.restore(); });
+  txt("Which one is real?", W / 2, 940, 56, gradH, oe(seg(t, 2.4, 3.1)), { w: 700 });
+}
+// scene 1: the badge lands
+function a1(t) {
+  flat(CREAM); maskLine("Meet the badge", W / 2, 120, 90, INK, oe(seg(t, .1, 1))); maskLine("that proves it’s you.", W / 2, 220, 90, INK, oe(seg(t, .35, 1.25)));
+  const vt = seg(t, 1.0, 1.9), ps = pcard(290, 300, 500, 540, "Thandi M.", "@thandi.m", vt, oe(seg(t, .3, 1)), false); burst(ps[0], ps[1], t, 1.45);
+  txt("The official mark of real people.", W / 2, 930, 42, "#6e6e73", oe(seg(t, 2.2, 3)), { w: 500 });
+}
+// scene 2: spotting a scammer in chat
+const PU = { n: "Unknown number", c: "#71717a", i: "?" }, PR = { n: "Thandi · Verified", c: "#10b981", i: "T" };
+const C2 = { dark: 1, x0: 60, x1: 1020, top: 0, bot: 1080, hdr: { name: "Haba", sub: "Look for the badge", live: 1, vf: 1 }, comp: 952, ts: 40, mx: 700, mxb: 860, gap: 20, items: [
+  { p: PU, text: "Hi, it’s Thandi. New number.", at: .7, typ: .2 }, { p: PU, text: "Please send R500, it’s urgent!", at: 1.7, typ: 1.2 },
+  { side: 1, text: "No badge. Not you.", at: 3.0, typ: 2.4 }, { p: PR, text: "That wasn’t me. Block them.", at: 4.3, typ: 3.7 }] };
+const CH_ALL = { 2: C2 };
 function a2(t) { flat("#000"); glow(W / 2, H * .6, 900, ARGB, .14 * oc(seg(t, .6, 2.6))); chat(t, C2); }
-function a3(t) {
-  flat(BGL); maskLine("Chats that feel", W / 2, 110, 96, INK, oe(seg(t, .1, 1))); maskLine("effortless.", W / 2, 210, 96, INK, oe(seg(t, .35, 1.25))); chat(t, C3);
+// scene 3: why get verified
+function rowCard(y, ic, t1, t2, p) {
+  p = clamp(p); if (p <= 0) return; c.save(); c.globalAlpha *= clamp(p * 2); c.translate((1 - oc(p)) * 90, 0); c.shadowColor = "rgba(0,0,0,.1)"; c.shadowBlur = 40; c.shadowOffsetY = 14; rr(80, y, 920, 170, 44); c.fillStyle = "#fff"; c.fill(); c.shadowColor = "rgba(0,0,0,0)";
+  c.beginPath(); c.arc(175, y + 85, 56, 0, 7); c.fillStyle = accFill(119, y + 29, 112, 112); c.fill(); ico(ic, 175, y + 85, 54, onAcc(), 2.2);
+  F(700, 46, HEAD, -.8); c.textAlign = "left"; c.textBaseline = "middle"; c.fillStyle = INK; c.fillText(t1, 262, y + 66); F(500, 30, HEAD, -.1); c.fillStyle = "#8e8e93"; c.fillText(t2, 262, y + 116); c.restore();
 }
-function a4(t) { flat("#000"); glow(W / 2, H * .5, 800, ARGB, .12 * oc(seg(t, .3, 2))); chat(t, C4); }
-function a5(t) { flat("#fff"); chat(t, C5); }
+function a3(t) {
+  flat(CREAM); maskLine("Why get verified?", W / 2, 130, 92, INK, oe(seg(t, .1, 1)));
+  rowCard(260, "shield", "Protection from copycats", "Fake accounts can’t wear your badge.", seg(t, .5, 1.1));
+  rowCard(480, "search", "Found faster", "Stand out when people search.", seg(t, 1.3, 1.9));
+  rowCard(700, "heart", "Trusted by your people", "Followers know it’s really you.", seg(t, 2.1, 2.7));
+  vb(W / 2, 950, 90 * sp(seg(t, 3, 3.6)), seg(t, 3, 3.4), seg(t, 3.4, 4.2));
+}
+// scene 4: how to apply
+function a4(t) {
+  flat("#000"); glow(W / 2, H * .5, 800, ARGB, .12 * oc(seg(t, .3, 2))); maskLine("Apply in three taps.", W / 2, 120, 88, "#fff", oe(seg(t, .1, 1)));
+  const Y = [360, 590, 820], S = [["Open Settings", "Profile  →  Settings"], ["Tap Request verification", "Add your ID and details"], ["Get your badge", "We’ll notify you when it’s live"]], A = [.6, 1.6, 2.6];
+  for (let k = 0; k < 2; k++) { const y0 = Y[k] + 54, y1 = Y[k + 1] - 54; c.fillStyle = "rgba(255,255,255,.12)"; c.fillRect(137, y0, 6, y1 - y0); c.fillStyle = `rgb(${ARGB})`; c.fillRect(137, y0, 6, (y1 - y0) * oc(seg(t, A[k] + .5, A[k] + 1.1))); }
+  Y.forEach((y, k) => {
+    const p = oe(seg(t, A[k] - .3, A[k] + .3)), on = io(seg(t, A[k] + .2, A[k] + .6)); if (p <= 0) return; c.save(); c.globalAlpha *= p; c.translate((1 - p) * 60, 0);
+    rr(230, y - 80, 760, 160, 40); c.fillStyle = "#15171d"; c.fill(); c.lineWidth = 3; c.strokeStyle = `rgba(${ARGB},${.8 * on})`; c.stroke();
+    c.beginPath(); c.arc(140, y, 54, 0, 7); c.fillStyle = "#23252c"; c.fill(); c.save(); c.globalAlpha *= on; c.beginPath(); c.arc(140, y, 54, 0, 7); c.fillStyle = accFill(86, y - 54, 108, 108); c.fill(); c.restore();
+    if (k < 2) { F(700, 46, HEAD, 0); c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = mixc("#8e8e93", onAcc(), on); c.fillText(String(k + 1), 140, y + 2); } else { c.save(); c.globalAlpha *= 1 - on; F(700, 46, HEAD, 0); c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = "#8e8e93"; c.fillText("3", 140, y + 2); c.restore(); vb(140, y, 118 * sp(on), on, seg(t, A[k] + .6, A[k] + 1.4), true); }
+    F(700, 46, HEAD, -.8); c.textAlign = "left"; c.textBaseline = "middle"; c.fillStyle = "#fff"; c.fillText(S[k][0], 270, y - 24); F(500, 30, HEAD, -.1); c.fillStyle = "#8e8e93"; c.fillText(S[k][1], 270, y + 28); c.restore();
+  });
+}
+// scene 5: approved
+function a5(t) {
+  const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, `rgb(${ARGB2})`); g.addColorStop(1, `rgb(${SRGB})`); c.fillStyle = g; c.fillRect(0, 0, W, H); glow(W / 2, 490, 700, "255,255,255", .28 * oe(seg(t, .9, 1.6)));
+  const n = sp(seg(t, .1, .9)); c.save(); c.translate(0, (1 - n) * -220); c.globalAlpha *= clamp(n * 2); c.shadowColor = "rgba(0,0,0,.25)"; c.shadowBlur = 50; c.shadowOffsetY = 20; rr(90, 70, 900, 150, 44); c.fillStyle = "rgba(255,255,255,.96)"; c.fill(); c.shadowColor = "rgba(0,0,0,0)";
+  hmark(176, 145, 86, 1); F(600, 28, HEAD, 0); c.textAlign = "left"; c.textBaseline = "middle"; c.fillStyle = "#8e8e93"; c.fillText("Haba  ·  now", 244, 116); F(700, 36, HEAD, -.5); c.fillStyle = INK; c.fillText("Your verification was approved", 244, 164); c.restore();
+  const p = seg(t, .9, 1.9); vb(W / 2, 490, 420 * (.3 + .7 * sp(p)), oe(p), seg(t, 1.6, 2.4), true);
+  for (let i = 0; i < 46; i++) { const r1 = Math.sin(i * 12.9898) * 43758.5453, r = r1 - Math.floor(r1), r2 = Math.sin(i * 78.233) * 12345.678, q = r2 - Math.floor(r2), tt = t - 1.0; if (tt < 0) continue;
+    const an = -Math.PI / 2 + (r - .5) * 3.6, v = 500 + q * 700, x = W / 2 + Math.cos(an) * v * tt * .9, y = 490 + Math.sin(an) * v * tt + 700 * tt * tt; if (y > H + 40) continue;
+    c.save(); c.translate(x, y); c.rotate(tt * (3 + q * 6) + i); c.globalAlpha *= clamp(1 - tt / 2.6); c.fillStyle = ["#fff", "#fff5b0", "#b9f5df", "#ffd1e8"][i % 4]; c.fillRect(-9, -5, 18, 10); c.restore(); }
+  maskLine("You’re verified.", W / 2, 830, 112, onAcc(), oe(seg(t, 1.2, 2.0))); txt("Your badge is live on Haba.", W / 2, 935, 40, onAcc(), oe(seg(t, 2.2, 3)), { w: 500 });
+}
+
 function badge(t) { // Google Play download badge
   const u = sp(seg(t, 2.9, 3.6)); if (u <= 0) return; const bw = 440, bh = 116;
   c.save(); c.globalAlpha *= clamp(u * 1.6); c.translate(W / 2, 940); const k = .88 + .12 * u; c.scale(k, k);
@@ -331,12 +367,15 @@ function badge(t) { // Google Play download badge
 }
 function s6(t) { // black: outro
   flat("#000"); const a = oe(seg(t, 0, .5)), p = sp(seg(t, .05, 1)); glow(W / 2, 230, 600, ARGB, .35 * a);
-  hmark(W / 2, 190 + (1 - oc(seg(t, 0, .9))) * 50, 230 * (.6 + .4 * p), a, true, seg(t, .7, 1.6));
-  txt("Haba", W / 2, 372, 90, "#fff", oe(seg(t, .45, 1.15)), { w: 700 }); chat(t, C6); badge(t);
+  hmark(W / 2, 170 + (1 - oc(seg(t, 0, .9))) * 50, 190 * (.6 + .4 * p), a, true, seg(t, .7, 1.6));
+  maskLine("Get verified.", W / 2, 400, 128, gradH, oe(seg(t, .4, 1.2)));
+  txt("Prove it’s really you.", W / 2, 510, 48, "#a1a1aa", oe(seg(t, 1.1, 1.8)), { w: 500 });
+  const bp = seg(t, 1.6, 2.4); vb(W / 2, 640, 120 * sp(bp), bp, seg(t, 2.2, 3));
+  txt("habaapp.co.za", W / 2, 770, 52, "#fff", oe(seg(t, 2.0, 2.7)), { w: 600 }); badge(t);
 }
 
 // ---------- compositor: soft dissolve between scenes ----------
-const FN = [a0, a1, a2, a3, a4, a5, s6], BASE = [4.0, 4.2, 4.4, 5.9, 4.2, 3.8, 4.8];
+const FN = [a0, a1, a2, a3, a4, a5, s6], BASE = [4.2, 4.6, 5.8, 4.6, 5.2, 4.8, 4.8];
 let SC = [], ST = [];
 function retime(d = []) { let s = 0; SC = FN.map((f, i) => { const len = Math.max(BASE[i], d[i] ? d[i] + .7 : 0), r = [s, s + len, f]; ST[i] = s; s += len - .5; return r; }); T = SC[SC.length - 1][1]; }
 retime();
@@ -351,13 +390,13 @@ function frame(t) {
 const $ = id => document.getElementById(id);
 const say = (t, e) => { $("msg").textContent = t || ""; $("msg").style.color = e ? "#ff8a8a" : "#9fd8c0"; };
 const LINES = [
-  "Say hello.",
-  "Meet Haba.",
-  "Every conversation. One place.",
-  "Chats that feel effortless.",
-  "Chats. Posts. Status. Videos.",
-  "Fast. Safe. Free.",
-  "Haba. Join the conversation at habaapp dot co dot z a."
+  "Anyone can be anyone online.",
+  "Meet the badge that proves it's you.",
+  "Scammers copy. Verified can't be copied.",
+  "Protection. Reach. Trust.",
+  "Apply in three taps.",
+  "You're verified.",
+  "Get verified on Haba. habaapp dot co dot z a."
 ];
 let VO = [], cache = {}, user = null, voiceFn = null, auth = null, t0 = performance.now(), recording = false, busy = false, outNode = null, actx = null, audioMode = false;
 
@@ -414,13 +453,12 @@ function sfx(ctx, out, type, at, g = 1) {
 function events() {
   const E = [], a = (i, l, type, g = 1) => E.push([ST[i] + l, type, g]);
   for (let i = 1; i < 7; i++) a(i, -.1, "swish", .35);
-  CH_ALL.forEach((cf, i) => cf.items.forEach(it => {
-    if (it.side) { if (it.typ != null) { const n = Math.min(it.text.length, 24); for (let k = 0; k < n; k++) a(i, it.typ + .05 + k * (it.at - it.typ - .25) / n, "key", .35); } a(i, it.at, "swish", .5); }
-    else { if (it.typ != null) a(i, it.typ, "tick", .4); a(i, it.at, "pop", .6); }
-    if (it.re) a(i, it.re.at, "pop", .5); if (it.ico) a(i, it.at + .3, "pop", .4); if (it.act) a(i, it.act[0], "click", .6);
-  }));
-  a(1, .15, "chime", .45); a(2, 2.7, "chime", .4); a(5, 2.5, "chime", .5); a(6, .1, "thump", .6); a(6, .4, "chime", .7); a(6, 3.0, "pop", .6);
-  return E;
+  a(0, .5, "pop", .6); a(0, .9, "pop", .6); a(0, 2.4, "tick", .5); a(1, 1.45, "impact", .7); a(1, 1.5, "chime", .5);
+  C2.items.forEach(it => { if (it.side) { if (it.typ != null) { const n = Math.min(it.text.length, 24); for (let k = 0; k < n; k++) a(2, it.typ + .05 + k * (it.at - it.typ - .25) / n, "key", .35); } a(2, it.at, "swish", .5); } else { if (it.typ != null) a(2, it.typ, "tick", .4); a(2, it.at, "pop", .6); } });
+  a(3, .6, "pop", .6); a(3, 1.4, "pop", .6); a(3, 2.2, "pop", .6); a(3, 3.1, "chime", .4);
+  [.8, 1.8, 2.8].forEach(l => a(4, l, "click", .6)); a(4, 2.9, "chime", .4);
+  a(5, .3, "swish", .5); a(5, 1.1, "impact", .8); a(5, 1.15, "chime", .7);
+  a(6, .1, "thump", .6); a(6, .4, "chime", .7); a(6, 3.0, "pop", .6); return E;
 }
 function mix(ctx, dest, base) {
   const out = ctx.createGain(), bus = ctx.createGain(); out.connect(dest); bus.connect(out); bus.gain.value = .55;
@@ -453,7 +491,7 @@ async function exportMP4() {
     if (i % 10 === 0) { say(`Rendering video… ${Math.round(i / N * 100)}% (keep this tab open)`); await new Promise(r => setTimeout(r)); }
   }
   await ve.flush(); ve.close(); mux.finalize(); if (err) throw err;
-  save(new Blob([mux.target.buffer], { type: "video/mp4" }), "haba-ad.mp4");
+  save(new Blob([mux.target.buffer], { type: "video/mp4" }), "haba-verified-ad.mp4");
 }
 async function exportRT() { // fallback without WebCodecs: real-time recording
   const ac = new AudioContext(), dest = ac.createMediaStreamDestination(), stream = cv.captureStream(30); dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
@@ -461,13 +499,13 @@ async function exportRT() { // fallback without WebCodecs: real-time recording
   const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 12e6 }), done = new Promise(r => (rec.onstop = r)); rec.ondataavailable = e => e.data.size && ch.push(e.data);
   await ac.resume(); const base = ac.currentTime + .1; mix(ac, dest, base);
   busy = false; recording = true; t0 = performance.now() + 100; rec.start(); await new Promise(r => setTimeout(r, (T + .5) * 1000)); rec.stop(); await done;
-  const type = (mime || "video/webm").split(";")[0]; save(new Blob(ch, { type }), "haba-ad." + (type.includes("mp4") ? "mp4" : "webm"));
+  const type = (mime || "video/webm").split(";")[0]; save(new Blob(ch, { type }), "haba-verified-ad." + (type.includes("mp4") ? "mp4" : "webm"));
 }
 
 // ---------- controls ----------
 $("replay").onclick = restart; $("voice").onchange = restart; $("sfx").onchange = restart;
 $("cp").onclick = async e => {
-  const txt = "Meet Haba: every conversation, one place. Chats, posts, status and videos that are fast, safe and free. Join the conversation at habaapp.co.za #Haba #JoinTheConversation";
+  const txt = "Anyone can be anyone online. Get the Haba verified badge and prove it’s really you. Request yours at habaapp.co.za #Haba #Verified";
   try { await navigator.clipboard.writeText(txt); e.target.textContent = "Copied ✓"; } catch (x) { e.target.textContent = "Copy failed"; }
   setTimeout(() => (e.target.textContent = "Copy caption"), 1600);
 };
