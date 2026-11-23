@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Haba · Verified Badge Ad</title>
+<title>Haba · Google Play Download Ad</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0}
 html,body{height:100%;background:#0a0f0d;color:#f4f4f5;font-family:"Inter",system-ui,sans-serif}
@@ -39,6 +39,9 @@ select option{color:#111}input{width:190px}input::placeholder{color:#8fa79d}
   <img id="logoPrev" class="hide" alt="Logo preview"><button id="logoClear" class="hide">Remove logo</button><span id="logoMsg" style="font-size:13px;color:#ff8a8a"></span>
 </div>
 <div class="row">
+  <label class="up" for="phFile">Upload people photos</label><input id="phFile" type="file" accept="image/*" multiple hidden><button id="phClear" class="hide">Remove photos</button><span id="phMsg" style="font-size:13px;color:#9fd8c0"></span>
+</div>
+<div class="row">
   <select id="voice" aria-label="Voiceover"><option value="rex">Voiceover: Rex (male)</option><option value="sal">Voiceover: Sal (male)</option><option value="leo">Voiceover: Leo (male)</option><option value="none">No voiceover</option></select>
   <select id="sfx" aria-label="Sound effects"><option value="on">Sound effects: On</option><option value="off">Sound effects: Off</option></select>
   <span id="vs" style="font-size:13px;color:#9fd8c0">Sign in to use voiceover</span>
@@ -56,6 +59,7 @@ const W = 1080, H = 1080; let T = 24;
 const cv = document.getElementById("cv"), c = cv.getContext("2d"); const CW = 1080, CH = 1080; cv.width = CW; cv.height = CH;
 let NOW = 0;
 let HEAD = '"Inter",system-ui,-apple-system,"Helvetica Neue",sans-serif', INK = "#1d1d1f", GRN = "#087f5b", MINT = "#34d399", LIME = "#6ee7b7", GREY = "#86868b";
+const DISP = '"Sora","Inter",system-ui,sans-serif';
 const FIL = "filter" in CanvasRenderingContext2D.prototype;
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v)), lerp = (a, b, t) => a + (b - a) * t;
 const oc = t => 1 - Math.pow(1 - clamp(t), 3), oe = t => { t = clamp(t); return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t); };
@@ -82,9 +86,11 @@ function txt(s, x, y, size, fill, p, o = {}) { // soft rise + fade
   c.textAlign = al; c.textBaseline = "middle"; c.save(); c.globalAlpha *= p; if (FIL && bl) c.filter = `blur(${(1 - p) * bl}px)`;
   c.fillStyle = typeof fill === "function" ? fill(x0, m) : fill; c.fillText(s, x, y + (1 - p) * rise); c.restore();
 }
-function maskLine(s, x, y, size, fill, p) { // headline slides up out of its own baseline
-  p = clamp(p); if (p <= 0) return; F(700, size, HEAD, -size * .03); c.textAlign = "center"; c.textBaseline = "middle";
-  const m = c.measureText(s).width; c.save(); c.beginPath(); c.rect(0, y - size * .62, W, size * 1.3); c.clip();
+function maskLine(s, x, y, size, fill, p) { // headline rises out of a mask; a delayed, offset outline trails behind it
+  p = clamp(p); if (p <= 0) return; F(700, size, DISP, -size * .03); c.textAlign = "center"; c.textBaseline = "middle";
+  let m = c.measureText(s).width; if (m > 960) { size *= 960 / m; F(700, size, DISP, -size * .03); m = c.measureText(s).width; }
+  c.save(); c.beginPath(); c.rect(0, y - size * .62, W, size * 1.3); c.clip();
+  const q = clamp(p - .22); if (q > 0 && q < 1) { c.save(); c.globalAlpha *= (1 - q) * .55; c.lineWidth = 2.5; c.strokeStyle = `rgb(${ARGB})`; c.strokeText(s, x - 14 * (1 - q), y + (1 - q) * size * .85 + 12 * (1 - q)); c.restore(); }
   c.globalAlpha *= clamp(p * 2); c.fillStyle = typeof fill === "function" ? fill(x - m / 2, m) : fill; c.fillText(s, x, y + (1 - p) * size * .85); c.restore();
 }
 
@@ -118,9 +124,21 @@ document.getElementById("logoFile").onchange = e => { const f = e.target.files[0
 document.getElementById("logoClear").onclick = () => { resetTheme(); document.getElementById("logoPrev").classList.add("hide"); document.getElementById("logoClear").classList.add("hide"); try { localStorage.removeItem("habaLogo"); } catch (e) {} };
 try { const sv = localStorage.getItem("habaLogo"); if (sv) loadLogo(sv, false); } catch (e) {}
 
+const PH = {}; // uploaded photos by initial: T K Z P N
+function portrait(av, cx, cy, d) { // illustrated head-and-shoulders, used until real photos are uploaded
+  c.save(); c.beginPath(); c.arc(cx, cy, d / 2, 0, 7); c.clip(); const g = c.createLinearGradient(cx, cy - d / 2, cx, cy + d / 2); g.addColorStop(0, mixc(av.c, "#ffffff", .45)); g.addColorStop(1, av.c); c.fillStyle = g; c.fillRect(cx - d / 2, cy - d / 2, d, d);
+  c.fillStyle = mixc(av.c, "#000000", .35); c.beginPath(); c.ellipse(cx, cy + d * .5, d * .38, d * .3, 0, 0, 7); c.fill();
+  c.fillStyle = av.sk; c.fillRect(cx - d * .06, cy + d * .08, d * .12, d * .16); c.beginPath(); c.ellipse(cx, cy - d * .06, d * .17, d * .21, 0, 0, 7); c.fill();
+  c.fillStyle = av.hr; c.beginPath(); c.ellipse(cx, cy - d * .17, d * .19, d * .15, 0, Math.PI, 0); c.fill(); c.restore();
+}
+const phMsg = document.getElementById("phMsg"), phClear = document.getElementById("phClear");
+document.getElementById("phFile").onchange = e => { [...e.target.files].slice(0, 5).forEach((f, i) => { const r = new FileReader(); r.onload = () => { const im = new Image(); im.onload = () => { PH["TKZPN"[i]] = im; phClear.classList.remove("hide"); phMsg.textContent = Object.keys(PH).length + " photo(s) in the ad (Thandi, Kabelo, Zoleka, Pieter, Nkateko)"; }; im.src = r.result; }; r.readAsDataURL(f); }); e.target.value = ""; };
+phClear.onclick = () => { for (const k in PH) delete PH[k]; phClear.classList.add("hide"); phMsg.textContent = ""; };
+
 // ---------- shared drawing ----------
 function bg() { c.fillStyle = "#000"; c.fillRect(0, 0, CW, CH); }
-function sq(x, y, s, n = 5) { // continuous-corner squircle, like an app icon
+let SQN = 5;
+function sq(x, y, s, n = SQN) { // continuous-corner squircle, like an app icon
   const a = s / 2, N = 96; c.beginPath();
   for (let i = 0; i <= N; i++) { const th = i / N * Math.PI * 2, ct = Math.cos(th), st = Math.sin(th), px = x + a * Math.sign(ct) * Math.pow(Math.abs(ct), 2 / n), py = y + a * Math.sign(st) * Math.pow(Math.abs(st), 2 / n); i ? c.lineTo(px, py) : c.moveTo(px, py); }
   c.closePath();
@@ -132,7 +150,7 @@ function hmark(x, y, s, a = 1, dark = false, sheen = 0) {
   c.save(); sq(0, 0, s); c.clip();
   if (LOGO) { const k = Math.max(s / LOGO.width, s / LOGO.height); c.drawImage(LOGO, -LOGO.width * k / 2, -LOGO.height * k / 2, LOGO.width * k, LOGO.height * k); }
   else { const g = c.createLinearGradient(0, -s / 2, 0, s / 2); g.addColorStop(0, LIME); g.addColorStop(1, GRN); c.fillStyle = g; c.fillRect(-s / 2, -s / 2, s, s);
-    c.font = `800 ${s * .6}px ${HEAD}`; c.letterSpacing = `${-s * .02}px`; c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("h", 0, -s * .02); }
+    c.font = `800 ${s * .6}px ${DISP}`; c.letterSpacing = `${-s * .02}px`; c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("h", 0, -s * .02); }
   const gl = c.createLinearGradient(0, -s / 2, 0, s / 2); gl.addColorStop(0, "rgba(255,255,255,.22)"); gl.addColorStop(.5, "rgba(255,255,255,0)"); c.fillStyle = gl; c.fillRect(-s / 2, -s / 2, s, s);
   if (sheen > 0 && sheen < 1) { const bx = lerp(-s * .9, s * .9, sheen), g2 = c.createLinearGradient(bx - s * .2, 0, bx + s * .2, 0); g2.addColorStop(0, "rgba(255,255,255,0)"); g2.addColorStop(.5, "rgba(255,255,255,.5)"); g2.addColorStop(1, "rgba(255,255,255,0)"); c.rotate(.45); c.fillStyle = g2; c.fillRect(-s * 1.2, -s * 1.2, s * 2.4, s * 2.4); }
   c.restore(); sq(0, 0, s); c.lineWidth = Math.max(1.5, s * .006); c.strokeStyle = dark ? "rgba(255,255,255,.22)" : "rgba(0,0,0,.08)"; c.stroke(); c.restore();
@@ -186,6 +204,8 @@ function bub(x, y, w, h, out, fill, r) {
 }
 function avatar(av, cx, cy, d, a) {
   if (a <= 0) return; if (av.logo) { hmark(cx, cy, d, a, false, 0); return; }
+  const im = PH[av.i]; if (im) { c.save(); c.globalAlpha *= a; c.beginPath(); c.arc(cx, cy, d / 2, 0, 7); c.clip(); const k = Math.max(d / im.width, d / im.height); c.drawImage(im, cx - im.width * k / 2, cy - im.height * k / 2, im.width * k, im.height * k); c.restore(); return; }
+  if (av.sk) { c.save(); c.globalAlpha *= a; portrait(av, cx, cy, d); c.restore(); return; }
   c.save(); c.globalAlpha *= a; const g = c.createLinearGradient(cx, cy - d / 2, cx, cy + d / 2); g.addColorStop(0, mixc(av.c, "#ffffff", .3)); g.addColorStop(1, av.c);
   c.beginPath(); c.arc(cx, cy, d / 2, 0, 7); c.fillStyle = g; c.fill(); c.font = `700 ${d * .44}px ${HEAD}`; c.letterSpacing = "0px"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = "#fff"; c.fillText(av.i, cx, cy + 1); c.restore();
 }
@@ -197,13 +217,13 @@ function meas(it, cf) {
   if (kd === "text") {
     F(big ? 700 : 500, sz, HEAD, big ? -sz * .03 : -.3); const mx = (big ? cf.mxb : cf.mx) - (it.p ? 84 : 0) - 2 * px;
     it.text.split("\n").forEach(pr => { let cur = ""; pr.split(" ").forEach(wd => { const tr = cur ? cur + " " + wd : wd; if (cur && c.measureText(tr).width > mx) { L.push(cur); cur = wd; } else cur = tr; }); L.push(cur); });
-    w = Math.max(...L.map(s => c.measureText(s).width)) + 2 * px; h = L.length * lh + 2 * py;
+    w = Math.max(...L.map(s => c.measureText(s).width)) + 2 * px; h = L.length * lh + 2 * py; if (cf.wa) { h += 24; w = Math.max(w, 190); }
   } else if (kd === "voice") { w = 540; h = 108; } else { w = cf.cw || 620; h = 136; }
-  const lab = it.p && it.p.n && !it.side ? 34 : 0, stH = it.st ? 38 : 0;
+  const lab = it.p && it.p.n && !it.side ? 34 : 0, stH = it.st && !cf.wa ? 38 : 0;
   return it._m = { w, h, L, px, py, lh, sz, big, lab, stH, tot: lab + h + stH + cf.gap };
 }
 function geo(cf) {
-  const thT = cf.top + (cf.hdr ? 148 : 0), thB = cf.comp != null ? cf.comp - 22 : cf.bot - 10, thH = thB - thT; let y = 0;
+  const thT = cf.top + (cf.hdr ? 148 : 0), thB = cf.comp != null ? cf.comp - 22 : cf.bot - 10, thH = thB - thT; let y = cf.wa ? 74 : 0;
   cf.items.forEach(it => { const m = meas(it, cf); it._y = y + m.lab; y += m.tot; });
   return { thT, thB, thH, vo: cf.vc ? Math.max(0, (thH - (y - cf.gap)) / 2) : 0 };
 }
@@ -221,7 +241,7 @@ function item(it, cf, P, t) {
     for (let i = 0; i < 3; i++) { const v = .5 + .5 * Math.sin(t * 7 - i * .9); c.fillStyle = cf.dark ? `rgba(180,180,190,${.35 + .65 * v})` : `rgba(142,142,147,${.4 + .6 * v})`; c.beginPath(); c.arc(x + 55 + i * 30, y + 46 - v * 6, 11, 0, 7); c.fill(); } c.restore();
   }
   if (p <= 0) return;
-  const grad = (out && !it.neutral) || it.big, ax = out ? x + m.w : x, ay = y + m.h, sc = .72 + .28 * sp(p), dy = (1 - oc(p)) * (out && it.typ != null ? 110 : 26), r = m.big ? 64 : 46;
+  const grad = (out && !it.neutral) || it.big, ax = out ? x + m.w : x, ay = y + m.h, sc = .72 + .28 * sp(p), dy = (1 - oc(p)) * (out && it.typ != null ? 110 : 26), r = cf.wa ? 30 : m.big ? 64 : 46;
   const act = it.act ? io(seg(t, it.act[0], it.act[0] + .35)) * (it.act[1] ? 1 - io(seg(t, it.act[1], it.act[1] + .35)) : 1) : 0;
   let ink = grad ? onAcc() : P.ink;
   c.save(); c.translate(ax, ay + dy); c.scale(sc, sc); c.translate(-ax, -ay); c.globalAlpha *= clamp(p * 2.5);
@@ -231,6 +251,8 @@ function item(it, cf, P, t) {
   if (kd === "text") {
     F(m.big ? 700 : 500, m.sz, HEAD, m.big ? -m.sz * .03 : -.3); c.textAlign = "left"; c.textBaseline = "middle"; c.fillStyle = ink;
     m.L.forEach((s, i) => c.fillText(s, x + m.px, y + m.py + m.lh * (i + .5) + (m.big ? -m.sz * .02 : 1)));
+    if (cf.wa) { const rd = it.st && it.st.some(([ts, s2]) => s2 === "Read" && t >= ts); F(500, 21, HEAD, 0); c.textAlign = "right"; c.fillStyle = grad ? "rgba(255,255,255,.75)" : P.sub; c.fillText(it.tm || "17:04", x + m.w - 26 - (out ? 38 : 0), y + m.h - 26);
+      if (out) { c.strokeStyle = rd ? "#9be7ff" : "rgba(255,255,255,.7)"; c.lineWidth = 2.6; c.lineCap = c.lineJoin = "round"; [0, 11].forEach(o => { const bx = x + m.w - 56 + o, by = y + m.h - 27; c.beginPath(); c.moveTo(bx, by); c.lineTo(bx + 5, by + 6); c.lineTo(bx + 15, by - 7); c.stroke(); }); } }
   } else if (kd === "voice") {
     const cx = x + 68, cy = y + m.h / 2, N = 26, bx0 = x + 128, bw = m.w - 128 - 100, pr = clamp((t - it.at - .35) / (it.dur || 1.5));
     c.beginPath(); c.arc(cx, cy, 38, 0, 7); c.fillStyle = out ? ink : accent; c.fill();
@@ -270,11 +292,11 @@ function composer(t, cf, P) {
   c.save(); c.translate(bx, by); c.rotate(-Math.PI / 2); ico("arrow", 0, 0, 40, on ? onAcc() : "#ffffff", 2.6); c.restore(); c.restore();
 }
 function chat(t, cf) {
-  const P = PW(cf.dark), g = cf._g || (cf._g = geo(cf)), off = scrollAt(cf, g, t);
+  const P = PW(cf.dark), g = cf._g || (cf._g = geo(cf)), off = scrollAt(cf, g, t); if (cf.wa) Object.assign(P, cf.dark ? { bgc: "#0a1512", inb: "#262b36", comp: "#1a2623" } : { bgc: "#ffffff", inb: "#eef0f4", comp: "#f1f3f5" });
   if (cf.card) { const k = cf.card; c.save(); c.globalAlpha *= oe(seg(t, 0, .5)); c.shadowColor = "rgba(0,0,0,.14)"; c.shadowBlur = 80; c.shadowOffsetY = 30; rr(k.x, k.y, k.w, k.h, 60); c.fillStyle = "#fff"; c.fill(); c.restore(); }
-  c.save(); c.beginPath(); c.rect(0, g.thT, W, g.thH); c.clip(); c.translate(0, g.thT + g.vo - off); cf.items.forEach(it => item(it, cf, P, t)); c.restore();
-  if (off > 2) { const gr = c.createLinearGradient(0, g.thT, 0, g.thT + 90); gr.addColorStop(0, P.bgc); gr.addColorStop(1, P.bgc + "00"); c.save(); c.globalAlpha *= clamp(off / 50); c.fillStyle = gr; c.fillRect(0, g.thT, W, 90); c.restore(); }
-  if (cf.hdr) header(t, cf, P); if (cf.comp != null) composer(t, cf, P);
+  c.save(); c.beginPath(); c.rect(0, g.thT, W, g.thH); c.clip(); c.translate(0, g.thT + g.vo - off); cf.items.forEach(it => item(it, cf, P, t)); if (cf.wa) { rr(W / 2 - 74, 14, 148, 46, 23); c.fillStyle = cf.dark ? "rgba(255,255,255,.1)" : "rgba(0,0,0,.06)"; c.fill(); F(600, 23, HEAD, 0); c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = cf.dark ? "#b6c2bf" : "#6b7280"; c.fillText("Today", W / 2, 38); } c.restore();
+  if (off > 2 && !cf.wa) { const gr = c.createLinearGradient(0, g.thT, 0, g.thT + 90); gr.addColorStop(0, P.bgc); gr.addColorStop(1, P.bgc + "00"); c.save(); c.globalAlpha *= clamp(off / 50); c.fillStyle = gr; c.fillRect(0, g.thT, W, 90); c.restore(); }
+  if (cf.wa) { c.fillStyle = cf.dark ? "#101d19" : "#ffffff"; c.fillRect(0, 0, W, 134); c.fillRect(0, cf.comp - 22, W, H - cf.comp + 22); } if (cf.hdr) header(t, cf, P); if (cf.comp != null) composer(t, cf, P);
 }
 
 // ---------- VERIFIED BADGE AD: new scenes ----------
@@ -299,90 +321,148 @@ function pcard(x, y, w, h, nm, hd, vt, a, dk) { // profile card; vt = badge prog
   rr(x + w * .2, y + h * .84, w * .6, h * .09, h * .045); c.fillStyle = dk ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.06)"; c.fill(); F(600, 28, HEAD, 0); c.fillStyle = dk ? "#fff" : INK; c.fillText("Follow", x + w / 2, y + h * .885);
   const bx = nx + m / 2 + 36, by = y + h * .62; if (vt > 0) vb(bx, by, 54 * (1 + 2.2 * (1 - oc(vt))), vt * 4, seg(vt, .5, 1)); c.restore(); return [bx, by];
 }
-// scene 0: two identical accounts, which is real?
+// ---------- HABA · GOOGLE PLAY DOWNLOAD AD ----------
+const PLAY = "#01875f";
+// signature logo motion: streaks converge -> outline draws on -> squash-and-stretch pop -> shockwave -> sheen -> orbiting light
+function sting0(x, y, s, t, k = 1) {
+  const tr = seg(t, 0, .75 * k), dr = seg(t, .1 * k, .95 * k), t1 = .85 * k, po = seg(t, t1, t1 + .85 * k), u = Math.max(0, t - t1);
+  glow(x, y, s * 2.4, ARGB, .4 * oe(seg(t, t1, t1 + .6)) * (.85 + .15 * Math.sin(t * 2.2)));
+  for (let i = 0; i < 26 && tr < 1; i++) {
+    const an = i / 26 * 6.283 + i * .41, r0 = 640 + (i * 53) % 160, p = oc(clamp(tr * 1.2 - (i % 7) * .035)), tg = s * .56, r = lerp(r0, tg, p), r2 = lerp(r0, tg, clamp(p - .2));
+    c.save(); c.globalAlpha = (1 - seg(tr, .75, 1)) * clamp(tr * 6); c.strokeStyle = i % 3 ? `rgb(${ARGB})` : "#fff"; c.lineWidth = 3 + (i % 3) * 2; c.lineCap = "round";
+    c.beginPath(); c.moveTo(x + Math.cos(an) * r2, y + Math.sin(an) * r2); c.lineTo(x + Math.cos(an) * r, y + Math.sin(an) * r); c.stroke(); c.restore();
+  }
+  if (dr > 0 && po < 1) { c.save(); c.translate(x, y); sq(0, 0, s * 1.04); c.setLineDash([s * 3.95 * oe(dr), s * 9]); c.lineWidth = 8; c.lineCap = "round"; c.strokeStyle = gradH(-s / 2, s); c.globalAlpha = 1 - seg(po, .25, .7); c.stroke(); c.restore(); }
+  if (po > 0) {
+    burst(x, y, t, t1);
+    const sc = lerp(.35, 1, sp(po)), q = .11 * Math.exp(-5 * u) * Math.cos(18 * u), fl = Math.sin(t * 1.8) * 5 * oe(seg(t, t1 + 1.2 * k, t1 + 2 * k));
+    c.save(); c.translate(x, y + fl); c.rotate((1 - sp(po)) * -.25); c.scale(sc * (1 + q), sc * (1 - q));
+    hmark(0, 0, s, oe(seg(po, 0, .25)), true, seg(t, t1 + .7 * k, t1 + 1.5 * k)); c.restore();
+  }
+  const ob = oe(seg(t, t1 + 1, t1 + 1.8)); if (ob <= 0) return; c.save(); c.lineCap = "round"; c.lineWidth = 6; const R = s * .8;
+  for (let j = 0; j < 2; j++) {
+    const a0 = t * 1.6 + j * Math.PI, hx = x + Math.cos(a0) * R, hy = y + Math.sin(a0) * R, g = c.createLinearGradient(hx, hy, x + Math.cos(a0 - 1) * R, y + Math.sin(a0 - 1) * R);
+    g.addColorStop(0, `rgba(${ARGB},${.9 * ob})`); g.addColorStop(1, `rgba(${ARGB},0)`); c.strokeStyle = g; c.beginPath(); c.arc(x, y, R, a0 - 1, a0); c.stroke();
+    c.beginPath(); c.arc(hx, hy, 7, 0, 7); c.fillStyle = `rgba(255,255,255,${ob})`; c.fill();
+  } c.restore();
+}
+function sting(x, y, s, t, k = 1) { SQN = lerp(2, 5, io(seg(t, .1 * k, 1.7 * k))); sting0(x, y, s, t, k); SQN = 5; } // circle morphs into the squircle
+// scene 0: logo reveal
 function a0(t) {
-  flat("#000"); glow(W / 2, H * .55, 800, ARGB, .16 * oc(seg(t, 0, 1.2)));
-  maskLine("Anyone can be", W / 2, 120, 92, "#fff", oe(seg(t, .1, 1))); maskLine("anyone online.", W / 2, 225, 92, gradH, oe(seg(t, .35, 1.25)));
-  [[70, "@thandi.m", .5], [560, "@thandi_m", .9]].forEach(([x, hd, s]) => { const p = seg(t, s, s + .7); c.save(); c.translate(0, (1 - oc(p)) * 70 + Math.sin(t * 1.6 + x) * 5); pcard(x, 340, 450, 520, "Thandi M.", hd, 0, oe(p), true); c.restore(); });
-  txt("Which one is real?", W / 2, 940, 56, gradH, oe(seg(t, 2.4, 3.1)), { w: 700 });
+  flat("#000"); const m = io(seg(t, 1.9, 2.8)); sting(W / 2, lerp(520, 350, m), lerp(260, 230, m), t);
+  maskLine("Meet Haba.", W / 2, 690, 124, gradH, oe(seg(t, 2.1, 2.9)));
+  txt("Chat with the people who matter.", W / 2, 810, 44, "#a1a1aa", oe(seg(t, 2.7, 3.4)), { w: 500, fit: 940 });
 }
-// scene 1: the badge lands
+// scene 1: kinetic type over drifting bubbles
 function a1(t) {
-  flat(CREAM); maskLine("Meet the badge", W / 2, 120, 90, INK, oe(seg(t, .1, 1))); maskLine("that proves it’s you.", W / 2, 220, 90, INK, oe(seg(t, .35, 1.25)));
-  const vt = seg(t, 1.0, 1.9), ps = pcard(290, 300, 500, 540, "Thandi M.", "@thandi.m", vt, oe(seg(t, .3, 1)), false); burst(ps[0], ps[1], t, 1.45);
-  txt("The official mark of real people.", W / 2, 930, 42, "#6e6e73", oe(seg(t, 2.2, 3)), { w: 500 });
+  const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, `rgb(${ARGB2})`); g.addColorStop(1, `rgb(${SRGB})`); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  for (let i = 0; i < 9; i++) { const r1 = Math.sin(i * 12.99) * 4375.5, r = r1 - Math.floor(r1), w = 200 + r * 200, x = 80 + (i * 137) % 900, y = H + 200 - ((t * (60 + r * 90) + i * 190) % (H + 400)); c.save(); c.globalAlpha = .1 + .08 * (i % 3); c.translate(x, y); bub(-w / 2, -w * .25, w, w * .5, i % 2, "#fff", 46); c.restore(); }
+  const dim = onAcc() === "#ffffff" ? "rgba(255,255,255,.6)" : "rgba(0,0,0,.45)"; hmark(W / 2, 110, 90, oe(seg(t, .1, .7)), true, seg(t, .5, 1.3));
+  [["Chat.", 330, .3], ["Share.", 520, .9], ["Connect.", 710, 1.5]].forEach(([w, y, s0], i) => maskLine(w, W / 2, y, 170, i == 2 ? onAcc() : dim, oe(seg(t, s0, s0 + .8))));
+  const e = oe(seg(t, 2.3, 3)); c.fillStyle = onAcc(); rr(W / 2 - 250 * e, 800, 500 * e, 12, 6); c.fill();
+  txt("All in one app.", W / 2, 910, 50, onAcc(), oe(seg(t, 2.6, 3.3)), { w: 600 });
 }
-// scene 2: spotting a scammer in chat
-const PU = { n: "Unknown number", c: "#71717a", i: "?" }, PR = { n: "Thandi · Verified", c: "#10b981", i: "T" };
-const C2 = { dark: 1, x0: 60, x1: 1020, top: 0, bot: 1080, hdr: { name: "Haba", sub: "Look for the badge", live: 1, vf: 1 }, comp: 952, ts: 40, mx: 700, mxb: 860, gap: 20, items: [
-  { p: PU, text: "Hi, it’s Thandi. New number.", at: .7, typ: .2 }, { p: PU, text: "Please send R500, it’s urgent!", at: 1.7, typ: 1.2 },
-  { side: 1, text: "No badge. Not you.", at: 3.0, typ: 2.4 }, { p: PR, text: "That wasn’t me. Block them.", at: 4.3, typ: 3.7 }] };
-const CH_ALL = { 2: C2 };
-function a2(t) { flat("#000"); glow(W / 2, H * .6, 900, ARGB, .14 * oc(seg(t, .6, 2.6))); chat(t, C2); }
-// scene 3: why get verified
+// scene 2: a friend invites you, in chat
+const PF = { n: "Thandi", c: "#f97316", i: "T" };
+const KB = { n: "Kabelo", c: "#8b5cf6", i: "K", sk: "#6b4228", hr: "#0e0b09" }, ZL = { n: "Zoleka", c: "#ec4899", i: "Z", sk: "#a06a48", hr: "#2a1810" }, PT = { n: "Pieter", c: "#0ea5e9", i: "P", sk: "#e0b394", hr: "#8a6a3a" }, NK = { n: "Nkateko", c: "#eab308", i: "N", sk: "#7a4d33", hr: "#150f0c" };
+PF.sk = "#8d5a3b"; PF.hr = "#17110d";
+const C2 = { dark: 0, x0: 60, x1: 1020, top: 0, bot: 1080, hdr: { name: "Varsity crew", sub: "Thandi, Kabelo, Zoleka, You", av: { n: "V", c: "#14b8a6", i: "V" } }, comp: 952, wa: 1, ts: 38, mx: 700, mxb: 860, gap: 18, items: [
+  { p: ZL, text: "Guys, are we still on for 5 at the Hatfield spot?", at: .6, typ: .1 },
+  { p: KB, text: "Yes! Thandi, you coming?", at: 1.7, typ: 1.1 },
+  { p: PF, text: "Sharp! But get Haba first so we can all chat in one place.", at: 3.0, typ: 2.2, re: { at: 4.0 } },
+  { side: 1, text: "Haba? Is it on Google Play?", at: 4.4, typ: 3.7, st: [[4.7, "Delivered"], [5.4, "Read"]] },
+  { p: PF, text: "Yup. Search Haba, tap Install.", at: 5.6, typ: 5.0 },
+  { side: 1, text: "Done. Joining now!", at: 6.9, typ: 6.3 }] };
+C2.items.forEach((it, i) => it.tm = ["17:02", "17:02", "17:03", "17:03", "17:04", "17:04"][i]);
+function doodles(t, col = "#ffffff") { // faint doodle wallpaper that drifts slowly, in the spirit of a messenger background
+  const L = ["message", "heart", "camera", "music", "image", "at", "hash", "pin", "gift", "zap", "mail", "phone"]; c.save(); c.globalAlpha *= col === "#ffffff" ? .07 : .1;
+  for (let r = -2; r < 9; r++) for (let q = 0; q < 8; q++) { c.save(); c.translate(q * 150 + (r & 1 ? 75 : 0) + 20, r * 140 - 70 + t * 5); c.rotate(((r * 7 + q * 3 + 20) % 5 - 2) * .18); ico(L[(r * 5 + q * 3 + 24) % 12], 0, 0, 58, col, 1.8); c.restore(); } c.restore();
+}
+function a2(t) { flat("#ffffff"); doodles(t, "#0f766e"); glow(W / 2, H * .6, 900, ARGB, .05 * oc(seg(t, .6, 2.6))); chat(t, C2); }
+// scene 3: reasons to download
 function rowCard(y, ic, t1, t2, p) {
   p = clamp(p); if (p <= 0) return; c.save(); c.globalAlpha *= clamp(p * 2); c.translate((1 - oc(p)) * 90, 0); c.shadowColor = "rgba(0,0,0,.1)"; c.shadowBlur = 40; c.shadowOffsetY = 14; rr(80, y, 920, 170, 44); c.fillStyle = "#fff"; c.fill(); c.shadowColor = "rgba(0,0,0,0)";
   c.beginPath(); c.arc(175, y + 85, 56, 0, 7); c.fillStyle = accFill(119, y + 29, 112, 112); c.fill(); ico(ic, 175, y + 85, 54, onAcc(), 2.2);
   F(700, 46, HEAD, -.8); c.textAlign = "left"; c.textBaseline = "middle"; c.fillStyle = INK; c.fillText(t1, 262, y + 66); F(500, 30, HEAD, -.1); c.fillStyle = "#8e8e93"; c.fillText(t2, 262, y + 116); c.restore();
 }
 function a3(t) {
-  flat(CREAM); maskLine("Why get verified?", W / 2, 130, 92, INK, oe(seg(t, .1, 1)));
-  rowCard(260, "shield", "Protection from copycats", "Fake accounts can’t wear your badge.", seg(t, .5, 1.1));
-  rowCard(480, "search", "Found faster", "Stand out when people search.", seg(t, 1.3, 1.9));
-  rowCard(700, "heart", "Trusted by your people", "Followers know it’s really you.", seg(t, 2.1, 2.7));
-  vb(W / 2, 950, 90 * sp(seg(t, 3, 3.6)), seg(t, 3, 3.4), seg(t, 3.4, 4.2));
+  flat(CREAM); maskLine("Why you’ll love it.", W / 2, 130, 90, INK, oe(seg(t, .1, 1)));
+  rowCard(260, "message", "Fast, real-time chats", "Messages land the moment you send.", seg(t, .5, 1.1));
+  rowCard(480, "badge", "Verified profiles", "Know who’s really on the other end.", seg(t, 1.3, 1.9));
+  rowCard(700, "heart", "Built in South Africa", "Made for how we talk.", seg(t, 2.1, 2.7));
+  const p = seg(t, 3, 3.7); hmark(W / 2, 950, 100 * sp(p), p, false, seg(t, 3.4, 4.2));
 }
-// scene 4: how to apply
+// scene 4: the Play Store install, step by step
 function a4(t) {
-  flat("#000"); glow(W / 2, H * .5, 800, ARGB, .12 * oc(seg(t, .3, 2))); maskLine("Apply in three taps.", W / 2, 120, 88, "#fff", oe(seg(t, .1, 1)));
-  const Y = [360, 590, 820], S = [["Open Settings", "Profile  →  Settings"], ["Tap Request verification", "Add your ID and details"], ["Get your badge", "We’ll notify you when it’s live"]], A = [.6, 1.6, 2.6];
-  for (let k = 0; k < 2; k++) { const y0 = Y[k] + 54, y1 = Y[k + 1] - 54; c.fillStyle = "rgba(255,255,255,.12)"; c.fillRect(137, y0, 6, y1 - y0); c.fillStyle = `rgb(${ARGB})`; c.fillRect(137, y0, 6, (y1 - y0) * oc(seg(t, A[k] + .5, A[k] + 1.1))); }
-  Y.forEach((y, k) => {
-    const p = oe(seg(t, A[k] - .3, A[k] + .3)), on = io(seg(t, A[k] + .2, A[k] + .6)); if (p <= 0) return; c.save(); c.globalAlpha *= p; c.translate((1 - p) * 60, 0);
-    rr(230, y - 80, 760, 160, 40); c.fillStyle = "#15171d"; c.fill(); c.lineWidth = 3; c.strokeStyle = `rgba(${ARGB},${.8 * on})`; c.stroke();
-    c.beginPath(); c.arc(140, y, 54, 0, 7); c.fillStyle = "#23252c"; c.fill(); c.save(); c.globalAlpha *= on; c.beginPath(); c.arc(140, y, 54, 0, 7); c.fillStyle = accFill(86, y - 54, 108, 108); c.fill(); c.restore();
-    if (k < 2) { F(700, 46, HEAD, 0); c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = mixc("#8e8e93", onAcc(), on); c.fillText(String(k + 1), 140, y + 2); } else { c.save(); c.globalAlpha *= 1 - on; F(700, 46, HEAD, 0); c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = "#8e8e93"; c.fillText("3", 140, y + 2); c.restore(); vb(140, y, 118 * sp(on), on, seg(t, A[k] + .6, A[k] + 1.4), true); }
-    F(700, 46, HEAD, -.8); c.textAlign = "left"; c.textBaseline = "middle"; c.fillStyle = "#fff"; c.fillText(S[k][0], 270, y - 24); F(500, 30, HEAD, -.1); c.fillStyle = "#8e8e93"; c.fillText(S[k][1], 270, y + 28); c.restore();
+  flat("#000"); glow(790, 540, 700, ARGB, .2 * oc(seg(t, .2, 1.8)));
+  txt("Get it on", 70, 150, 76, "#fff", oe(seg(t, .1, .8)), { al: "left", w: 700, fit: 480 }); txt("Google Play.", 70, 238, 76, gradH, oe(seg(t, .3, 1)), { al: "left", w: 700, fit: 480 });
+  const S = [["Search Haba", "Open Google Play", .6], ["Tap Install", "Takes just seconds", 2.1], ["Open & chat", "Say hi to your people", 4.1]];
+  for (let k = 0; k < 2; k++) { const y0 = 440 + k * 190 + 48, y1 = y0 + 94; c.fillStyle = "rgba(255,255,255,.12)"; c.fillRect(114, y0, 4, y1 - y0); c.fillStyle = `rgb(${ARGB})`; c.fillRect(114, y0, 4, (y1 - y0) * oc(seg(t, S[k + 1][2] - .5, S[k + 1][2]))); }
+  S.forEach(([a, b, s0], k) => {
+    const y = 440 + k * 190, p = oe(seg(t, s0 - .3, s0 + .3)), on = io(seg(t, s0, s0 + .4)); if (p <= 0) return; c.save(); c.globalAlpha *= p; c.translate((1 - p) * -50, 0);
+    c.beginPath(); c.arc(116, y, 44, 0, 7); c.fillStyle = "#1c1e24"; c.fill(); c.save(); c.globalAlpha *= on; c.beginPath(); c.arc(116, y, 44, 0, 7); c.fillStyle = accFill(72, y - 44, 88, 88); c.fill(); c.restore();
+    F(700, 40, HEAD, 0); c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = mixc("#8e8e93", onAcc(), on); c.fillText(String(k + 1), 116, y + 2);
+    F(700, 40, HEAD, -.6); c.textAlign = "left"; c.fillStyle = "#fff"; c.fillText(a, 186, y - 18); F(500, 27, HEAD, -.1); c.fillStyle = "#8e8e93"; c.fillText(b, 186, y + 25); c.restore();
   });
+  const pp = sp(seg(t, .2, 1)), px = 580, py = 110 + (1 - pp) * 160 + Math.sin(t * 1.3) * 4, pw = 430, ph = 860;
+  c.save(); c.globalAlpha *= clamp(pp * 2); c.shadowColor = `rgba(${ARGB},.35)`; c.shadowBlur = 90; c.shadowOffsetY = 30; rr(px, py, pw, ph, 64); c.fillStyle = "#16181d"; c.fill(); c.shadowColor = "rgba(0,0,0,0)"; c.lineWidth = 3; c.strokeStyle = "rgba(255,255,255,.18)"; c.stroke();
+  const sx = px + 14, sy = py + 14, sw = pw - 28, sh = ph - 28; rr(sx, sy, sw, sh, 52); c.fillStyle = "#fff"; c.fill(); c.save(); rr(sx, sy, sw, sh, 52); c.clip();
+  c.beginPath(); c.arc(px + pw / 2, sy + 26, 9, 0, 7); c.fillStyle = "#111"; c.fill();
+  rr(sx + 26, sy + 62, sw - 52, 72, 36); c.fillStyle = "#f1f3f4"; c.fill(); ico("search", sx + 68, sy + 98, 34, "#5f6368", 2.4);
+  const q = "Haba".slice(0, Math.ceil(4 * seg(t, .7, 1.3))); F(500, 32, HEAD, -.2); c.textAlign = "left"; c.textBaseline = "middle"; c.fillStyle = q ? INK : "#9aa0a6"; c.fillText(q || "Search apps", sx + 104, sy + 99);
+  if (t < 1.6 && Math.sin(t * 9) > 0) { const w = q ? c.measureText(q).width : 0; c.fillStyle = PLAY; c.fillRect(sx + 108 + w, sy + 80, 3, 38); }
+  const r = oe(seg(t, 1.4, 2)); c.save(); c.globalAlpha *= r; c.translate(0, (1 - r) * 30);
+  hmark(sx + 100, sy + 265, 124, 1, false, 0); F(700, 44, HEAD, -.6); c.fillStyle = INK; c.fillText("Haba", sx + 186, sy + 240); F(600, 26, HEAD, 0); c.fillStyle = PLAY; c.fillText("Vynix", sx + 186, sy + 277); F(500, 24, HEAD, 0); c.fillStyle = "#5f6368"; c.fillText("Messaging", sx + 186, sy + 310);
+  const bw = sw - 60, bh = 78, pr = seg(t, 2.6, 4.0), dn = t >= 4.1, ins = pr > 0 && !dn, bs = 1 - .05 * Math.sin(seg(t, 2.2, 2.5) * 3.14) + (dn ? .06 * Math.sin(seg(t, 4.1, 4.5) * 3.14) : 0);
+  c.translate(sx + 30 + bw / 2, sy + 370 + bh / 2); c.scale(bs, bs); c.translate(-bw / 2, -bh / 2); rr(0, 0, bw, bh, 39); c.fillStyle = ins ? "#e3efe9" : PLAY; c.fill();
+  c.save(); rr(0, 0, bw, bh, 39); c.clip(); if (ins) { c.fillStyle = PLAY; c.fillRect(0, 0, bw * pr, bh); } const rp = seg(t, 2.25, 2.9); if (rp > 0 && rp < 1) { c.beginPath(); c.arc(bw / 2, bh / 2, bw * .55 * oc(rp), 0, 7); c.fillStyle = `rgba(255,255,255,${.35 * (1 - rp)})`; c.fill(); } c.restore();
+  const lb = dn ? "Open" : ins ? `Installing  ${Math.round(pr * 100)}%` : "Install"; F(700, 32, HEAD, -.3); c.textAlign = "center"; c.fillStyle = ins ? "#0b3d2e" : "#fff"; c.fillText(lb, bw / 2, bh / 2 + 1);
+  if (ins) { c.save(); c.beginPath(); c.rect(0, 0, bw * pr, bh); c.clip(); c.fillStyle = "#fff"; c.fillText(lb, bw / 2, bh / 2 + 1); c.restore(); }
+  c.restore();
+  [0, 1].forEach(i => { const x = sx + 30 + i * 190, y = sy + 520, g = c.createLinearGradient(x, y, x + 170, y + 330); g.addColorStop(0, `rgb(${i ? SRGB : ARGB})`); g.addColorStop(1, `rgb(${i ? ARGB2 : SRGB})`); c.save(); c.globalAlpha *= oe(seg(t, 1.8 + i * .2, 2.5 + i * .2)); rr(x, y, 170, 300, 26); c.fillStyle = g; c.fill();
+    for (let j = 0; j < 3; j++) { rr(x + 16 + (j % 2) * 34, y + 60 + j * 70, 100, 44, 22); c.fillStyle = j % 2 ? "rgba(255,255,255,.35)" : "rgba(255,255,255,.8)"; c.fill(); } c.restore(); });
+  c.restore(); c.restore();
 }
-// scene 5: approved
-function a5(t) {
-  const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, `rgb(${ARGB2})`); g.addColorStop(1, `rgb(${SRGB})`); c.fillStyle = g; c.fillRect(0, 0, W, H); glow(W / 2, 490, 700, "255,255,255", .28 * oe(seg(t, .9, 1.6)));
-  const n = sp(seg(t, .1, .9)); c.save(); c.translate(0, (1 - n) * -220); c.globalAlpha *= clamp(n * 2); c.shadowColor = "rgba(0,0,0,.25)"; c.shadowBlur = 50; c.shadowOffsetY = 20; rr(90, 70, 900, 150, 44); c.fillStyle = "rgba(255,255,255,.96)"; c.fill(); c.shadowColor = "rgba(0,0,0,0)";
-  hmark(176, 145, 86, 1); F(600, 28, HEAD, 0); c.textAlign = "left"; c.textBaseline = "middle"; c.fillStyle = "#8e8e93"; c.fillText("Haba  ·  now", 244, 116); F(700, 36, HEAD, -.5); c.fillStyle = INK; c.fillText("Your verification was approved", 244, 164); c.restore();
-  const p = seg(t, .9, 1.9); vb(W / 2, 490, 420 * (.3 + .7 * sp(p)), oe(p), seg(t, 1.6, 2.4), true);
-  for (let i = 0; i < 46; i++) { const r1 = Math.sin(i * 12.9898) * 43758.5453, r = r1 - Math.floor(r1), r2 = Math.sin(i * 78.233) * 12345.678, q = r2 - Math.floor(r2), tt = t - 1.0; if (tt < 0) continue;
-    const an = -Math.PI / 2 + (r - .5) * 3.6, v = 500 + q * 700, x = W / 2 + Math.cos(an) * v * tt * .9, y = 490 + Math.sin(an) * v * tt + 700 * tt * tt; if (y > H + 40) continue;
-    c.save(); c.translate(x, y); c.rotate(tt * (3 + q * 6) + i); c.globalAlpha *= clamp(1 - tt / 2.6); c.fillStyle = ["#fff", "#fff5b0", "#b9f5df", "#ffd1e8"][i % 4]; c.fillRect(-9, -5, 18, 10); c.restore(); }
-  maskLine("You’re verified.", W / 2, 830, 112, onAcc(), oe(seg(t, 1.2, 2.0))); txt("Your badge is live on Haba.", W / 2, 935, 40, onAcc(), oe(seg(t, 2.2, 3)), { w: 500 });
-}
-
-function badge(t) { // Google Play download badge
-  const u = sp(seg(t, 2.9, 3.6)); if (u <= 0) return; const bw = 440, bh = 116;
-  c.save(); c.globalAlpha *= clamp(u * 1.6); c.translate(W / 2, 940); const k = .88 + .12 * u; c.scale(k, k);
-  c.shadowColor = "rgba(255,255,255,.12)"; c.shadowBlur = 40; rr(-bw / 2, -bh / 2, bw, bh, 22); c.fillStyle = "#000"; c.fill(); c.shadowColor = "rgba(0,0,0,0)"; c.lineWidth = 2.5; c.strokeStyle = "#a6a6a6"; c.stroke();
-  const z = 64, x0 = -bw / 2 + 36, y0 = -z / 2, poly = (col, pts) => { c.beginPath(); pts.forEach(([a, b], i) => i ? c.lineTo(x0 + a * z, y0 + b * z) : c.moveTo(x0 + a * z, y0 + b * z)); c.closePath(); c.fillStyle = col; c.fill(); };
+// scene 5: outro with logo reprise + store badge
+function badge(t, y, t0) {
+  const u = sp(seg(t, t0, t0 + .7)); if (u <= 0) return; const bw = 470, bh = 124, pu = 1 + .018 * Math.sin((t - t0) * 3.2) * oe(seg(t, t0 + .8, t0 + 1.4));
+  c.save(); c.globalAlpha *= clamp(u * 1.6); c.translate(W / 2, y); const k = (.86 + .14 * u) * pu; c.scale(k, k); glow(0, 0, 420, ARGB, .22 * oe(seg(t, t0, t0 + 1)));
+  c.shadowColor = "rgba(255,255,255,.14)"; c.shadowBlur = 44; rr(-bw / 2, -bh / 2, bw, bh, 24); c.fillStyle = "#000"; c.fill(); c.shadowColor = "rgba(0,0,0,0)"; c.lineWidth = 2.5; c.strokeStyle = "#a6a6a6"; c.stroke();
+  const z = 68, x0 = -bw / 2 + 38, y0 = -z / 2, poly = (col, pts) => { c.beginPath(); pts.forEach(([a, b], i) => i ? c.lineTo(x0 + a * z, y0 + b * z) : c.moveTo(x0 + a * z, y0 + b * z)); c.closePath(); c.fillStyle = col; c.fill(); };
   poly("#00c3ff", [[0, 0], [.54, .5], [0, 1]]); poly("#00f076", [[0, 0], [.8, .4], [.54, .5]]); poly("#ffd500", [[.8, .4], [.98, .5], [.8, .6], [.54, .5]]); poly("#ff3a44", [[0, 1], [.54, .5], [.8, .6]]);
-  c.fillStyle = "#fff"; c.textBaseline = "middle"; c.textAlign = "left"; F(500, 24, HEAD, 1); c.fillText("GET IT ON", x0 + z + 28, -22); F(600, 46, HEAD, -.5); c.fillText("Google Play", x0 + z + 28, 16); c.restore();
+  c.fillStyle = "#fff"; c.textBaseline = "middle"; c.textAlign = "left"; F(500, 25, HEAD, 1); c.fillText("GET IT ON", x0 + z + 28, -23); F(600, 48, HEAD, -.5); c.fillText("Google Play", x0 + z + 28, 17);
+  const sh = seg(t, t0 + .9, t0 + 1.7); if (sh > 0 && sh < 1) { c.save(); rr(-bw / 2, -bh / 2, bw, bh, 24); c.clip(); const bx = lerp(-bw * .7, bw * .7, sh), g = c.createLinearGradient(bx - 60, 0, bx + 60, 0); g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(.5, "rgba(255,255,255,.35)"); g.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = g; c.fillRect(-bw, -bh, 2 * bw, 2 * bh); c.restore(); }
+  c.restore();
 }
-function s6(t) { // black: outro
-  flat("#000"); const a = oe(seg(t, 0, .5)), p = sp(seg(t, .05, 1)); glow(W / 2, 230, 600, ARGB, .35 * a);
-  hmark(W / 2, 170 + (1 - oc(seg(t, 0, .9))) * 50, 190 * (.6 + .4 * p), a, true, seg(t, .7, 1.6));
-  maskLine("Get verified.", W / 2, 400, 128, gradH, oe(seg(t, .4, 1.2)));
-  txt("Prove it’s really you.", W / 2, 510, 48, "#a1a1aa", oe(seg(t, 1.1, 1.8)), { w: 500 });
-  const bp = seg(t, 1.6, 2.4); vb(W / 2, 640, 120 * sp(bp), bp, seg(t, 2.2, 3));
-  txt("habaapp.co.za", W / 2, 770, 52, "#fff", oe(seg(t, 2.0, 2.7)), { w: 600 }); badge(t);
+function a5(t) {
+  flat("#000"); sting(W / 2, 230, 190, t, .6);
+  maskLine("Download Haba.", W / 2, 470, 112, gradH, oe(seg(t, 1.0, 1.8)));
+  [PF, KB, ZL, PT, NK].forEach((av, i) => { const p = sp(seg(t, 1.7 + i * .12, 2.3 + i * .12)); if (p <= 0) return; const x = W / 2 + (i - 2) * 66, d = 92 * p; c.beginPath(); c.arc(x, 585, d / 2 + 5, 0, 7); c.fillStyle = "#000"; c.fill(); avatar(av, x, 585, d, 1); });
+  txt("Your people are waiting.", W / 2, 680, 46, "#a1a1aa", oe(seg(t, 2.1, 2.8)), { w: 500 });
+  badge(t, 815, 2.4); txt("habaapp.co.za", W / 2, 960, 50, "#fff", oe(seg(t, 3.2, 3.9)), { w: 600 });
 }
 
 // ---------- compositor: soft dissolve between scenes ----------
-const FN = [a0, a1, a2, a3, a4, a5, s6], BASE = [4.2, 4.6, 5.8, 4.6, 5.2, 4.8, 4.8];
+const FN = [a0, a1, a2, a3, a4, a5], BASE = [4.8, 4.4, 7.6, 4.8, 5.6, 5.6];
 let SC = [], ST = [];
 function retime(d = []) { let s = 0; SC = FN.map((f, i) => { const len = Math.max(BASE[i], d[i] ? d[i] + .7 : 0), r = [s, s + len, f]; ST[i] = s; s += len - .5; return r; }); T = SC[SC.length - 1][1]; }
 retime();
+// camera per scene -> [zoom, focalX, focalY, panX, panY]: dolly-out, tracking, push-in, pull-back
+const CAMS = [
+  (t, d) => [lerp(1.3, 1, oe(seg(t, 0, 1.6))) * lerp(1, 1.06, seg(t, 1.6, d)), W / 2, 470, 0, 0],
+  (t, d) => [1.08, W / 2, H / 2, lerp(36, -36, io(seg(t, 0, d))), 0],
+  (t, d) => [lerp(1, 1.09, io(seg(t, .5, d))), W / 2, 760, 0, 0],
+  (t, d) => [lerp(1.12, 1, oc(seg(t, 0, 1.2))), W / 2, H / 2, lerp(-30, 30, seg(t, 0, d)), 0],
+  (t, d) => [1 + .12 * io(seg(t, 3.4, 4.8)), W / 2, H / 2, 0, 0],
+  (t, d) => [lerp(1.22, 1, oe(seg(t, 0, 1.4))), W / 2, 420, 0, 0]
+];
 function frame(t) {
   NOW = t; c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = "source-over"; c.filter = "none"; bg();
-  SC.forEach(([a, b, f], i) => { if (t < a || t > b) return; const lt = t - a, m = i ? io(seg(lt, 0, .5)) : 1;
-    c.save(); c.globalAlpha = m; const fs = CH / H; c.translate((CW - W * fs) / 2, 0); c.scale(fs, fs); if (i) { const k = 1 + .035 * (1 - m); c.translate(W / 2, H / 2); c.scale(k, k); c.translate(-W / 2, -H / 2); } f(lt); c.restore(); });
+  SC.forEach(([a, b, f], i) => { if (t < a || t > b) return; const lt = t - a, m = i ? io(seg(lt, 0, .6)) : 1, dur = b - a;
+    c.save(); const fs = CH / H; c.translate((CW - W * fs) / 2, 0); c.scale(fs, fs);
+    if (i && m < 1) { c.beginPath(); const ty = i % 3; if (ty === 1) c.arc(W / 2, H / 2, 900 * oc(m), 0, 7); else if (ty === 2) for (let k = 0; k < 8; k++) c.rect(0, k * 135, W, 136 * m); else c.rect(0, H * (1 - oc(m)), W, H);
+      c.clip(); if (ty === 1) { c.lineWidth = 16; c.strokeStyle = `rgba(${ARGB},${1 - m})`; c.stroke(); } }
+    const cm = CAMS[i](lt, dur); c.translate(cm[1] + cm[3], cm[2] + cm[4]); c.scale(cm[0], cm[0]); c.translate(-cm[1], -cm[2]); f(lt); c.restore(); });
   c.fillStyle = `rgba(${ARGB},.9)`; c.fillRect(0, CH - 4, CW * clamp(t / T), 4);
 }
 </script>
@@ -390,13 +470,12 @@ function frame(t) {
 const $ = id => document.getElementById(id);
 const say = (t, e) => { $("msg").textContent = t || ""; $("msg").style.color = e ? "#ff8a8a" : "#9fd8c0"; };
 const LINES = [
-  "Anyone can be anyone online.",
-  "Meet the badge that proves it's you.",
-  "Scammers copy. Verified can't be copied.",
-  "Protection. Reach. Trust.",
-  "Apply in three taps.",
-  "You're verified.",
-  "Get verified on Haba. habaapp dot co dot z a."
+  "Meet Haba.",
+  "Chat. Share. Connect.",
+  "Your friends are already on it.",
+  "Fast chats. Verified profiles. Built in South Africa.",
+  "Search Haba on Google Play. Tap install. Open and chat.",
+  "Download Haba on Google Play today."
 ];
 let VO = [], cache = {}, user = null, voiceFn = null, auth = null, t0 = performance.now(), recording = false, busy = false, outNode = null, actx = null, audioMode = false;
 
@@ -447,18 +526,29 @@ function sfx(ctx, out, type, at, g = 1) {
   else if (type === "whoosh") { nz(250, 3800, .55, .55, 1.1, .22); nz(120, 900, .5, .2, .8, .2, "lowpass"); }
   else if (type === "impact") { osc("sine", 110, 38, .5, .9, .003); nz(900, 200, .3, .4, .7, .003, "lowpass"); }
   else if (type === "thump") osc("sine", 140, 55, .28, .6, .003);
+  else if (type.startsWith("note:")) { const f = +type.slice(5); osc("sine", f, f, .24, .32, .003); osc("triangle", f * 2, f * 2, .12, .06, .003); }
+  else if (type === "sent") { osc("sine", 520, 900, .09, .4, .003); nz(3500, 2500, .03, .2, 1.5, .002); }
+  else if (type === "dot") osc("sine", 760, 700, .05, .16, .002);
+  else if (type === "riser") { nz(300, 5200, .6, .5, 1.2, .4); osc("sine", 180, 760, .6, .12, .3); }
+  else if (type === "blind") { osc("triangle", 1500 + Math.random() * 500, 900, .03, .28, .001); nz(5000, 3000, .02, .22, 2, .001); }
   else if (type === "chime") [880, 1320, 1760].forEach((f, k) => osc("sine", f, f * .998, .9 - k * .2, .18 / (k + 1), .005));
 }
 // every sound is tied to a scene start (ST), so it follows the timeline even when the voiceover stretches scenes
 function events() {
-  const E = [], a = (i, l, type, g = 1) => E.push([ST[i] + l, type, g]);
-  for (let i = 1; i < 7; i++) a(i, -.1, "swish", .35);
-  a(0, .5, "pop", .6); a(0, .9, "pop", .6); a(0, 2.4, "tick", .5); a(1, 1.45, "impact", .7); a(1, 1.5, "chime", .5);
-  C2.items.forEach(it => { if (it.side) { if (it.typ != null) { const n = Math.min(it.text.length, 24); for (let k = 0; k < n; k++) a(2, it.typ + .05 + k * (it.at - it.typ - .25) / n, "key", .35); } a(2, it.at, "swish", .5); } else { if (it.typ != null) a(2, it.typ, "tick", .4); a(2, it.at, "pop", .6); } });
+  const E = [], a = (i, l, type, g = 1) => E.push([ST[i] + l, type, g]), ping = (i, l, g = 1) => { a(i, l, "note:988", .8 * g); a(i, l + .11, "note:1318", g); };
+  // transitions: one signature sound per kind (iris = riser, blinds = rapid ticks, slide = whoosh)
+  [1, 2, 3, 4, 5].forEach(i => { const ty = i % 3; if (ty === 1) { a(i, -.05, "riser", .5); a(i, .55, "thump", .45); } else if (ty === 2) { a(i, -.05, "swish", .4); for (let k = 0; k < 8; k++) a(i, k * .045, "blind", .4); } else { a(i, -.05, "whoosh", .6); a(i, .5, "thump", .45); } });
+  a(0, 0, "whoosh", .6); a(0, .85, "impact", .9); a(0, .9, "chime", .6); a(0, 2.1, "swish", .4);
+  a(1, .3, "thump", .5); a(1, .9, "thump", .5); a(1, 1.5, "thump", .6); a(1, 2.6, "chime", .4);
+  // chat: typing keys + typing dots, a notification ping for every incoming message, a send blip for yours
+  C2.items.forEach(it => {
+    if (it.side) { if (it.typ != null) { const n = Math.min(it.text.length, 28); for (let k = 0; k < n; k++) a(2, it.typ + .05 + k * (it.at - it.typ - .25) / n, "key", .4); } a(2, it.at, "sent", .7); }
+    else { if (it.typ != null) for (let tt = it.typ + .12; tt < it.at - .1; tt += .45) a(2, tt, "dot", .5); ping(2, it.at, .55); }
+    if (it.re) a(2, it.re.at, "pop", .5); if (it.st) it.st.forEach(([ts]) => a(2, ts, "tick", .3));
+  });
   a(3, .6, "pop", .6); a(3, 1.4, "pop", .6); a(3, 2.2, "pop", .6); a(3, 3.1, "chime", .4);
-  [.8, 1.8, 2.8].forEach(l => a(4, l, "click", .6)); a(4, 2.9, "chime", .4);
-  a(5, .3, "swish", .5); a(5, 1.1, "impact", .8); a(5, 1.15, "chime", .7);
-  a(6, .1, "thump", .6); a(6, .4, "chime", .7); a(6, 3.0, "pop", .6); return E;
+  for (let k = 0; k < 4; k++) a(4, .7 + k * .15, "key", .35); a(4, 2.25, "click", .7); for (let k = 0; k < 7; k++) a(4, 2.7 + k * .2, "tick", .25); a(4, 4.1, "chime", .7);
+  a(5, 0, "whoosh", .5); a(5, .5, "impact", .8); a(5, .55, "chime", .7); for (let i = 0; i < 5; i++) a(5, 1.7 + i * .12, "pop", .35); a(5, 2.4, "pop", .6); a(5, 3.3, "chime", .5); return E;
 }
 function mix(ctx, dest, base) {
   const out = ctx.createGain(), bus = ctx.createGain(); out.connect(dest); bus.connect(out); bus.gain.value = .55;
@@ -491,7 +581,7 @@ async function exportMP4() {
     if (i % 10 === 0) { say(`Rendering video… ${Math.round(i / N * 100)}% (keep this tab open)`); await new Promise(r => setTimeout(r)); }
   }
   await ve.flush(); ve.close(); mux.finalize(); if (err) throw err;
-  save(new Blob([mux.target.buffer], { type: "video/mp4" }), "haba-verified-ad.mp4");
+  save(new Blob([mux.target.buffer], { type: "video/mp4" }), "haba-google-play-ad.mp4");
 }
 async function exportRT() { // fallback without WebCodecs: real-time recording
   const ac = new AudioContext(), dest = ac.createMediaStreamDestination(), stream = cv.captureStream(30); dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
@@ -499,13 +589,13 @@ async function exportRT() { // fallback without WebCodecs: real-time recording
   const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 12e6 }), done = new Promise(r => (rec.onstop = r)); rec.ondataavailable = e => e.data.size && ch.push(e.data);
   await ac.resume(); const base = ac.currentTime + .1; mix(ac, dest, base);
   busy = false; recording = true; t0 = performance.now() + 100; rec.start(); await new Promise(r => setTimeout(r, (T + .5) * 1000)); rec.stop(); await done;
-  const type = (mime || "video/webm").split(";")[0]; save(new Blob(ch, { type }), "haba-verified-ad." + (type.includes("mp4") ? "mp4" : "webm"));
+  const type = (mime || "video/webm").split(";")[0]; save(new Blob(ch, { type }), "haba-google-play-ad." + (type.includes("mp4") ? "mp4" : "webm"));
 }
 
 // ---------- controls ----------
 $("replay").onclick = restart; $("voice").onchange = restart; $("sfx").onchange = restart;
 $("cp").onclick = async e => {
-  const txt = "Anyone can be anyone online. Get the Haba verified badge and prove it’s really you. Request yours at habaapp.co.za #Haba #Verified";
+  const txt = "Your people are waiting. Download Haba on Google Play and start chatting. habaapp.co.za #Haba #GooglePlay";
   try { await navigator.clipboard.writeText(txt); e.target.textContent = "Copied ✓"; } catch (x) { e.target.textContent = "Copy failed"; }
   setTimeout(() => (e.target.textContent = "Copy caption"), 1600);
 };
@@ -525,7 +615,7 @@ function loop() {
   if (!busy) frame(recording || audioMode ? Math.min(el, T) : Math.min(el % (T + .9), T));
   requestAnimationFrame(loop);
 }
-Promise.race([Promise.all([document.fonts.load('600 100px "Inter"'), document.fonts.load('800 100px "Inter"')]), new Promise(r => setTimeout(r, 2500))]).finally(() => { t0 = performance.now(); loop(); });
+Promise.race([Promise.all([document.fonts.load('600 100px "Inter"'), document.fonts.load('800 100px "Inter"'), document.fonts.load('700 100px "Sora"'), document.fonts.load('800 100px "Sora"')]), new Promise(r => setTimeout(r, 2500))]).finally(() => { t0 = performance.now(); loop(); });
 </script>
 </body>
 </html>
