@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Haba Code · Product Ad</title>
+<title>Haba Code · Firebase Ad</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -11,614 +11,199 @@
 *{box-sizing:border-box;margin:0}
 html,body{height:100%;background:#0a0f0d;color:#f4f4f5;font-family:"Inter",system-ui,sans-serif}
 body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 12px)}
-.stage{width:min(100%,calc((100vh - 300px) * 1.7778));aspect-ratio:16/9;border-radius:18px;overflow:hidden;box-shadow:0 0 0 1px #ffffff14,0 40px 100px #000c;background:#000}
+.stage{width:min(100%,calc((100vh - 140px) * 1.7778));aspect-ratio:16/9;border-radius:18px;overflow:hidden;box-shadow:0 0 0 1px #ffffff14,0 40px 100px #000c;background:#000}
 canvas{width:100%;height:100%;display:block}
-.bar,.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
+.bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 button{font:700 14px "Inter",system-ui,sans-serif;padding:12px 20px;border-radius:999px;border:1px solid #ffffff2a;background:#ffffff10;color:#f4f4f5;cursor:pointer;transition:.2s}
 button:hover{background:#ffffff20}
 button.p{background:#f4f4f5;color:#09090b;border-color:#f4f4f5}
 button.p:hover{box-shadow:0 0 30px #34d399aa}
-.up{font:700 14px "Inter",system-ui,sans-serif;padding:12px 20px;border-radius:999px;border:1px solid #34d39966;background:#34d39922;color:#f4f4f5;cursor:pointer}.up:hover{background:#34d39940}#logoPrev{width:44px;height:44px;border-radius:12px;object-fit:cover;border:1px solid #ffffff30}
 button:disabled{opacity:.5;cursor:wait}
-.hide{display:none!important}
-select,input{font:600 14px "Inter",system-ui,sans-serif;padding:11px 14px;border-radius:999px;border:1px solid #ffffff2a;background:#ffffff10;color:#f4f4f5;outline:none}
-select option{color:#111}input{width:190px}input::placeholder{color:#8fa79d}
 #msg{min-height:18px;font-size:13px;color:#9fd8c0;text-align:center}
 </style>
 </head>
 <body>
-<div class="stage"><canvas id="cv"></canvas></div>
-<div id="login" class="row hide">
-  <input id="em" type="email" placeholder="Email" autocomplete="email">
-  <input id="pw" type="password" placeholder="Password" autocomplete="current-password">
-  <button id="signin">Sign in</button>
-  <button id="google">Google</button>
-</div>
-<div class="row">
-  <label class="up" for="logoFile">Upload logo</label><input id="logoFile" type="file" accept="image/*" hidden>
-  <img id="logoPrev" class="hide" alt="Logo preview"><button id="logoClear" class="hide">Remove logo</button><span id="logoMsg" style="font-size:13px;color:#ff8a8a"></span>
-</div>
-<div class="row hide">
-  <label class="up" for="phFile">Upload people photos</label><input id="phFile" type="file" accept="image/*" multiple hidden><button id="phClear" class="hide">Remove photos</button><span id="phMsg" style="font-size:13px;color:#9fd8c0"></span>
-</div>
-<div class="row">
-  <select id="voice" class="hide" aria-label="Voiceover"><option value="rex">Voiceover: Rex (male)</option><option value="sal">Voiceover: Sal (male)</option><option value="leo">Voiceover: Leo (male)</option><option value="none">No voiceover</option></select>
-  <select id="sfx" aria-label="Sound effects"><option value="on">Sound effects: On</option><option value="off">Sound effects: Off</option></select>
-  <span id="vs" class="hide" style="font-size:13px;color:#9fd8c0">Sign in to use voiceover</span>
-  <button id="out" class="hide">Sign out</button>
-</div>
+<div class="stage"><canvas id="cv" width="1920" height="1080"></canvas></div>
 <div id="msg"></div>
-<div class="bar">
-  <button id="replay">↻ Replay</button>
-  <button id="dl" class="p">Download video</button>
-  <button id="cp">Copy caption</button>
-</div>
+<div class="bar"><button id="replay">↻ Replay</button><button id="dl" class="p">Download video</button><button id="cp">Copy caption</button></div>
 
 <script>
-const W = 1920, H = 1080; let T = 25;
-const cv = document.getElementById("cv"), c = cv.getContext("2d"); const CW = 1920, CH = 1080; cv.width = CW; cv.height = CH;
-let NOW = 0;
-let HEAD = '"Inter",system-ui,-apple-system,"Helvetica Neue",sans-serif', INK = "#1d1d1f", GRN = "#087f5b", MINT = "#34d399", LIME = "#6ee7b7", GREY = "#86868b";
-const DISP = '"Sora","Inter",system-ui,sans-serif';
-const FIL = "filter" in CanvasRenderingContext2D.prototype;
-const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v)), lerp = (a, b, t) => a + (b - a) * t;
-const oc = t => 1 - Math.pow(1 - clamp(t), 3), oe = t => { t = clamp(t); return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t); };
-const io = t => { t = clamp(t); return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
-const sp = t => { t = clamp(t); return t >= 1 ? 1 : 1 - Math.exp(-8 * t) * Math.cos(7 * t); }; // gentle spring
-const seg = (t, a, b) => clamp((t - a) / (b - a));
-const rr = (x, y, w, h, r) => { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); };
-const F = (w, s, fam = HEAD, ls = 0) => { c.font = `${w} ${s}px ${fam}`; c.letterSpacing = ls + "px"; };
+const W=1920,H=1080,cv=document.getElementById("cv"),c=cv.getContext("2d");let T=25,NOW=0;
+const HEAD='"Inter",system-ui,sans-serif',DISP='"Sora","Inter",system-ui,sans-serif',MONO='"JetBrains Mono",Menlo,Consolas,monospace',DRK="#0a0a12",CRM="#f6f2ec";
+const ARGB="52,211,153",ARGB2="16,185,129",SRGB="10,132,255",ONA="#04130d";
+const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),lerp=(a,b,t)=>a+(b-a)*t;
+const oc=t=>1-Math.pow(1-clamp(t),3),oe=t=>{t=clamp(t);return t>=1?1:1-Math.pow(2,-10*t)};
+const io=t=>{t=clamp(t);return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2};
+const sp=t=>{t=clamp(t);return t>=1?1:1-Math.exp(-8*t)*Math.cos(7*t)};
+const seg=(t,a,b)=>clamp((t-a)/(b-a));
+const rr=(x,y,w,h,r)=>{c.beginPath();c.roundRect?c.roundRect(x,y,w,h,r):c.rect(x,y,w,h)};
+const F=(w,s,fam=HEAD,ls=0)=>{c.font=`${w} ${s}px ${fam}`;c.letterSpacing=ls+"px"};
+const flat=col=>{c.fillStyle=col;c.fillRect(-W,-H,3*W,3*H)};
+const accFill=(x,y,w,h)=>{const g=c.createLinearGradient(x,y,x+w,y+h);g.addColorStop(0,`rgb(${ARGB2})`);g.addColorStop(1,`rgb(${SRGB})`);return g};
+const grad2=(x,w)=>{const g=c.createLinearGradient(x,0,x+w,0);g.addColorStop(0,`rgb(${ARGB})`);g.addColorStop(.55,`rgb(${SRGB})`);g.addColorStop(1,"#a78bfa");return g};
+const grad3=(x,w)=>{const g=c.createLinearGradient(x,0,x+w,0);g.addColorStop(0,"#a855f7");g.addColorStop(.6,"#ec4899");g.addColorStop(1,"#fb923c");return g};
+function glow(x,y,r,rgb,a){if(a<=0)return;const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${rgb},${a})`);g.addColorStop(1,`rgba(${rgb},0)`);c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2)}
+const T_=(s,x,y,size,col,w=500,al="left",fam=HEAD)=>{F(w,size,fam,0);c.textAlign=al;c.textBaseline="middle";c.fillStyle=col;c.fillText(s,x,y)};
+function txt(s,x,y,size,fill,p,w=600){p=clamp(p);if(p<=0)return;F(w,size,HEAD,-size*.03);c.textAlign="center";c.textBaseline="middle";c.save();c.globalAlpha*=p;c.fillStyle=fill;c.fillText(s,x,y+(1-p)*size*.3);c.restore()}
+function maskLine(s,x,y,size,fill,p){p=clamp(p);if(p<=0)return;F(700,size,DISP,-size*.03);c.textAlign="center";c.textBaseline="middle";c.save();c.beginPath();c.rect(0,y-size*.62,W,size*1.3);c.clip();c.globalAlpha*=clamp(p*2);c.fillStyle=fill;c.fillText(s,x,y+(1-p)*size*.85);c.restore()}
 
-// ---------- helpers ----------
-const hx = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
-const mixc = (a, b, p) => { const A = hx(a), B = hx(b); return `rgb(${A.map((v, i) => Math.round(lerp(v, B[i], clamp(p)))).join(",")})`; };
-const lumOf = s => { const [r, g, b] = s.split(",").map(Number); return (.299 * r + .587 * g + .114 * b) / 255; };
-const onAcc = () => (lumOf(ARGB2) + lumOf(SRGB)) / 2 > .72 ? "#0a0a0a" : "#ffffff";
-const gradH = (x0, m) => { const g = c.createLinearGradient(x0, 0, x0 + m, 0); g.addColorStop(0, `rgb(${ARGB})`); g.addColorStop(1, `rgb(${SRGB})`); return g; };
-const accFill = (x, y, w, h) => { const g = c.createLinearGradient(x, y, x + w, y + h); g.addColorStop(0, `rgb(${ARGB2})`); g.addColorStop(1, `rgb(${SRGB})`); return g; };
-function glow(x, y, r, rgb, a) { if (a <= 0) return; const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(${rgb},${a})`); g.addColorStop(1, `rgba(${rgb},0)`); c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2); }
-function txt(s, x, y, size, fill, p, o = {}) { // soft rise + fade
-  p = clamp(p); if (p <= 0) return;
-  const w = o.w || 600, al = o.al || "center", bl = o.blur == null ? 8 : o.blur;
-  let ls = o.ls != null ? o.ls : -size * .03; F(w, size, HEAD, ls); let m = c.measureText(s).width;
-  if (o.fit && m > o.fit) { size *= o.fit / m; if (o.ls == null) ls = -size * .03; F(w, size, HEAD, ls); m = c.measureText(s).width; }
-  const rise = o.rise == null ? size * .3 : o.rise, x0 = al === "center" ? x - m / 2 : al === "right" ? x - m : x;
-  c.textAlign = al; c.textBaseline = "middle"; c.save(); c.globalAlpha *= p; if (FIL && bl) c.filter = `blur(${(1 - p) * bl}px)`;
-  c.fillStyle = typeof fill === "function" ? fill(x0, m) : fill; c.fillText(s, x, y + (1 - p) * rise); c.restore();
-}
-function maskLine(s, x, y, size, fill, p) { // headline rises out of a mask; a delayed, offset outline trails behind it
-  p = clamp(p); if (p <= 0) return; F(700, size, DISP, -size * .03); c.textAlign = "center"; c.textBaseline = "middle";
-  let m = c.measureText(s).width; if (m > W * .89) { size *= W * .89 / m; F(700, size, DISP, -size * .03); m = c.measureText(s).width; }
-  c.save(); c.beginPath(); c.rect(0, y - size * .62, W, size * 1.3); c.clip();
-  const q = clamp(p - .22); if (q > 0 && p < 1) { c.save(); c.globalAlpha *= (1 - q) * .55 * (1 - seg(p, .8, 1)); c.lineWidth = 2.5; c.strokeStyle = `rgb(${ARGB})`; c.strokeText(s, x - 14 * (1 - q), y + (1 - q) * size * .85 + 12 * (1 - q)); c.restore(); }
-  c.globalAlpha *= clamp(p * 2); c.fillStyle = typeof fill === "function" ? fill(x - m / 2, m) : fill; c.fillText(s, x, y + (1 - p) * size * .85); c.restore();
-}
-
-// ---------- theme + uploaded logo ----------
-let SLATE = "#223a37", ARGB = "52,211,153", ARGB2 = "16,185,129", SRGB = "10,132,255", LOGO = null, LOGO_BG = null;
-const h2r = (h, s, l) => { const k = n => (n + h / 30) % 12, a = s * Math.min(l, 1 - l), f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1))); return [f(0), f(8), f(4)].map(v => Math.round(v * 255)); };
-const r2h = (r, g, b) => { r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn; let h = 0, s = 0; if (d) { s = d / (1 - Math.abs(2 * l - 1)); h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; } return [h, s, l]; };
-const hex = a => "#" + a.map(v => v.toString(16).padStart(2, "0")).join("");
-function setTheme(h, s, h2, gray) {
-  s = gray ? 0 : Math.max(s, .6); const m = h2r(h, s, gray ? .86 : .58);
-  MINT = hex(m); LIME = hex(h2r(h, s, gray ? .96 : .74)); GRN = hex(h2r(h, s, gray ? .5 : .3)); SLATE = hex(h2r(h, gray ? 0 : .25, .17)); ARGB = m.join(","); ARGB2 = h2r(h, s, gray ? .6 : .4).join(","); SRGB = h2r(h2, Math.max(s, gray ? 0 : .6), gray ? .7 : .55).join(",");
-}
-function resetTheme() { setTheme(160, .6, 215); SLATE = "#223a37"; MINT = "#34d399"; LIME = "#6ee7b7"; GRN = "#0a8f63"; ARGB = "52,211,153"; ARGB2 = "16,185,129"; SRGB = "10,132,255"; LOGO = LOGO_BG = null; }
-function themeFrom(img) {
-  const S = 48, k = document.createElement("canvas"); k.width = k.height = S; const g = k.getContext("2d", { willReadFrequently: true }); g.drawImage(img, 0, 0, S, S); const d = g.getImageData(0, 0, S, S).data, B = {}; let tr = 0, lum = 0, op = 0;
-  for (let i = 0; i < d.length; i += 4) { const a = d[i + 3]; if (a < 250) tr++; if (a < 128) continue; op++; const [h, s, l] = r2h(d[i], d[i + 1], d[i + 2]); lum += l; if (s < .3 || l < .15 || l > .9) continue; const key = Math.floor(h / 20) % 18, b = B[key] || (B[key] = { n: 0, x: 0, y: 0, s: 0 }); b.n += s; b.x += Math.cos(h * Math.PI / 180) * s; b.y += Math.sin(h * Math.PI / 180) * s; b.s += s * s; }
-  LOGO_BG = tr / (S * S) > .05 ? (op && lum / op > .6 ? "#0d1211" : "#ffffff") : null;
-  const ks = Object.keys(B).sort((a, b) => B[b].n - B[a].n); if (!ks.length) { setTheme(0, 0, 0, true); return; }
-  const hue = b => ((Math.atan2(b.y, b.x) * 180 / Math.PI) + 360) % 360, b1 = B[ks[0]], h1 = hue(b1), s1 = b1.s / b1.n;
-  const o = ks.slice(1).find(q => { const dd = Math.abs(((hue(B[q]) - h1 + 540) % 360) - 180); return dd > 40 && B[q].n > b1.n * .15; });
-  setTheme(h1, s1, o ? hue(B[o]) : (h1 + 40) % 360);
-}
-function loadLogo(url, keep = true) {
-  const im = new Image(); im.onload = () => {
-    const k = document.createElement("canvas"), m = Math.min(1, 512 / Math.max(im.width, im.height)); k.width = Math.max(1, Math.round(im.width * m)); k.height = Math.max(1, Math.round(im.height * m)); k.getContext("2d").drawImage(im, 0, 0, k.width, k.height);
-    LOGO = k; themeFrom(k); const pv = document.getElementById("logoPrev"); pv.src = k.toDataURL("image/png"); pv.classList.remove("hide"); document.getElementById("logoClear").classList.remove("hide");
-    if (keep) { try { localStorage.setItem("habaLogo", pv.src); } catch (e) {} }
-  }; im.onerror = () => { document.getElementById("logoMsg").textContent = "Could not read that image."; }; im.src = url;
-}
-document.getElementById("logoFile").onchange = e => { const f = e.target.files[0]; if (!f) return; document.getElementById("logoMsg").textContent = ""; const r = new FileReader(); r.onload = () => loadLogo(r.result); r.readAsDataURL(f); e.target.value = ""; };
-document.getElementById("logoClear").onclick = () => { resetTheme(); document.getElementById("logoPrev").classList.add("hide"); document.getElementById("logoClear").classList.add("hide"); try { localStorage.removeItem("habaLogo"); } catch (e) {} };
-try { const sv = localStorage.getItem("habaLogo"); if (sv) loadLogo(sv, false); } catch (e) {}
-
-const PH = {}; // uploaded photos by initial: T K Z P N
-function portrait(av, cx, cy, d) { // illustrated head-and-shoulders, used until real photos are uploaded
-  c.save(); c.beginPath(); c.arc(cx, cy, d / 2, 0, 7); c.clip(); const g = c.createLinearGradient(cx, cy - d / 2, cx, cy + d / 2); g.addColorStop(0, mixc(av.c, "#ffffff", .45)); g.addColorStop(1, av.c); c.fillStyle = g; c.fillRect(cx - d / 2, cy - d / 2, d, d);
-  c.fillStyle = mixc(av.c, "#000000", .35); c.beginPath(); c.ellipse(cx, cy + d * .5, d * .38, d * .3, 0, 0, 7); c.fill();
-  c.fillStyle = av.sk; c.fillRect(cx - d * .06, cy + d * .08, d * .12, d * .16); c.beginPath(); c.ellipse(cx, cy - d * .06, d * .17, d * .21, 0, 0, 7); c.fill();
-  c.fillStyle = av.hr; c.beginPath(); c.ellipse(cx, cy - d * .17, d * .19, d * .15, 0, Math.PI, 0); c.fill(); c.restore();
-}
-const phMsg = document.getElementById("phMsg"), phClear = document.getElementById("phClear");
-document.getElementById("phFile").onchange = e => { [...e.target.files].slice(0, 5).forEach((f, i) => { const r = new FileReader(); r.onload = () => { const im = new Image(); im.onload = () => { PH["TKZPN"[i]] = im; phClear.classList.remove("hide"); phMsg.textContent = Object.keys(PH).length + " photo(s) in the ad (Thandi, Kabelo, Zoleka, Pieter, Nkateko)"; }; im.src = r.result; }; r.readAsDataURL(f); }); e.target.value = ""; };
-phClear.onclick = () => { for (const k in PH) delete PH[k]; phClear.classList.add("hide"); phMsg.textContent = ""; };
-
-// ---------- shared drawing ----------
-function bg() { c.fillStyle = "#000"; c.fillRect(0, 0, CW, CH); }
-let SQN = 5;
-function sq(x, y, s, n = SQN) { // continuous-corner squircle, like an app icon
-  const a = s / 2, N = 96; c.beginPath();
-  for (let i = 0; i <= N; i++) { const th = i / N * Math.PI * 2, ct = Math.cos(th), st = Math.sin(th), px = x + a * Math.sign(ct) * Math.pow(Math.abs(ct), 2 / n), py = y + a * Math.sign(st) * Math.pow(Math.abs(st), 2 / n); i ? c.lineTo(px, py) : c.moveTo(px, py); }
-  c.closePath();
-}
-function hmark(x, y, s, a = 1, dark = false, sheen = 0) {
-  a = clamp(a); if (a <= 0 || s <= 0) return; c.save(); c.translate(x, y); c.globalAlpha *= a;
-  c.save(); if (dark) { c.shadowColor = `rgba(${ARGB},.55)`; c.shadowBlur = s * .45; c.shadowOffsetY = s * .06; } else { c.shadowColor = "rgba(0,0,0,.28)"; c.shadowBlur = s * .22; c.shadowOffsetY = s * .1; }
-  sq(0, 0, s); c.fillStyle = LOGO ? (LOGO_BG || "#0d1211") : GRN; c.fill(); c.restore();
-  c.save(); sq(0, 0, s); c.clip();
-  if (LOGO) { const k = Math.max(s / LOGO.width, s / LOGO.height); c.drawImage(LOGO, -LOGO.width * k / 2, -LOGO.height * k / 2, LOGO.width * k, LOGO.height * k); }
-  else { const g = c.createLinearGradient(0, -s / 2, 0, s / 2); g.addColorStop(0, LIME); g.addColorStop(1, GRN); c.fillStyle = g; c.fillRect(-s / 2, -s / 2, s, s);
-    c.font = `800 ${s * .6}px ${DISP}`; c.letterSpacing = `${-s * .02}px`; c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("h", 0, -s * .02); }
-  const gl = c.createLinearGradient(0, -s / 2, 0, s / 2); gl.addColorStop(0, "rgba(255,255,255,.22)"); gl.addColorStop(.5, "rgba(255,255,255,0)"); c.fillStyle = gl; c.fillRect(-s / 2, -s / 2, s, s);
-  if (sheen > 0 && sheen < 1) { const bx = lerp(-s * .9, s * .9, sheen), g2 = c.createLinearGradient(bx - s * .2, 0, bx + s * .2, 0); g2.addColorStop(0, "rgba(255,255,255,0)"); g2.addColorStop(.5, "rgba(255,255,255,.5)"); g2.addColorStop(1, "rgba(255,255,255,0)"); c.rotate(.45); c.fillStyle = g2; c.fillRect(-s * 1.2, -s * 1.2, s * 2.4, s * 2.4); }
-  c.restore(); sq(0, 0, s); c.lineWidth = Math.max(1.5, s * .006); c.strokeStyle = dark ? "rgba(255,255,255,.22)" : "rgba(0,0,0,.08)"; c.stroke(); c.restore();
-}
-function fillIco(n, x, y, s, col) { c.save(); c.translate(x - s / 2, y - s / 2); c.scale(s / 24, s / 24); c.fillStyle = col; ICO[n].forEach(q => c.fill(q)); c.restore(); }
-
-// ---------- real SVG icons (Lucide, 24px grid) ----------
+// ---------- real icons (Lucide, 24px grid) ----------
 const rc=(x,y,w,h)=>`M${x+2} ${y}h${w-4}a2 2 0 0 1 2 2v${h-4}a2 2 0 0 1-2 2h${4-w}a2 2 0 0 1-2-2v${4-h}a2 2 0 0 1 2-2z`,ci=(x,y,r)=>`M${x-r} ${y}a${r} ${r} 0 1 0 ${2*r} 0a${r} ${r} 0 1 0 ${-2*r} 0`;
 const D={
- message:["M7.9 20A9 9 0 1 0 4 16.1L2 22Z"],
- at:[ci(12,12,4),"M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"],
- hash:["M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"],
- badge:["M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z","m9 12 2 2 4-4"],
- heart:["M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"],
- camera:["M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z",ci(12,13,3)],
- phone:["M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"],
- mail:[rc(2,4,20,16),"m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"],
- pin:["M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z",ci(12,10,3)],
- music:["M9 18V5l12-2v13",ci(6,18,3),ci(18,16,3)],
- image:[rc(3,3,18,18),ci(9,9,2),"m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"],
- video:["m22 8-6 4 6 4V8Z",rc(2,6,14,12)],
- file:["M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z","M14 2v4a2 2 0 0 0 2 2h4","M10 9H8M16 13H8M16 17H8"],
- dot:[ci(12,12,10),ci(12,12,1)],
- arrow:["M5 12h14M12 5l7 7-7 7"],
- search:[ci(11,11,8),"m21 21-4.3-4.3"],
- zap:["M13 2 3 14h9l-1 8 10-12h-9l1-8z"],
- shield:["M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z","m9 12 2 2 4-4"],
- gift:[rc(3,8,18,4),"M12 8v13","M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7","M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"]
+ users:["M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2",ci(9,7,4),"M22 21v-2a4 4 0 0 0-3-3.87","M16 3.13a4 4 0 0 1 0 7.75"],
+ database:["M3 5a9 3 0 1 0 18 0a9 3 0 1 0-18 0","M3 5v14a9 3 0 0 0 18 0V5","M3 12a9 3 0 0 0 18 0"],
+ cloud:["M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"],
+ lock:[rc(3,11,18,11),"M7 11V7a5 5 0 0 1 10 0v4"],
+ check:["M20 6 9 17l-5-5"],
+ file:["M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z","M14 2v4a2 2 0 0 0 2 2h4","M10 9H8M16 13H8M16 17H8"]
 },ICO={};for(const k in D)ICO[k]=D[k].map(q=>new Path2D(q));
 function ico(n,x,y,s,col,lw=2){if(s<=0)return;c.save();c.translate(x-s/2,y-s/2);c.scale(s/24,s/24);c.strokeStyle=col;c.lineWidth=lw;c.lineCap=c.lineJoin="round";ICO[n].forEach(q=>c.stroke(q));c.restore()}
-const flat=col=>{c.fillStyle=col;c.fillRect(-W,-H,3*W,3*H)};
 
-// ---------- scenes: the whole ad is one conversation, told in bubbles ----------
-const BGL = "#f5f5f7";
-const HB = { logo: 1 };
-const PE = {
-  T: { n: "Thandi", c: "#f97316", i: "T" }, K: { n: "Kabelo", c: "#8b5cf6", i: "K" }, Z: { n: "Zoleka", c: "#ec4899", i: "Z" },
-  P: { n: "Pieter", c: "#0ea5e9", i: "P" }, N: { n: "Nkateko", c: "#eab308", i: "N" },
-  M: { n: "Mama · Family", c: "#ef4444", i: "M" }, W: { n: "Work crew", c: "#6366f1", i: "W" },
-  F: { n: "Thandi · Friends", c: "#f97316", i: "T" }, C: { n: "Campus", c: "#14b8a6", i: "C" }
-};
-const PW = d => d
-  ? { bgc: "#000000", inb: "#26262a", ink: "#f5f5f7", sub: "#8e8e93", line: "rgba(255,255,255,.12)", comp: "#1c1c1e", ph: "#6e6e73", off: "#3a3a3c" }
-  : { bgc: "#ffffff", inb: "#ececef", ink: INK, sub: "#8e8e93", line: "rgba(0,0,0,.09)", comp: "#f1f1f4", ph: "#a1a1a6", off: "#d1d1d6" };
+// ---------- the Firebase flame (official three-part mark) ----------
+const FL=[["M20.684 19.364l-2.25-14a.54.54 0 00-.919-.295L3.316 19.365l7.856 4.427a1.621 1.621 0 001.588 0z","#F57C00"],["M3.89 15.672L6.255.461A.542.542 0 017.27.288l2.543 4.771z","#FFA000"],["M14.3 7.147l-1.82-3.482a.542.542 0 00-.96 0L3.53 17.984z","#FFCA28"]].map(([d,col])=>[new Path2D(d),col]);
+function flame(x,y,s,a=1){if(a<=0||s<=0)return;c.save();c.globalAlpha*=clamp(a);c.shadowColor="rgba(255,150,0,.5)";c.shadowBlur=s*.3;c.translate(x-s/2,y-s/2);c.scale(s/24,s/24);FL.forEach(([p,col])=>{c.fillStyle=col;c.fill(p)});c.restore()}
 
-function bub(x, y, w, h, out, fill, r) {
-  r = Math.min(r || 46, h / 2); const s = r / 46; rr(x, y, w, h, r); c.fillStyle = fill; c.fill(); c.beginPath();
-  if (out) { c.moveTo(x + w - 34 * s, y + h - 30 * s); c.lineTo(x + w - 34 * s, y + h); c.quadraticCurveTo(x + w - 8 * s, y + h + 1, x + w + 8 * s, y + h + 9 * s); c.quadraticCurveTo(x + w - 6 * s, y + h - 8 * s, x + w - 2 * s, y + h - 32 * s); }
-  else { c.moveTo(x + 34 * s, y + h - 30 * s); c.lineTo(x + 34 * s, y + h); c.quadraticCurveTo(x + 8 * s, y + h + 1, x - 8 * s, y + h + 9 * s); c.quadraticCurveTo(x + 6 * s, y + h - 8 * s, x + 2 * s, y + h - 32 * s); }
-  c.closePath(); c.fillStyle = fill; c.fill();
-}
-function avatar(av, cx, cy, d, a) {
-  if (a <= 0) return; if (av.logo) { hmark(cx, cy, d, a, false, 0); return; }
-  const im = PH[av.i]; if (im) { c.save(); c.globalAlpha *= a; c.beginPath(); c.arc(cx, cy, d / 2, 0, 7); c.clip(); const k = Math.max(d / im.width, d / im.height); c.drawImage(im, cx - im.width * k / 2, cy - im.height * k / 2, im.width * k, im.height * k); c.restore(); return; }
-  if (av.sk) { c.save(); c.globalAlpha *= a; portrait(av, cx, cy, d); c.restore(); return; }
-  c.save(); c.globalAlpha *= a; const g = c.createLinearGradient(cx, cy - d / 2, cx, cy + d / 2); g.addColorStop(0, mixc(av.c, "#ffffff", .3)); g.addColorStop(1, av.c);
-  c.beginPath(); c.arc(cx, cy, d / 2, 0, 7); c.fillStyle = g; c.fill(); c.font = `700 ${d * .44}px ${HEAD}`; c.letterSpacing = "0px"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = "#fff"; c.fillText(av.i, cx, cy + 1); c.restore();
-}
-// measure one message: wraps text, returns size + spacing
-function meas(it, cf) {
-  if (it._m) return it._m;
-  const kd = it.kind || "text", sz = it.size || cf.ts, big = sz > 60, px = Math.max(36, sz * .55), py = Math.max(26, sz * .42), lh = sz * (big ? 1.08 : 1.24), L = [];
-  let w, h;
-  if (kd === "text") {
-    F(big ? 700 : 500, sz, HEAD, big ? -sz * .03 : -.3); const mx = (big ? cf.mxb : cf.mx) - (it.p ? 84 : 0) - 2 * px;
-    it.text.split("\n").forEach(pr => { let cur = ""; pr.split(" ").forEach(wd => { const tr = cur ? cur + " " + wd : wd; if (cur && c.measureText(tr).width > mx) { L.push(cur); cur = wd; } else cur = tr; }); L.push(cur); });
-    w = Math.max(...L.map(s => c.measureText(s).width)) + 2 * px; h = L.length * lh + 2 * py; if (cf.wa) { h += 24; w = Math.max(w, 190); }
-  } else if (kd === "voice") { w = 540; h = 108; } else { w = cf.cw || 620; h = 136; }
-  const lab = it.p && it.p.n && !it.side ? 34 : 0, stH = it.st && !cf.wa ? 38 : 0;
-  return it._m = { w, h, L, px, py, lh, sz, big, lab, stH, tot: lab + h + stH + cf.gap };
-}
-function geo(cf) {
-  const thT = cf.top + (cf.hdr ? 148 : 0), thB = cf.comp != null ? cf.comp - 22 : cf.bot - 10, thH = thB - thT; let y = cf.wa ? 74 : 0;
-  cf.items.forEach(it => { const m = meas(it, cf); it._y = y + m.lab; y += m.tot; });
-  return { thT, thB, thH, vo: cf.vc ? Math.max(0, (thH - (y - cf.gap)) / 2) : 0 };
-}
-function scrollAt(cf, g, t) { // smooth auto-scroll as new messages arrive
-  let off = 0; cf.items.forEach(it => { const m = it._m, ap = it.typ != null ? it.typ : it.at, need = Math.max(0, g.vo + it._y + m.h + m.stH + 28 - g.thH); off = lerp(off, need, io(seg(t, ap, ap + .5))); }); return off;
-}
-function item(it, cf, P, t) {
-  const m = it._m, out = !!it.side, x = out ? cf.x1 - m.w : cf.x0 + (it.p ? 84 : 0), y = it._y, kd = it.kind || "text", accent = `rgb(${ARGB2})`;
-  const typing = !out && it.typ != null && t >= it.typ && t < it.at + .05, p = seg(t, it.at, it.at + .45);
-  const vis = !out && it.typ != null ? clamp(seg(t, it.typ, it.typ + .25)) : clamp(p * 2.5);
-  if (it.p && vis > 0) avatar(it.p, cf.x0 + 34, y + m.h - 34, 68, vis);
-  if (m.lab && vis > 0) { c.save(); c.globalAlpha *= vis; F(600, 24, HEAD, 0); c.textAlign = "left"; c.textBaseline = "middle"; c.fillStyle = it.p.c; c.fillText(it.p.n, x + 16, y - 17); c.restore(); }
-  if (typing) {
-    c.save(); c.globalAlpha *= clamp(seg(t, it.typ, it.typ + .2)) * (1 - clamp(seg(t, it.at - .06, it.at + .04))); bub(x, y, 170, 92, 0, P.inb);
-    for (let i = 0; i < 3; i++) { const v = .5 + .5 * Math.sin(t * 7 - i * .9); c.fillStyle = cf.dark ? `rgba(180,180,190,${.35 + .65 * v})` : `rgba(142,142,147,${.4 + .6 * v})`; c.beginPath(); c.arc(x + 55 + i * 30, y + 46 - v * 6, 11, 0, 7); c.fill(); } c.restore();
-  }
-  if (p <= 0) return;
-  const grad = (out && !it.neutral) || it.big, ax = out ? x + m.w : x, ay = y + m.h, sc = .72 + .28 * sp(p), dy = (1 - oc(p)) * (out && it.typ != null ? 110 : 26), r = cf.wa ? 30 : m.big ? 64 : 46;
-  const act = it.act ? io(seg(t, it.act[0], it.act[0] + .35)) * (it.act[1] ? 1 - io(seg(t, it.act[1], it.act[1] + .35)) : 1) : 0;
-  let ink = grad ? onAcc() : P.ink;
-  c.save(); c.translate(ax, ay + dy); c.scale(sc, sc); c.translate(-ax, -ay); c.globalAlpha *= clamp(p * 2.5);
-  if (grad) { c.save(); c.shadowColor = `rgba(${ARGB2},.35)`; c.shadowBlur = 36; c.shadowOffsetY = 14; bub(x, y, m.w, m.h, out, accFill(x, y, m.w, m.h), r); c.restore(); }
-  else bub(x, y, m.w, m.h, out, P.inb, r);
-  if (kd === "chip" && act > 0) { c.save(); c.globalAlpha *= act; c.shadowColor = `rgba(${ARGB2},.5)`; c.shadowBlur = 50; c.shadowOffsetY = 16; bub(x, y, m.w, m.h, out, accFill(x, y, m.w, m.h), r); c.restore(); }
-  if (kd === "text") {
-    F(m.big ? 700 : 500, m.sz, HEAD, m.big ? -m.sz * .03 : -.3); c.textAlign = "left"; c.textBaseline = "middle"; c.fillStyle = ink;
-    m.L.forEach((s, i) => c.fillText(s, x + m.px, y + m.py + m.lh * (i + .5) + (m.big ? -m.sz * .02 : 1)));
-    if (cf.wa) { const rd = it.st && it.st.some(([ts, s2]) => s2 === "Read" && t >= ts); F(500, 21, HEAD, 0); c.textAlign = "right"; c.fillStyle = grad ? "rgba(255,255,255,.75)" : P.sub; c.fillText(it.tm || "17:04", x + m.w - 26 - (out ? 38 : 0), y + m.h - 26);
-      if (out) { c.strokeStyle = rd ? "#9be7ff" : "rgba(255,255,255,.7)"; c.lineWidth = 2.6; c.lineCap = c.lineJoin = "round"; [0, 11].forEach(o => { const bx = x + m.w - 56 + o, by = y + m.h - 27; c.beginPath(); c.moveTo(bx, by); c.lineTo(bx + 5, by + 6); c.lineTo(bx + 15, by - 7); c.stroke(); }); } }
-  } else if (kd === "voice") {
-    const cx = x + 68, cy = y + m.h / 2, N = 26, bx0 = x + 128, bw = m.w - 128 - 100, pr = clamp((t - it.at - .35) / (it.dur || 1.5));
-    c.beginPath(); c.arc(cx, cy, 38, 0, 7); c.fillStyle = out ? ink : accent; c.fill();
-    c.beginPath(); c.moveTo(cx - 10, cy - 17); c.lineTo(cx + 18, cy); c.lineTo(cx - 10, cy + 17); c.closePath(); c.fillStyle = out ? accent : "#fff"; c.fill();
-    for (let i = 0; i < N; i++) {
-      const hh = 14 + 40 * Math.abs(Math.sin(i * 1.7) * Math.cos(i * .55 + 1)), xx = bx0 + (i + .5) * bw / N, on = i / N < pr;
-      c.save(); c.globalAlpha *= on ? 1 : .38; c.fillStyle = out ? ink : (on ? accent : (cf.dark ? "#ffffff" : "#000000")); if (!out && !on) c.globalAlpha *= .6; rr(xx - 3.5, cy - hh / 2, 7, hh, 3.5); c.fill(); c.restore();
-    }
-    F(500, 26, HEAD, 0); c.textAlign = "right"; c.textBaseline = "middle"; c.fillStyle = out ? ink : P.sub; c.fillText(it.time || "0:08", x + m.w - 30, cy + 1);
-  } else {
-    const cx = x + 72, cy = y + m.h / 2, ic = mixc(P.sub, onAcc(), act);
-    c.beginPath(); c.arc(cx, cy, 44, 0, 7); c.fillStyle = cf.dark ? "rgba(255,255,255,.09)" : "rgba(0,0,0,.06)"; c.fill();
-    if (act > 0) { c.save(); c.globalAlpha *= act; c.beginPath(); c.arc(cx, cy, 44, 0, 7); c.fillStyle = "rgba(255,255,255,.24)"; c.fill(); c.restore(); }
-    ico(it.ic, cx, cy, 48, ic, 2); F(700, 60, HEAD, -1.5); c.textAlign = "left"; c.textBaseline = "middle"; c.fillStyle = mixc(P.ink, onAcc(), act); c.fillText(it.text, x + 144, cy + 2);
-  }
-  c.restore();
-  if (it.st) { let cur = null; it.st.forEach(([ts, s]) => { if (t >= ts) cur = [ts, s]; }); if (cur) { c.save(); c.globalAlpha *= clamp(seg(t, cur[0], cur[0] + .25)); F(500, 26, HEAD, -.1); c.textAlign = "right"; c.textBaseline = "middle"; c.fillStyle = cur[1] === "Read" ? accent : P.sub; c.fillText(cur[1], x + m.w - 6, y + m.h + 24); c.restore(); } }
-  if (it.re) { const rp = sp(seg(t, it.re.at, it.re.at + .5)); if (rp > 0) { c.save(); c.translate(out ? x + 6 : x + m.w - 6, y - 8); c.scale(rp, rp); c.shadowColor = "rgba(0,0,0,.22)"; c.shadowBlur = 22; c.shadowOffsetY = 6; c.beginPath(); c.arc(0, 0, 40, 0, 7); c.fillStyle = cf.dark ? "#3a3a3e" : "#fff"; c.fill(); c.shadowColor = "rgba(0,0,0,0)"; fillIco("heart", 0, 2, 42, "#ff375f"); c.restore(); } }
-  if (it.ico) { const q = sp(seg(t, it.at + .25, it.at + .8)); if (q > 0) { c.save(); c.translate(out ? x : x + m.w, y); c.scale(q, q); c.rotate((out ? -1 : 1) * .14 * (1 - q)); c.shadowColor = "rgba(0,0,0,.2)"; c.shadowBlur = 26; c.shadowOffsetY = 8; c.beginPath(); c.arc(0, 0, 56, 0, 7); c.fillStyle = "#fff"; c.fill(); c.shadowColor = "rgba(0,0,0,0)"; ico(it.ico, 0, 0, 62, accent, 2.2); c.restore(); } }
-}
-function header(t, cf, P) {
-  const h = cf.hdr, a = oe(seg(t, 0, .5)), cy = cf.top + 72, ac = cf.dark ? `rgb(${ARGB})` : `rgb(${ARGB2})`, cx0 = cf.card ? cf.card.x : 0, cx1 = cf.card ? cf.card.x + cf.card.w : W;
-  c.save(); c.globalAlpha *= a; c.strokeStyle = ac; c.lineWidth = 6; c.lineCap = c.lineJoin = "round"; c.beginPath(); c.moveTo(cf.x0 + 22, cy - 20); c.lineTo(cf.x0 + 2, cy); c.lineTo(cf.x0 + 22, cy + 20); c.stroke();
-  avatar(h.av || HB, cf.x0 + 100, cy, 80, 1);
-  F(700, 40, HEAD, -.6); c.textAlign = "left"; c.textBaseline = "middle"; c.fillStyle = P.ink; c.fillText(h.name, cf.x0 + 158, cy - 15); const nw = c.measureText(h.name).width;
-  if (h.vf) ico("badge", cf.x0 + 158 + nw + 28, cy - 15, 34, ac, 2.2);
-  F(500, 26, HEAD, -.1); c.fillStyle = h.live ? ac : P.sub; c.fillText(h.sub, cf.x0 + 158, cy + 24);
-  ico("phone", cf.x1 - 112, cy, 48, ac, 2); ico("video", cf.x1 - 36, cy, 52, ac, 2);
-  c.fillStyle = P.line; c.fillRect(cx0, cf.top + 132, cx1 - cx0, 2); c.restore();
-}
-function composer(t, cf, P) {
-  const y = cf.comp, a = oe(seg(t, 0, .5)); let s = "", on = false;
-  cf.items.forEach(it => { if (it.side && it.typ != null && t >= it.typ && t < it.at) { on = true; const q = clamp((t - it.typ - .05) / Math.max(.1, it.at - it.typ - .25)); s = it.text.slice(0, Math.ceil(it.text.length * q)); } });
-  c.save(); c.globalAlpha *= a; rr(cf.x0, y, cf.x1 - cf.x0 - 104, 88, 44); c.fillStyle = P.comp; c.fill(); F(500, 34, HEAD, -.2); c.textAlign = "left"; c.textBaseline = "middle";
-  if (s) { c.fillStyle = P.ink; c.fillText(s, cf.x0 + 36, y + 45); const w = c.measureText(s).width; c.fillStyle = `rgb(${ARGB2})`; c.fillRect(cf.x0 + 36 + w + 4, y + 24, 3, 40); } else { c.fillStyle = P.ph; c.fillText("Message", cf.x0 + 36, y + 45); }
-  const bx = cf.x1 - 44, by = y + 44; c.beginPath(); c.arc(bx, by, 44, 0, 7); c.fillStyle = on ? accFill(bx - 44, by - 44, 88, 88) : P.off; c.fill();
-  c.save(); c.translate(bx, by); c.rotate(-Math.PI / 2); ico("arrow", 0, 0, 40, on ? onAcc() : "#ffffff", 2.6); c.restore(); c.restore();
-}
-function chat(t, cf) {
-  const P = PW(cf.dark), g = cf._g || (cf._g = geo(cf)), off = scrollAt(cf, g, t); if (cf.wa) Object.assign(P, cf.dark ? { bgc: "#0a1512", inb: "#262b36", comp: "#1a2623" } : { bgc: "#ffffff", inb: "#eef0f4", comp: "#f1f3f5" });
-  if (cf.card) { const k = cf.card; c.save(); c.globalAlpha *= oe(seg(t, 0, .5)); c.shadowColor = "rgba(0,0,0,.14)"; c.shadowBlur = 80; c.shadowOffsetY = 30; rr(k.x, k.y, k.w, k.h, 60); c.fillStyle = "#fff"; c.fill(); c.restore(); }
-  c.save(); c.beginPath(); c.rect(0, g.thT, W, g.thH); c.clip(); c.translate(0, g.thT + g.vo - off); cf.items.forEach(it => item(it, cf, P, t)); if (cf.wa) { rr(W / 2 - 74, 14, 148, 46, 23); c.fillStyle = cf.dark ? "rgba(255,255,255,.1)" : "rgba(0,0,0,.06)"; c.fill(); F(600, 23, HEAD, 0); c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = cf.dark ? "#b6c2bf" : "#6b7280"; c.fillText("Today", W / 2, 38); } c.restore();
-  if (off > 2 && !cf.wa) { const gr = c.createLinearGradient(0, g.thT, 0, g.thT + 90); gr.addColorStop(0, P.bgc); gr.addColorStop(1, P.bgc + "00"); c.save(); c.globalAlpha *= clamp(off / 50); c.fillStyle = gr; c.fillRect(0, g.thT, W, 90); c.restore(); }
-  if (cf.wa) { c.fillStyle = cf.dark ? "#101d19" : "#ffffff"; c.fillRect(0, 0, W, 134); c.fillRect(0, cf.comp - 22, W, H - cf.comp + 22); } if (cf.hdr) header(t, cf, P); if (cf.comp != null) composer(t, cf, P);
-}
+// ---------- Haba Code mark ----------
+let SQN=5;
+function sq(x,y,s,n=SQN){const a=s/2,N=96;c.beginPath();for(let i=0;i<=N;i++){const th=i/N*Math.PI*2,ct=Math.cos(th),st=Math.sin(th),px=x+a*Math.sign(ct)*Math.pow(Math.abs(ct),2/n),py=y+a*Math.sign(st)*Math.pow(Math.abs(st),2/n);i?c.lineTo(px,py):c.moveTo(px,py)}c.closePath()}
+function codeMark(x,y,s,a){if(a<=0||s<=0)return;c.save();c.globalAlpha*=clamp(a);c.shadowColor=`rgba(${ARGB},.5)`;c.shadowBlur=s*.3;sq(x,y,s);const g=c.createLinearGradient(x-s/2,y-s/2,x+s/2,y+s/2);g.addColorStop(0,`rgb(${ARGB})`);g.addColorStop(1,`rgb(${SRGB})`);c.fillStyle=g;c.fill();c.shadowColor="transparent";c.fillStyle="#fff";F(800,s*.4,DISP,-s*.01);c.textAlign="center";c.textBaseline="middle";c.fillText("</>",x,y+s*.02);c.restore()}
+function ptr(x,y,s,press=0){c.save();c.translate(x,y);c.scale(s*(1-.1*press),s*(1-.1*press));c.beginPath();c.moveTo(0,0);c.lineTo(0,40);c.lineTo(11,31);c.lineTo(19,49);c.lineTo(28,45);c.lineTo(20,28);c.lineTo(34,28);c.closePath();c.shadowColor="rgba(40,30,120,.35)";c.shadowBlur=14;c.shadowOffsetY=6;const g=c.createLinearGradient(0,0,34,49);g.addColorStop(0,"#1b1740");g.addColorStop(1,"#4338ca");c.fillStyle=g;c.fill();c.shadowColor="transparent";c.lineWidth=3.5;c.lineJoin="round";c.strokeStyle=`rgb(${ARGB})`;c.stroke();c.restore()}
+function ring(x,y,p,R=120,col=ARGB){if(p<=0||p>=1)return;c.save();c.lineWidth=6;c.strokeStyle=`rgba(${col},${1-p})`;c.beginPath();c.arc(x,y,R*oc(p),0,7);c.stroke();c.restore()}
+function burst(bx,by,t,t0){for(let k=0;k<2;k++){const p=seg(t,t0+k*.15,t0+k*.15+.9);if(p>0&&p<1){c.save();c.globalAlpha*=(1-p)*.7;c.strokeStyle=`rgb(${ARGB2})`;c.lineWidth=8*(1-p)+1;c.beginPath();c.arc(bx,by,lerp(30,190,oc(p)),0,7);c.stroke();c.restore()}}}
 
-// ---------- VERIFIED BADGE AD: new scenes ----------
-const CREAM = "#f6f4ee";
-function vb(x, y, s, a = 1, sh = 0, wh = false) { // the verified badge, filled
-  a = clamp(a); if (a <= 0 || s <= 0) return; c.save(); c.globalAlpha *= a; c.save(); c.shadowColor = `rgba(${ARGB2},.55)`; c.shadowBlur = s * .5; c.shadowOffsetY = s * .12;
-  c.translate(x - s / 2, y - s / 2); c.scale(s / 24, s / 24); const g = c.createLinearGradient(0, 0, 24, 24); g.addColorStop(0, `rgb(${ARGB})`); g.addColorStop(1, `rgb(${SRGB})`);
-  c.fillStyle = wh ? "#fff" : g; c.fill(ICO.badge[0]); c.shadowColor = "rgba(0,0,0,0)"; c.strokeStyle = wh ? `rgb(${ARGB2})` : onAcc(); c.lineWidth = 2.4; c.lineCap = c.lineJoin = "round"; c.stroke(ICO.badge[1]);
-  if (sh > 0 && sh < 1) { c.save(); c.clip(ICO.badge[0]); const bx = lerp(-8, 32, sh), gg = c.createLinearGradient(bx - 4, 0, bx + 4, 0); gg.addColorStop(0, "rgba(255,255,255,0)"); gg.addColorStop(.5, "rgba(255,255,255,.75)"); gg.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = gg; c.fillRect(-5, -5, 34, 34); c.restore(); }
-  c.restore(); c.restore();
-}
-function burst(bx, by, t, t0) {
-  for (let k = 0; k < 2; k++) { const p = seg(t, t0 + k * .15, t0 + k * .15 + .9); if (p > 0 && p < 1) { c.save(); c.globalAlpha *= (1 - p) * .7; c.strokeStyle = `rgb(${ARGB2})`; c.lineWidth = 8 * (1 - p) + 1; c.beginPath(); c.arc(bx, by, lerp(30, 190, oc(p)), 0, 7); c.stroke(); c.restore(); } }
-  const p = seg(t, t0, t0 + .8); if (p > 0 && p < 1) { c.save(); c.strokeStyle = `rgb(${ARGB})`; c.lineCap = "round"; c.lineWidth = 7; c.globalAlpha *= 1 - p;
-    for (let i = 0; i < 10; i++) { const an = i / 10 * 6.283, r0 = lerp(60, 120, oc(p)), r1 = r0 + 40 * Math.sin(p * 3.14); c.beginPath(); c.moveTo(bx + Math.cos(an) * r0, by + Math.sin(an) * r0); c.lineTo(bx + Math.cos(an) * r1, by + Math.sin(an) * r1); c.stroke(); } c.restore(); }
-}
-function pcard(x, y, w, h, nm, hd, vt, a, dk) { // profile card; vt = badge progress (0 = none)
-  c.save(); c.globalAlpha *= clamp(a); c.shadowColor = "rgba(0,0,0,.35)"; c.shadowBlur = 60; c.shadowOffsetY = 24; rr(x, y, w, h, 48); c.fillStyle = dk ? "#15171d" : "#fff"; c.fill(); c.shadowColor = "rgba(0,0,0,0)";
-  c.lineWidth = 2; c.strokeStyle = dk ? "rgba(255,255,255,.1)" : "rgba(0,0,0,.06)"; c.stroke(); avatar(PE.T, x + w / 2, y + h * .3, h * .3, 1);
-  F(700, Math.min(46, w * .1), HEAD, -1); const m = c.measureText(nm).width, e = oc(vt), nx = x + w / 2 - 30 * e; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = dk ? "#fff" : INK; c.fillText(nm, nx, y + h * .62);
-  F(500, 30, HEAD, 0); c.fillStyle = "#8e8e93"; c.fillText(hd, x + w / 2, y + h * .74);
-  rr(x + w * .2, y + h * .84, w * .6, h * .09, h * .045); c.fillStyle = dk ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.06)"; c.fill(); F(600, 28, HEAD, 0); c.fillStyle = dk ? "#fff" : INK; c.fillText("Follow", x + w / 2, y + h * .885);
-  const bx = nx + m / 2 + 36, by = y + h * .62; if (vt > 0) vb(bx, by, 54 * (1 + 2.2 * (1 - oc(vt))), vt * 4, seg(vt, .5, 1)); c.restore(); return [bx, by];
-}
-// ---------- HABA CODE · PRODUCT AD (16:9) ----------
-// story: "idea is easy" -> "building it?" -> "that's where everyone quits" -> logo -> prompt -> AI edit applied in the IDE -> cloud of projects -> CTA
-const CRM = "#f6f2ec", DRK = "#0a0a12", MONO = '"JetBrains Mono","SF Mono",Menlo,Consolas,monospace';
-const T_ = (s, x, y, size, col, w = 500, al = "left", fam = HEAD) => { F(w, size, fam, 0); c.textAlign = al; c.textBaseline = "middle"; c.fillStyle = col; c.fillText(s, x, y); };
-const grad2 = (x, w) => { const g = c.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, `rgb(${ARGB})`); g.addColorStop(.55, `rgb(${SRGB})`); g.addColorStop(1, "#a78bfa"); return g; };
-const grad3 = (x, w) => { const g = c.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, "#a855f7"); g.addColorStop(.6, "#ec4899"); g.addColorStop(1, "#fb923c"); return g; };
-function cream(t) { flat(CRM); glow(W * .2 + Math.sin(t * .7) * 90, H * .9, 900, "244,114,182", .16); glow(W * .82, H * .1 + Math.cos(t * .6) * 60, 900, ARGB, .13); glow(W * .55, H, 800, SRGB, .1); }
-function lay(segs, size) { F(600, size, HEAD, -size * .02); const ws = segs.map(([s]) => c.measureText(s).width), tot = ws.reduce((a, b) => a + b, 0); let x = W / 2 - tot / 2; return { ws, xs: ws.map(w => { const r = x; x += w; return r; }) }; }
-function typeLine(segs, y, size, n, col) { // typed kinetic line with caret; segs = [[text, fill|null]]
-  const L = lay(segs, size), total = segs.reduce((a, [s]) => a + s.length, 0); let left = Math.floor(n), ex = L.xs[0]; c.textAlign = "left"; c.textBaseline = "middle";
-  segs.forEach(([s, fill], i) => { const k = Math.min(s.length, Math.max(0, left)); left -= s.length; if (k > 0) { const sub = s.slice(0, k); c.fillStyle = typeof fill === "function" ? fill(L.xs[i], L.ws[i]) : (fill || col); c.fillText(sub, L.xs[i], y); ex = L.xs[i] + c.measureText(sub).width; } });
-  if (n > 0 && (n < total || Math.sin(NOW * 9) > 0)) { c.fillStyle = `rgb(${ARGB})`; c.fillRect(ex + 6, y - size * .55, 6, size * 1.1); } return L;
-}
-function bloom(x, y, r, rot, a, dark) {
-  if (a <= 0 || r <= 0) return; c.save(); c.translate(x, y); c.rotate(rot); c.globalAlpha *= a; if (dark) { c.beginPath(); c.arc(0, 0, r * .62, 0, 7); c.fillStyle = DRK; c.fill(); }
-  for (let k = 0; k < 8; k++) {
-    c.save(); c.rotate(k * Math.PI / 4); c.beginPath(); c.ellipse(0, -r * .55, r * .3, r * .45, 0, 0, 7); const g = c.createLinearGradient(0, -r, 0, 0);
-    if (dark) { g.addColorStop(0, `rgb(${SRGB})`); g.addColorStop(.5, "#7c3aed"); g.addColorStop(1, DRK); c.fillStyle = g; c.fill(); c.lineWidth = Math.max(1, r * .012); c.strokeStyle = `rgba(${ARGB},.7)`; c.stroke(); } else { g.addColorStop(0, `rgb(${ARGB})`); g.addColorStop(1, `rgb(${SRGB})`); c.fillStyle = g; c.fill(); } c.restore();
-  }
-  if (!dark) { c.fillStyle = "#fff"; c.beginPath(); for (let k = 0; k < 8; k++) { const q = k % 2 ? r * .1 : r * .26, an = k * Math.PI / 4 - Math.PI / 2; c.lineTo(Math.cos(an) * q, Math.sin(an) * q); } c.closePath(); c.fill(); } c.restore();
-}
-function codeMark(x, y, s, a) { // Haba Code app icon: gradient squircle with </>
-  if (a <= 0 || s <= 0) return; c.save(); c.globalAlpha *= a; c.shadowColor = `rgba(${ARGB},.5)`; c.shadowBlur = s * .3; sq(x, y, s); const g = c.createLinearGradient(x - s / 2, y - s / 2, x + s / 2, y + s / 2); g.addColorStop(0, `rgb(${ARGB})`); g.addColorStop(1, `rgb(${SRGB})`); c.fillStyle = g; c.fill(); c.shadowColor = "transparent";
-  c.fillStyle = "#fff"; F(800, s * .4, DISP, -s * .01); c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("</>", x, y + s * .02); c.restore();
-}
-function ptr(x, y, s, press = 0) { // gradient cursor
-  c.save(); c.translate(x, y); c.scale(s * (1 - .1 * press), s * (1 - .1 * press)); c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 40); c.lineTo(11, 31); c.lineTo(19, 49); c.lineTo(28, 45); c.lineTo(20, 28); c.lineTo(34, 28); c.closePath();
-  c.shadowColor = "rgba(40,30,120,.35)"; c.shadowBlur = 14; c.shadowOffsetY = 6; const g = c.createLinearGradient(0, 0, 34, 49); g.addColorStop(0, "#1b1740"); g.addColorStop(1, "#4338ca"); c.fillStyle = g; c.fill(); c.shadowColor = "transparent"; c.lineWidth = 3.5; c.lineJoin = "round"; c.strokeStyle = `rgb(${ARGB})`; c.stroke(); c.restore();
-}
-function ring(x, y, p, R = 120, col = ARGB) { if (p <= 0 || p >= 1) return; c.save(); c.lineWidth = 6; c.strokeStyle = `rgba(${col},${1 - p})`; c.beginPath(); c.arc(x, y, R * oc(p), 0, 7); c.stroke(); c.restore(); }
-// 1: "Getting an idea is [bloom] easy."
-function k1(t) {
-  cream(t); const segs = [["Getting an idea is ", null], ["   ", null], ["easy.", null]], L = lay(segs, 104), ix = L.xs[1] + L.ws[1] / 2, ctr = io(seg(t, 1.8, 2.5));
-  const R = t < 1.4 ? 1300 * io(seg(t, .85, 1.4)) : lerp(1300, 36, ctr), px = lerp(W / 2, ix, ctr), dk = clamp((R - 160) / 700), a = clamp((R - 36) / 80);
-  bloom(px, H / 2, R, t * .4, a, true); typeLine(segs, H / 2, 104, (t - .25) * 15, mixc("#111114", "#ffffff", dk)); bloom(ix, H / 2, 38 * sp(seg(t, 2.3, 2.8)), t * 1.4, 1 - a, false);
-}
-// 2: "Building it?" with a fake-3D question mark
-function k2(t) {
-  cream(t); const p = sp(seg(t, .1, .8)), bob = Math.sin(t * 2.2) * 16; c.save(); c.fillStyle = "rgba(0,0,0,.07)"; c.beginPath(); c.ellipse(W / 2, 640, 150 * p, 26 * p, 0, 0, 7); c.fill(); c.restore();
-  c.save(); c.translate(W / 2, 330 + bob); c.rotate(Math.sin(t * 1.5) * .07); c.scale(p * (.93 + .07 * Math.cos(t * 1.7)), p); F(800, 520, DISP, 0); c.textAlign = "center"; c.textBaseline = "middle";
-  for (let k = 20; k >= 1; k--) { c.fillStyle = mixc("#8b7cf6", "#5b4bd1", k / 20); c.fillText("?", k * 1.2, k * 1.8); }
-  const g = c.createLinearGradient(0, -230, 0, 230); g.addColorStop(0, "#c4b5fd"); g.addColorStop(.5, `rgb(${SRGB})`); g.addColorStop(1, `rgb(${ARGB})`); c.fillStyle = g; c.fillText("?", 0, 0); c.restore();
-  typeLine([["Building it?", null]], 790, 108, (t - .5) * 13, "#111114");
-}
-// 3: "That's where everyone quits."
-function k3(t) {
-  cream(t); const segs = [["That’s where everyone ", null], ["quits", grad3], [".", null]], L = lay(segs, 100), qx = L.xs[1] + L.ws[1] / 2, bp = oe(seg(t, 1.4, 2.1));
-  glow(qx, H / 2 + 20, 480 + 140 * bp, "236,72,153", .5 * bp); glow(qx, H / 2 + 40, 300, "167,139,250", .4 * bp); typeLine(segs, H / 2, 100, (t - .2) * 16, "#111114");
-}
-// 4: dark logo reveal, then the camera dives into the wordmark
-function k4(t) {
-  flat(DRK); glow(W / 2, H + 120, 1200, SRGB, .6); glow(W / 2, H + 80, 800, ARGB, .3); const ip = sp(seg(t, .15, .85)), wx = 650, y = 520, size = 150;
-  SQN = lerp(2, 5, io(seg(t, .15, .95))); burst(520, y, t, .3); c.save(); c.translate(520, y); c.rotate((1 - ip) * -.3); codeMark(0, 0, 170 * Math.max(ip, 0), clamp(ip * 2)); c.restore(); SQN = 5;
-  const wp = oe(seg(t, .55, 1.3)); if (wp > 0) { c.save(); c.beginPath(); c.rect(wx - 20, 0, W, H); c.clip(); F(800, size, DISP, -size * .03); c.textAlign = "left"; c.textBaseline = "middle"; const w = c.measureText("Haba Code").width; c.globalAlpha = clamp(wp * 1.6); c.fillStyle = grad2(wx, w); c.fillText("Haba Code", wx + (1 - wp) * -360, y + 4); c.restore(); }
-}
-// 5: giant letters + the prompt box, cursor clicks send
-function k5(t) {
-  cream(t); c.save(); F(800, 900, DISP, -20); c.textAlign = "left"; c.textBaseline = "alphabetic"; const gx = -260 - t * 24; c.fillStyle = grad2(gx, 2400); c.globalAlpha = .95; c.fillText("Code", gx, 560); c.restore();
-  const bp = sp(seg(t, .2, .85)), bx = 460, bw = 1000, bh = 300, by = 440 + (1 - clamp(bp)) * 520, sx = bx + bw - 72, sy = by + bh - 70, press = clamp(seg(t, 3.4, 3.55)) * (1 - seg(t, 3.55, 3.7)), done = t > 3.45;
-  c.save(); c.shadowColor = "rgba(40,30,80,.22)"; c.shadowBlur = 70; c.shadowOffsetY = 30; rr(bx, by, bw, bh, 44); c.fillStyle = "#fbf9f6"; c.fill(); c.restore();
-  const msg = "Add a dark mode toggle to my portfolio", sub = msg.slice(0, Math.max(0, Math.floor((t - .9) * 20))); T_(sub, bx + 56, by + 92, 46, "#111114", 500);
-  if (t > .9 && (sub.length < msg.length || Math.sin(NOW * 9) > 0)) { F(500, 46, HEAD, 0); c.fillStyle = `rgb(${ARGB})`; c.fillRect(bx + 60 + c.measureText(sub).width, by + 62, 5, 60); }
-  T_("+", bx + 64, by + bh - 70, 44, "#555", 400, "center");
-  [["Attach", "image", 112, 170], ["Files", "hash", 300, 150]].forEach(([l, ic, o, w]) => { rr(bx + o, by + bh - 104, w, 68, 34); c.fillStyle = "#f1ede6"; c.fill(); ico(ic, bx + o + 36, by + bh - 70, 30, "#555", 2); T_(l, bx + o + 62, by + bh - 69, 26, "#444", 500); });
-  for (let k = 0; k < 5; k++) { const h = 14 + 16 * Math.abs(Math.sin(t * 5 + k * 1.3)); c.fillStyle = "#555"; rr(sx - 160 + k * 14, by + bh - 70 - h / 2, 5, h, 3); c.fill(); }
-  c.beginPath(); c.arc(sx, sy, 42 * (1 - .08 * press), 0, 7); const bg = c.createLinearGradient(sx - 42, sy, sx + 42, sy); bg.addColorStop(0, done ? `rgb(${ARGB})` : "#111"); bg.addColorStop(1, done ? `rgb(${SRGB})` : "#111"); c.fillStyle = bg; c.fill();
-  c.strokeStyle = "#fff"; c.lineWidth = 5; c.lineCap = "round"; c.lineJoin = "round"; c.beginPath(); c.moveTo(sx, sy + 14); c.lineTo(sx, sy - 14); c.moveTo(sx - 13, sy - 2); c.lineTo(sx, sy - 15); c.lineTo(sx + 13, sy - 2); c.stroke();
-  ring(sx, sy, seg(t, 3.45, 3.85)); const p = io(seg(t, 2.7, 3.35)); ptr(lerp(W + 60, sx + 10, p), lerp(H + 40, sy + 8, p), 1.4, press);
-}
-// 6: the IDE — AI proposes edits, you apply, live preview flips to dark
-const CODE = (() => { const S = "#7dd3fc", P = "#8b93a7", K = "#6ee7b7", V = "#fbbf24"; return [[[":root", S], [" {", P]], [["  --bg", K], [": ", P], ["#ffffff", V], [";", P]], [["  --text", K], [": ", P], ["#111114", V], [";", P]], [["}", P]], [["body", S], [" {", P]], [["  background", K], [": ", P], ["var(--bg)", V], [";", P]], [["  color", K], [": ", P], ["var(--text)", V], [";", P]], [["}", P]],
-  [['[data-theme="dark"]', S], [" {", P]], [["  --bg", K], [": ", P], ["#0b0c14", V], [";", P]], [["  --text", K], [": ", P], ["#f4f5f7", V], [";", P]], [["}", P]]]; })();
-function codeLine(tk, x, y, max) { F(400, 22, MONO, 0); c.textAlign = "left"; c.textBaseline = "middle"; let left = max; for (const [s, col] of tk) { if (left <= 0) break; const sub = s.slice(0, left); left -= s.length; c.fillStyle = col; c.fillText(sub, x, y); x += c.measureText(sub).width; } }
-function k6(t) {
-  flat(DRK); glow(W * .5, H * .5, 1300, SRGB, .16); glow(W * .2, H * .9, 900, ARGB, .1);
-  const wi = sp(seg(t, 0, .7)), wx = 130, wy = 95, ww = 1660, wh = 890, y0 = wy + 54, ax = wx + 894, aw = 332, px = wx + 1270, pw = 370, k = io(seg(t, 3.45, 3.95)), apx = ax + aw / 2, apy = y0 + 441;
-  c.save(); c.globalAlpha *= clamp(wi * 1.5); c.translate(W / 2, H / 2 + (1 - clamp(wi)) * 120); c.scale(.9 + .1 * wi, .9 + .1 * wi); c.translate(-W / 2, -H / 2);
-  c.save(); c.shadowColor = "rgba(0,0,0,.6)"; c.shadowBlur = 90; c.shadowOffsetY = 40; rr(wx, wy, ww, wh, 26); c.fillStyle = "#0f1018"; c.fill(); c.restore(); c.save(); rr(wx, wy, ww, wh, 26); c.clip();
-  ["#ff5f57", "#febc2e", "#28c840"].forEach((col, i) => { c.beginPath(); c.arc(wx + 36 + i * 28, wy + 27, 9, 0, 7); c.fillStyle = col; c.fill(); }); T_("portfolio — Haba Code", wx + ww / 2, wy + 27, 20, "#8b93a7", 500, "center");
-  c.fillStyle = "rgba(255,255,255,.07)"; [wx + 230, wx + 870, wx + 1250].forEach(x => c.fillRect(x, y0, 2, wh - 54)); c.fillRect(wx, y0, ww, 2);
-  T_("EXPLORER", wx + 24, y0 + 34, 15, "#6b7280", 600); [["index.html", "#fb923c"], ["style.css", "#60a5fa"], ["app.js", "#facc15"]].forEach(([n, col], i) => { const y = y0 + 84 + i * 46; if (i == 1) { rr(wx + 10, y - 20, 210, 40, 10); c.fillStyle = "rgba(110,231,183,.1)"; c.fill(); } c.beginPath(); c.arc(wx + 32, y, 6, 0, 7); c.fillStyle = col; c.fill(); T_(n, wx + 52, y, 21, i == 1 ? "#fff" : "#9ca3af", 500); });
-  rr(wx + 248, y0 + 8, 170, 40, 10); c.fillStyle = "#1a1d2e"; c.fill(); T_("style.css", wx + 270, y0 + 28, 20, "#e5e7eb", 500); c.fillStyle = `rgb(${ARGB})`; c.fillRect(wx + 248, y0 + 46, 170, 3);
-  CODE.forEach((tk, j) => { const y = y0 + 100 + j * 40, st = 2.85 + (j - 8) * .22, add = j >= 8, n = add ? Math.floor((t - st) * 70) : 99; if (add && n <= 0) return;
-    if (add) { c.fillStyle = "rgba(110,231,183,.12)"; c.fillRect(wx + 232, y - 20, 636, 40); c.fillStyle = `rgb(${ARGB})`; c.fillRect(wx + 232, y - 20, 4, 40); T_("+", wx + 252, y, 20, "#6ee7b7", 700, "center", MONO); } else T_(String(j + 1), wx + 272, y, 18, "#4b5563", 400, "right", MONO); if (add) T_(String(j + 1), wx + 292, y, 18, "#4b5563", 400, "right", MONO); codeLine(tk, wx + 318, y, n); });
-  codeMark(ax + 14, y0 + 28, 30, 1); T_("Haba AI", ax + 40, y0 + 28, 20, "#e5e7eb", 700);
-  const ub = oe(seg(t, .5, .9)); c.save(); c.globalAlpha *= ub; c.translate(0, (1 - ub) * 20); rr(ax, y0 + 70, aw, 104, 20); c.fillStyle = "#1c2033"; c.fill(); T_("Add a dark mode toggle", ax + 20, y0 + 104, 22, "#e5e7eb", 500); T_("to my portfolio", ax + 20, y0 + 138, 22, "#e5e7eb", 500); c.restore();
-  if (t > .95 && t < 1.5) for (let i = 0; i < 3; i++) { c.beginPath(); c.arc(ax + 16 + i * 22, y0 + 214 + Math.sin(t * 10 - i) * 5, 6, 0, 7); c.fillStyle = `rgb(${ARGB})`; c.fill(); }
-  const rp = oe(seg(t, 1.45, 1.8)); c.save(); c.globalAlpha *= rp; c.translate(0, (1 - rp) * 16); T_("On it. I’ll update 2 files:", ax, y0 + 226, 22, "#e5e7eb", 500); c.restore();
-  [["style.css", "+4", 1.7, 262, "#60a5fa"], ["app.js", "+6", 1.9, 326, "#facc15"]].forEach(([n, d, s0, dy, col]) => { const p = oe(seg(t, s0, s0 + .35)); c.save(); c.globalAlpha *= p; c.translate((1 - p) * 30, 0); rr(ax, y0 + dy, aw, 52, 14); c.fillStyle = "#161a2b"; c.fill(); c.beginPath(); c.arc(ax + 26, y0 + dy + 26, 6, 0, 7); c.fillStyle = col; c.fill(); T_(n, ax + 46, y0 + dy + 26, 21, "#e5e7eb", 500); T_(d, ax + aw - 20, y0 + dy + 26, 21, "#6ee7b7", 700, "right"); c.restore(); });
-  const bp = oe(seg(t, 2.1, 2.45)), applied = t > 2.8, pr = clamp(seg(t, 2.72, 2.82)) * (1 - seg(t, 2.82, 2.95)); c.save(); c.globalAlpha *= bp; c.translate(apx, apy); c.scale(1 - .05 * pr, 1 - .05 * pr); rr(-aw / 2, -31, aw, 62, 31);
-  const bg = c.createLinearGradient(-aw / 2, 0, aw / 2, 0); bg.addColorStop(0, applied ? "#10281f" : `rgb(${ARGB})`); bg.addColorStop(1, applied ? "#10281f" : `rgb(${SRGB})`); c.fillStyle = bg; c.fill(); if (applied) { c.lineWidth = 2; c.strokeStyle = `rgb(${ARGB})`; c.stroke(); } T_(applied ? "Applied ✓" : "Apply changes", 0, 1, 23, applied ? "#6ee7b7" : "#04130d", 700, "center"); c.restore();
-  rr(px, y0 + 14, pw, 40, 20); c.fillStyle = "#1a1d2e"; c.fill(); T_("Live preview", px + pw / 2, y0 + 34, 18, "#8b93a7", 500, "center");
-  const bgc = mixc("#ffffff", "#0b0c14", k), fg = mixc("#111114", "#f4f5f7", k), sb = mixc("#6b7280", "#9ca3af", k), cd = mixc("#f3f4f6", "#161827", k); rr(px, y0 + 70, pw, 600, 18); c.fillStyle = bgc; c.fill();
-  c.beginPath(); c.arc(px + 36, y0 + 108, 14, 0, 7); c.fillStyle = `rgb(${ARGB})`; c.fill(); rr(px + pw - 80, y0 + 94, 56, 28, 14); c.fillStyle = mixc("#d1d5db", "#34d399", k); c.fill(); c.beginPath(); c.arc(lerp(px + pw - 66, px + pw - 38, k), y0 + 108, 11, 0, 7); c.fillStyle = "#fff"; c.fill();
-  T_("Hi, I’m Thandi", px + 24, y0 + 190, 36, fg, 800, "left", DISP); T_("Designer & developer", px + 24, y0 + 232, 19, sb, 500); rr(px + 24, y0 + 268, 160, 48, 24); const g2 = c.createLinearGradient(px, 0, px + 184, 0); g2.addColorStop(0, `rgb(${ARGB})`); g2.addColorStop(1, `rgb(${SRGB})`); c.fillStyle = g2; c.fill(); T_("See my work", px + 104, y0 + 293, 18, "#04130d", 700, "center");
-  for (let i = 0; i < 4; i++) { const x = px + 24 + (i % 2) * 172, y = y0 + 350 + Math.floor(i / 2) * 150; rr(x, y, 160, 138, 16); c.fillStyle = cd; c.fill(); c.save(); c.globalAlpha *= .85; rr(x + 10, y + 10, 140, 64, 10); const g3 = c.createLinearGradient(x, y, x + 160, y + 80); g3.addColorStop(0, i % 3 ? `rgb(${SRGB})` : "#a78bfa"); g3.addColorStop(1, `rgb(${ARGB})`); c.fillStyle = g3; c.fill(); c.restore(); }
-  ring(px + pw - 52, y0 + 108, seg(t, 3.4, 4.1), 520, ARGB);
-  c.restore(); const tp = oe(seg(t, 4.0, 4.4)); if (tp > 0) { c.save(); c.globalAlpha *= tp; c.translate(0, (1 - tp) * -24); rr(W / 2 - 210, wy + 78, 420, 56, 28); c.fillStyle = "#10281f"; c.fill(); c.lineWidth = 2; c.strokeStyle = `rgb(${ARGB})`; c.stroke(); T_("✓  Applied to 2 files", W / 2, wy + 106, 22, "#6ee7b7", 700, "center"); c.restore(); }
-  const cp = io(seg(t, 2, 2.7)), hv = io(seg(t, 3.3, 4.2)); ptr(lerp(lerp(1700, apx + 16, cp), px + 150, hv), lerp(lerp(820, apy + 12, cp), y0 + 330, hv), 1.3, pr); ring(apx, apy, seg(t, 2.75, 3.15), 90);
-  c.restore();
-}
-// 7: cloud of projects, camera pulls back
-function miniApp(kind, w, h) {
-  c.save(); c.shadowColor = "rgba(0,0,0,.5)"; c.shadowBlur = 40; c.shadowOffsetY = 18; rr(-w / 2, -h / 2, w, h, 18); const dk = kind % 2; c.fillStyle = dk ? "#11131f" : "#fbf9f6"; c.fill(); c.restore();
-  const x0 = -w / 2 + 16, y0 = -h / 2 + 16, bar = dk ? "#252941" : "#e9e4db", g = c.createLinearGradient(x0, y0, x0 + w, y0 + h); g.addColorStop(0, `rgb(${ARGB})`); g.addColorStop(1, `rgb(${SRGB})`);
-  c.fillStyle = bar; rr(x0, y0, w - 32, 26, 8); c.fill();
-  if (kind === 0) { c.fillStyle = g; rr(x0, y0 + 46, (w - 32) * .62, h * .42, 14); c.fill(); c.fillStyle = bar; rr(x0, y0 + h * .42 + 66, (w - 32) * .5, 16, 8); c.fill(); rr(x0, y0 + h * .42 + 96, 120, 36, 18); c.fillStyle = "#111"; c.fill(); }
-  else if (kind === 1) { for (let i = 0; i < 6; i++) { const bh = 40 + (i * 53 % 120); c.fillStyle = g; rr(x0 + 10 + i * 56, y0 + h - 56 - bh, 36, bh, 8); c.fill(); } for (let i = 0; i < 3; i++) { c.fillStyle = bar; rr(x0 + i * 130, y0 + 40, 118, 50, 12); c.fill(); } }
-  else if (kind === 2) { for (let i = 0; i < 4; i++) { c.fillStyle = i % 3 ? g : bar; rr(x0 + (i % 2) * ((w - 32) / 2 + 4), y0 + 46 + Math.floor(i / 2) * (h / 2 - 30), (w - 32) / 2 - 8, h / 2 - 44, 14); c.fill(); } }
-  else { [.7, .45, .6, .35, .55, .8].forEach((f, i) => { c.fillStyle = i % 3 == 0 ? "#6ee7b7" : i % 3 == 1 ? "#7dd3fc" : "#fbbf24"; rr(x0 + (i % 2) * 30, y0 + 46 + i * 34, (w - 80) * f, 14, 7); c.fill(); }); }
-}
-function k7(t) {
-  flat(DRK); glow(W / 2, H * .55, 1200, SRGB, .18); glow(W * .3, H * .3, 800, "167,139,250", .12); const zoom = lerp(2.3, .9, io(seg(t, 0, 2.7)));
-  c.save(); c.translate(W / 2, H / 2 - 40); c.rotate(Math.sin(t * .5) * .04); c.scale(zoom, zoom); const items = [];
-  for (let i = 0; i < 18; i++) { const an = i * 2.399, rad = i === 0 ? 0 : 150 + (i % 6) * 125 + (i > 11 ? 120 : 0), dep = (i % 4) / 4; items.push({ i, x: Math.cos(an) * rad * 1.55, y: Math.sin(an) * rad * .85, s: (i === 0 ? 1.15 : 1) * (1 - dep * .45), dep }); }
-  items.sort((a, b) => b.dep - a.dep).forEach(o => { const p = oe(seg(t, .05 + o.i * .06, .85 + o.i * .06)); if (p <= 0) return; c.save(); c.globalAlpha *= p; c.translate(o.x * (1 + (1 - p) * .9), o.y * (1 + (1 - p) * .9) + Math.sin(t * 1.3 + o.i) * 8); c.rotate(((o.i * 37) % 9 - 4) * .018); const k = o.s * (.7 + .3 * p); c.scale(k, k); miniApp(o.i % 4, 460, 300); c.restore(); });
-  c.restore();
-  [["Add a login page", W * .17, H * .24], ["Make it responsive", W * .8, H * .2], ["Fix the bug in app.js", W * .72, H * .66]].forEach(([s, x, y], i) => { const p = oe(seg(t, 1.1 + i * .25, 1.7 + i * .25)); if (p <= 0) return; c.save(); c.globalAlpha *= p; c.translate(x, y + Math.sin(t * 1.6 + i) * 10); rr(-190, -34, 380, 68, 34); c.fillStyle = "rgba(20,22,38,.92)"; c.fill(); c.lineWidth = 3; c.strokeStyle = grad2(-190, 380); c.stroke(); T_(s, 0, 2, 26, "#fff", 600, "center"); c.restore(); });
-  const sh = c.createLinearGradient(0, H * .6, 0, H); sh.addColorStop(0, "rgba(10,10,18,0)"); sh.addColorStop(1, "rgba(10,10,18,.95)"); c.fillStyle = sh; c.fillRect(0, H * .6, W, H * .4); maskLine("Build anything. Ship it from your browser.", W / 2, H - 110, 70, "#fff", oe(seg(t, 1.8, 2.6)));
-}
-// 8: CTA on a moving gradient
-function k8(t) {
-  const g = c.createLinearGradient(W * (.1 + .1 * Math.sin(t * .6)), 0, W * (.9 - .1 * Math.sin(t * .6)), H); g.addColorStop(0, `rgb(${ARGB})`); g.addColorStop(.5, `rgb(${SRGB})`); g.addColorStop(1, "#a78bfa"); c.fillStyle = g; c.fillRect(-W, -H, 3 * W, 3 * H);
-  glow(W * .25, H * .2, 900, "255,255,255", .25 + .05 * Math.sin(t)); glow(W * .8, H * .9, 900, "236,72,153", .2);
-  const cp = sp(seg(t, .15, .85)), bx = 960, by = 720, press = clamp(seg(t, 2.4, 2.5)) * (1 - seg(t, 2.5, 2.65)), st = a => oe(seg(t, a, a + .5)), rise = (p, f) => { c.save(); c.globalAlpha *= p; c.translate(0, (1 - p) * 24); f(); c.restore(); };
-  c.save(); c.translate(W / 2, H / 2); c.scale(.9 + .1 * cp, .9 + .1 * cp); c.translate(-W / 2, -H / 2); c.globalAlpha *= clamp(cp * 1.5); c.shadowColor = "rgba(20,20,80,.35)"; c.shadowBlur = 90; c.shadowOffsetY = 40; rr(510, 215, 900, 650, 56); c.fillStyle = "rgba(255,255,255,.8)"; c.fill(); c.shadowColor = "transparent";
-  rise(st(.5), () => codeMark(960, 350, 120, 1)); rise(st(.7), () => T_("Haba Code", 960, 480, 72, "#111114", 800, "center", DISP)); rise(st(.9), () => T_("Your IDE in the browser. AI suggests, you apply.", 960, 552, 30, "#4b5563", 500, "center"));
-  rise(st(1.1), () => T_("Free to start · 10 AI requests a day · 2 projects", 960, 606, 26, "#087f5b", 600, "center"));
-  rise(st(1.3), () => { c.save(); c.translate(bx, by); c.scale(1 - .04 * press, 1 - .04 * press); rr(-190, -44, 380, 88, 44); c.fillStyle = "#111"; c.fill(); const sw = lerp(0, 380, oc(seg(t, 2.45, 2.9))); if (sw > 0) { c.save(); rr(-190, -44, 380, 88, 44); c.clip(); const bg = c.createLinearGradient(-190, 0, 190, 0); bg.addColorStop(0, `rgb(${ARGB})`); bg.addColorStop(1, `rgb(${SRGB})`); c.fillStyle = bg; c.fillRect(-190, -44, sw, 88); c.restore(); } T_("Start coding", 0, 2, 32, t > 2.6 ? "#04130d" : "#fff", 700, "center"); c.restore(); });
-  c.restore(); ring(bx, by, seg(t, 2.45, 2.95), 160, "255,255,255"); const p = io(seg(t, 1.6, 2.3)); ptr(lerp(W + 80, bx + 40, p), lerp(H + 80, by + 20, p), 1.5, press);
-}
+// ---------- text helpers ----------
+function cream(t){flat(CRM);glow(W*.2+Math.sin(t*.7)*90,H*.9,900,"244,114,182",.16);glow(W*.82,H*.1+Math.cos(t*.6)*60,900,ARGB,.13);glow(W*.55,H,800,SRGB,.1)}
+function lay(segs,size){F(600,size,HEAD,-size*.02);const ws=segs.map(([s])=>c.measureText(s).width),tot=ws.reduce((a,b)=>a+b,0);let x=W/2-tot/2;return{ws,xs:ws.map(w=>{const r=x;x+=w;return r})}}
+function typeLine(segs,y,size,n,col){const L=lay(segs,size),total=segs.reduce((a,[s])=>a+s.length,0);let left=Math.floor(n),ex=L.xs[0];c.textAlign="left";c.textBaseline="middle";
+ segs.forEach(([s,fill],i)=>{const k=Math.min(s.length,Math.max(0,left));left-=s.length;if(k>0){const sub=s.slice(0,k);c.fillStyle=typeof fill==="function"?fill(L.xs[i],L.ws[i]):(fill||col);c.fillText(sub,L.xs[i],y);ex=L.xs[i]+c.measureText(sub).width}});
+ if(n>0&&(n<total||Math.sin(NOW*9)>0)){c.fillStyle=`rgb(${ARGB})`;c.fillRect(ex+6,y-size*.55,6,size*1.1)}return L}
+function codeLine(tk,x,y,max){F(400,22,MONO,0);c.textAlign="left";c.textBaseline="middle";let left=max;for(const[s,col]of tk){if(left<=0)break;const sub=s.slice(0,left);left-=s.length;c.fillStyle=col;c.fillText(sub,x,y);x+=c.measureText(sub).width}}
+const S_="#7dd3fc",P_="#8b93a7",V_="#fbbf24",K_="#6ee7b7",G_="#6b7280";
+const kv=(k,v,e=",",q="")=>[["  "+q+k+q,S_],[": ",P_],['"'+v+'"',V_],[e,P_]];
+const CFG=[[["const firebaseConfig = {",P_]],kv("apiKey","AIzaSy••••••••••••"),kv("authDomain","my-app.firebaseapp.com"),kv("databaseURL","https://my-app-default-rtdb.firebaseio.com"),kv("projectId","my-app"),kv("storageBucket","my-app.firebasestorage.app"),kv("appId","1:941619830061:web:a1b2c3d4",""),[["};",P_]]];
+const FC=[[["// Managed by Haba Code",G_]],[["window.",P_],["FIREBASE_CONFIG",K_],[" = {",P_]],kv("apiKey","AIzaSy••••••••",",",'"'),kv("authDomain","my-app.web.app",",",'"'),kv("projectId","my-app",",",'"'),kv("appId","1:9416:web:a1b2",",",'"'),[["};",P_]]];
+const SJ=[[["firebase",S_],[".initializeApp(",P_],["window.FIREBASE_CONFIG",K_],[");",P_]],[["const ",V_],["auth = firebase.auth();",P_]],[["const ",V_],["db = firebase.database();",P_]],[["auth.onAuthStateChanged(u => {",P_]],[["  if (u) loadNotes(u.uid);",P_]],[["});",P_]]];
 
-// ---------- compositor: soft dissolve between scenes ----------
-const FN = [k1, k2, k3, k4, k5, k6, k7, k8], BASE = [3.2, 2.4, 3.0, 3.2, 3.8, 5.6, 3.2, 3.8];
-let SC = [], ST = [];
-function retime(d = []) { let s = 0; SC = FN.map((f, i) => { const len = Math.max(BASE[i], d[i] ? d[i] + .7 : 0), r = [s, s + len, f]; ST[i] = s; s += len - .5; return r; }); T = SC[SC.length - 1][1]; }
-retime();
-// camera per scene -> [zoom, focalX, focalY, panX, panY]: dolly-out, tracking, push-in, pull-back
-const CAMS = [ // dolly + zoom per scene -> [zoom, focalX, focalY, panX, panY]
-  (t, d) => [1 + .04 * seg(t, 0, d), W / 2, H / 2, 0, 0],
-  (t, d) => [lerp(1.12, 1, oc(seg(t, 0, .9))), W / 2, H / 2, 0, 0],
-  (t, d) => [1 + .05 * io(seg(t, 0, d)), W / 2, H / 2, lerp(20, -20, seg(t, 0, d)), 0],
-  (t, d) => [lerp(1, 8, io(seg(t, 2.2, 3.2))), 1330, 540, 0, 0],
-  (t, d) => [lerp(1.06, 1, oc(seg(t, 0, 1))) * (1 + .05 * io(seg(t, 2.6, 3.8))), W / 2, 620, 0, 0],
-  (t, d) => [1 + .12 * io(seg(t, 3, 4.6)), W / 2, H / 2, lerp(0, -60, io(seg(t, 3, 4.6))), 0],
-  (t, d) => [1 + .04 * seg(t, 0, d), W / 2, H / 2, 0, 0],
-  (t, d) => [lerp(1.12, 1, oc(seg(t, 0, 1.4))), W / 2, H / 2, 0, 0]
-];
-function frame(t) {
-  NOW = t; c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = "source-over"; c.filter = "none"; bg();
-  SC.forEach(([a, b, f], i) => { if (t < a || t > b) return; const lt = t - a, m = i ? io(seg(lt, 0, .6)) : 1, dur = b - a;
-    c.save(); const fs = CH / H; c.translate((CW - W * fs) / 2, 0); c.scale(fs, fs);
-    if (i && m < 1) { c.beginPath(); const ty = i % 3; if (ty === 1) c.arc(W / 2, H / 2, 1150 * oc(m), 0, 7); else if (ty === 2) for (let k = 0; k < 8; k++) c.rect(0, k * 135, W, 136 * m); else c.rect(0, H * (1 - oc(m)), W, H);
-      c.clip(); if (ty === 1) { c.lineWidth = 16; c.strokeStyle = `rgba(${ARGB},${1 - m})`; c.stroke(); } }
-    const cm = CAMS[i](lt, dur); c.translate(cm[1] + cm[3], cm[2] + cm[4]); c.scale(cm[0], cm[0]); c.translate(-cm[1], -cm[2]); f(lt); c.restore(); });
-  c.fillStyle = `rgba(${ARGB},.9)`; c.fillRect(0, CH - 4, CW * clamp(t / T), 4);
-}
-</script>
-<script type="module">
-const $ = id => document.getElementById(id);
-const say = (t, e) => { $("msg").textContent = t || ""; $("msg").style.color = e ? "#ff8a8a" : "#9fd8c0"; };
-const LINES = [];
-let VO = [], cache = {}, user = null, voiceFn = null, auth = null, t0 = performance.now(), recording = false, busy = false, outNode = null, actx = null, audioMode = false;
+// ---------- 1: every real app needs a backend ----------
+function k1(t){cream(t);
+ typeLine([["Every real app needs a ",null],["backend.",grad2]],H/2+40,96,(t-.25)*16,"#111114");
+ [["users",.2,.26],["database",.82,.24],["cloud",.18,.74],["lock",.84,.72]].forEach(([n,fx,fy],i)=>{const q=sp(seg(t,1+i*.2,1.7+i*.2));if(q<=0)return;c.save();c.globalAlpha*=clamp(q);c.translate(W*fx,H*fy+Math.sin(t*1.6+i*1.7)*12);c.scale(q,q);c.shadowColor="rgba(40,30,80,.22)";c.shadowBlur=50;c.shadowOffsetY=20;c.beginPath();c.arc(0,0,88,0,7);c.fillStyle="#fff";c.fill();c.shadowColor="transparent";ico(n,0,0,84,`rgb(${ARGB2})`,1.8);c.restore()})}
+// ---------- 2: accounts, data, files ----------
+function k2(t){cream(t);
+ typeLine([["Accounts. Data. Files.",null]],140,84,(t-.3)*14,"#111114");
+ [["users","Authentication","Email and anonymous sign-in"],["database","Realtime Database","Live data, synced instantly"],["cloud","Storage","Photos, uploads and files"]].forEach(([ic,h,s],i)=>{const p=sp(seg(t,.3+i*.25,1+i*.25));if(p<=0)return;const w=500,x=W/2+(i-1)*560-w/2,y=250+(1-clamp(p))*120;
+  c.save();c.globalAlpha*=clamp(p*1.5);c.shadowColor="rgba(40,30,80,.2)";c.shadowBlur=70;c.shadowOffsetY=28;rr(x,y,w,520,48);c.fillStyle="#fff";c.fill();c.shadowColor="transparent";
+  c.beginPath();c.arc(x+w/2,y+150,84,0,7);c.fillStyle=accFill(x+w/2-84,y+66,168,168);c.fill();ico(ic,x+w/2,y+150,88,ONA,2);
+  T_(h,x+w/2,y+310,40,"#111114",700,"center");T_(s,x+w/2,y+372,24,"#6b7280",500,"center");flame(x+w/2-62,y+455,40);T_("Firebase",x+w/2-34,y+456,26,"#6b7280",600);c.restore()})}
+// ---------- 3: wiring it up is the slow part ----------
+function k3(t){cream(t);const segs=[["Wiring it up is the ",null],["slow",grad3],[" part.",null]],L=lay(segs,100),qx=L.xs[1]+L.ws[1]/2,bp=oe(seg(t,1.4,2.1));
+ glow(qx,H/2+20,480+140*bp,"236,72,153",.5*bp);glow(qx,H/2+40,300,"167,139,250",.4*bp);typeLine(segs,H/2-30,100,(t-.2)*16,"#111114");
+ const ch=["apiKey","authDomain","databaseURL","projectId","appId"];F(600,30,MONO,0);const ws=ch.map(s=>c.measureText(s).width+56),tot=ws.reduce((a,b)=>a+b+20,-20);let x=W/2-tot/2;
+ ch.forEach((s,i)=>{const p=sp(seg(t,1.2+i*.12,1.8+i*.12));if(p>0){c.save();c.globalAlpha*=clamp(p);c.translate(x+ws[i]/2,H/2+160+(1-p)*30);rr(-ws[i]/2,-34,ws[i],68,34);c.fillStyle="#fff";c.fill();c.lineWidth=2;c.strokeStyle="rgba(0,0,0,.08)";c.stroke();T_(s,0,2,30,"#374151",600,"center",MONO);c.restore()}x+=ws[i]+20})}
+// ---------- 4: Haba Code + Firebase ----------
+function k4(t){flat(DRK);glow(W/2,H+120,1200,SRGB,.6);glow(W/2,H+80,800,ARGB,.3);const y=500,ip=sp(seg(t,.15,.85));
+ SQN=lerp(2,5,io(seg(t,.15,.95)));burst(520,y,t,.3);c.save();c.translate(520,y);c.rotate((1-ip)*-.3);codeMark(0,0,170*Math.max(ip,0),clamp(ip*2));c.restore();SQN=5;
+ T_("+",700,y,100,`rgba(255,255,255,${.7*oe(seg(t,.5,1))})`,300,"center");
+ const fp=sp(seg(t,.65,1.25));flame(880,y,170*Math.max(fp,0),fp*2);
+ const wp=oe(seg(t,.9,1.6));if(wp>0){c.save();c.beginPath();c.rect(980,0,W,H);c.clip();F(800,130,DISP,-4);c.textAlign="left";c.textBaseline="middle";const w=c.measureText("Firebase").width;c.globalAlpha=clamp(wp*1.6);c.fillStyle=grad2(990,w);c.fillText("Firebase",990+(1-wp)*-300,y+4);c.restore()}
+ txt("Add your backend in one paste.",W/2,y+190,46,"#9aa4b2",oe(seg(t,1.5,2.1)),500)}
+// ---------- 5: the Firebase backend dialog ----------
+function k5(t){cream(t);
+ const cp=sp(seg(t,.1,.8)),X=470,Y=50+(1-clamp(cp))*400,Wd=980;
+ c.save();c.globalAlpha*=clamp(cp*1.5);c.shadowColor="rgba(40,30,80,.25)";c.shadowBlur=80;c.shadowOffsetY=30;rr(X,Y,Wd,960,56);c.fillStyle="#fff";c.fill();c.shadowColor="transparent";
+ c.beginPath();c.arc(X+84,Y+90,40,0,7);c.fillStyle="rgba(8,127,91,.14)";c.fill();ico("database",X+84,Y+90,40,`rgb(${ARGB2})`,2);
+ T_("Firebase backend",X+148,Y+78,42,"#111114",700);T_("Paste the web config from your Firebase console.",X+148,Y+120,23,"#6b7280",500);
+ rr(X+40,Y+170,Wd-80,380,22);c.fillStyle="#0f1018";c.fill();
+ let left=Math.floor((t-.9)*95);CFG.forEach((tk,j)=>{const len=tk.reduce((a,[s])=>a+s.length,0);if(left>0)codeLine(tk,X+68,Y+214+j*44,left);left-=len+1});
+ const tp=oe(seg(t,2.9,3.3));c.save();c.globalAlpha*=tp;rr(X+40,Y+580,Wd-80,70,35);c.fillStyle="#f1f3f5";c.fill();c.lineWidth=2;c.strokeStyle="rgba(0,0,0,.08)";c.stroke();ico("database",X+Wd/2-130,Y+615,34,"#374151",2);T_(t>3.45&&t<3.8?"Testing…":"Test connection",X+Wd/2-100,Y+616,28,"#111114",600);c.restore();
+ [["Authentication","API key is valid and Authentication is reachable.",3.75],["Realtime Database","Reachable, and its rules require sign-in.",4.05],["Storage","Reachable, and its rules require sign-in.",4.35]].forEach(([h,s,a],i)=>{const p=oe(seg(t,a,a+.3));if(p<=0)return;const y=Y+672+i*64;c.save();c.globalAlpha*=p;c.translate((1-p)*30,0);rr(X+40,y,Wd-80,56,18);c.fillStyle="rgba(8,127,91,.08)";c.fill();c.beginPath();c.arc(X+82,y+28,16,0,7);c.fillStyle=`rgb(${ARGB2})`;c.fill();ico("check",X+82,y+28,20,"#fff",3);T_(h,X+116,y+29,24,"#111114",700);T_(s,X+350,y+29,22,"#4b5563",500);c.restore()});
+ const so=oe(seg(t,4.6,4.9)),saved=t>5.05;c.save();c.globalAlpha*=so;rr(X+40,Y+876,Wd-80,64,32);c.fillStyle=accFill(X,Y,Wd,0);c.fill();T_(saved?"Connected · my-app":"Save",X+Wd/2,Y+909,28,ONA,700,"center");c.restore();c.restore();
+ const a1=io(seg(t,2.6,3.35)),a2=io(seg(t,4.3,5.0)),pr=Math.max(clamp(seg(t,3.4,3.5))*(1-seg(t,3.5,3.65)),clamp(seg(t,5,5.1))*(1-seg(t,5.1,5.25)));
+ ptr(lerp(lerp(W+60,X+Wd/2-40,a1),X+Wd/2+120,a2),lerp(lerp(H+40,Y+620,a1),Y+906,a2),1.4,pr);ring(X+Wd/2-40,Y+615,seg(t,3.4,3.8),150);ring(X+Wd/2,Y+908,seg(t,5,5.4),180)}
+// ---------- 6: IDE, firebase-config.js appears, then an app uses it ----------
+function k6(t){flat(DRK);glow(W*.5,H*.5,1300,SRGB,.16);glow(W*.2,H*.9,900,ARGB,.1);
+ const wi=sp(seg(t,0,.7)),wx=130,wy=95,ww=1660,wh=890,y0=wy+54,ax=wx+894,aw=332,px=wx+1270,pw=370,k=io(seg(t,3.45,3.95)),apx=ax+aw/2,apy=y0+441,sw=t>2.85;
+ c.save();c.globalAlpha*=clamp(wi*1.5);c.translate(W/2,H/2+(1-clamp(wi))*120);c.scale(.9+.1*wi,.9+.1*wi);c.translate(-W/2,-H/2);
+ c.save();c.shadowColor="rgba(0,0,0,.6)";c.shadowBlur=90;c.shadowOffsetY=40;rr(wx,wy,ww,wh,26);c.fillStyle="#0f1018";c.fill();c.restore();c.save();rr(wx,wy,ww,wh,26);c.clip();
+ ["#ff5f57","#febc2e","#28c840"].forEach((col,i)=>{c.beginPath();c.arc(wx+36+i*28,wy+27,9,0,7);c.fillStyle=col;c.fill()});T_("my-app — Haba Code",wx+ww/2,wy+27,20,"#8b93a7",500,"center");
+ c.fillStyle="rgba(255,255,255,.07)";[wx+230,wx+870,wx+1250].forEach(x=>c.fillRect(x,y0,2,wh-54));c.fillRect(wx,y0,ww,2);T_("EXPLORER",wx+24,y0+34,15,"#6b7280",600);
+ [["index.html","#fb923c"],["style.css","#60a5fa"],["script.js","#facc15"],["firebase-config.js","#fbbf24"]].forEach(([n,col],i)=>{const y=y0+84+i*46,on=sw?i==2:i==3,p=i==3?oe(seg(t,.3,.8)):1;c.save();c.globalAlpha*=p;c.translate((1-p)*-30,0);
+  if(on){rr(wx+10,y-20,210,40,10);c.fillStyle="rgba(110,231,183,.1)";c.fill()}
+  if(i==3&&t<2.4){rr(wx+10,y-20,210,40,10);c.lineWidth=2;c.strokeStyle=`rgba(${ARGB},${.25+.5*(.5+.5*Math.sin(t*5))})`;c.stroke()}
+  c.beginPath();c.arc(wx+32,y,6,0,7);c.fillStyle=col;c.fill();T_(n,wx+50,y,19,on?"#fff":"#9ca3af",500);c.restore()});
+ rr(wx+248,y0+8,230,40,10);c.fillStyle="#1a1d2e";c.fill();T_(sw?"script.js":"firebase-config.js",wx+266,y0+28,19,"#e5e7eb",500);c.fillStyle=`rgb(${ARGB})`;c.fillRect(wx+248,y0+46,230,3);
+ (sw?SJ:FC).forEach((tk,j)=>{const y=y0+100+j*40,n=sw?Math.floor((t-(2.85+j*.25))*70):99;if(n<=0)return;if(sw){c.fillStyle="rgba(110,231,183,.12)";c.fillRect(wx+232,y-20,636,40);c.fillStyle=`rgb(${ARGB})`;c.fillRect(wx+232,y-20,4,40);T_("+",wx+252,y,20,K_,700,"center",MONO)}T_(String(j+1),wx+292,y,18,"#4b5563",400,"right",MONO);codeLine(tk,wx+318,y,n)});
+ codeMark(ax+14,y0+28,30,1);T_("Haba AI",ax+40,y0+28,20,"#e5e7eb",700);
+ const ub=oe(seg(t,.5,.9));c.save();c.globalAlpha*=ub;c.translate(0,(1-ub)*20);rr(ax,y0+70,aw,104,20);c.fillStyle="#1c2033";c.fill();T_("Add email login and",ax+20,y0+104,22,"#e5e7eb",500);T_("a notes list to my app",ax+20,y0+138,22,"#e5e7eb",500);c.restore();
+ if(t>.95&&t<1.5)for(let i=0;i<3;i++){c.beginPath();c.arc(ax+16+i*22,y0+214+Math.sin(t*10-i)*5,6,0,7);c.fillStyle=`rgb(${ARGB})`;c.fill()}
+ const rp=oe(seg(t,1.45,1.8));c.save();c.globalAlpha*=rp;c.translate(0,(1-rp)*16);T_("On it. I’ll update 2 files:",ax,y0+226,22,"#e5e7eb",500);c.restore();
+ [["index.html","+24",1.7,262,"#fb923c"],["script.js","+38",1.9,326,"#facc15"]].forEach(([n,d,s0,dy,col])=>{const p=oe(seg(t,s0,s0+.35));c.save();c.globalAlpha*=p;c.translate((1-p)*30,0);rr(ax,y0+dy,aw,52,14);c.fillStyle="#161a2b";c.fill();c.beginPath();c.arc(ax+26,y0+dy+26,6,0,7);c.fillStyle=col;c.fill();T_(n,ax+46,y0+dy+26,21,"#e5e7eb",500);T_(d,ax+aw-20,y0+dy+26,21,K_,700,"right");c.restore()});
+ const bp=oe(seg(t,2.1,2.45)),applied=t>2.8,pr=clamp(seg(t,2.72,2.82))*(1-seg(t,2.82,2.95));c.save();c.globalAlpha*=bp;c.translate(apx,apy);c.scale(1-.05*pr,1-.05*pr);rr(-aw/2,-31,aw,62,31);
+ const bg=c.createLinearGradient(-aw/2,0,aw/2,0);bg.addColorStop(0,applied?"#10281f":`rgb(${ARGB})`);bg.addColorStop(1,applied?"#10281f":`rgb(${SRGB})`);c.fillStyle=bg;c.fill();if(applied){c.lineWidth=2;c.strokeStyle=`rgb(${ARGB})`;c.stroke()}T_(applied?"Applied ✓":"Apply changes",0,1,23,applied?K_:ONA,700,"center");c.restore();
+ // live preview
+ rr(px,y0+14,pw,40,20);c.fillStyle="#1a1d2e";c.fill();T_("Live preview",px+pw/2,y0+34,18,"#8b93a7",500,"center");
+ c.save();rr(px,y0+70,pw,600,18);c.clip();c.fillStyle="#f4f6f8";c.fillRect(px,y0+70,pw,600);c.fillStyle="#087f5b";c.fillRect(px,y0+70,pw,72);
+ c.save();c.globalAlpha*=1-k;T_("My app",px+24,y0+106,26,"#fff",700);rr(px+16,y0+166,pw-32,200,18);c.fillStyle="#fff";c.fill();T_("Hello from Haba Code",px+34,y0+206,22,"#111114",700);rr(px+34,y0+240,pw-68,42,21);c.fillStyle="#e1f5ec";c.fill();T_("Firebase connected · my-app",px+pw/2,y0+262,16,"#087f5b",600,"center");rr(px+34,y0+302,pw-68,48,14);c.fillStyle="#087f5b";c.fill();T_("Tap me",px+pw/2,y0+326,19,"#fff",700,"center");c.restore();
+ c.save();c.globalAlpha*=k;T_("Notes",px+24,y0+106,26,"#fff",700);rr(px+16,y0+166,pw-32,236,18);c.fillStyle="#fff";c.fill();
+ [["you@email.com",190],["Password",246]].forEach(([s,dy])=>{rr(px+34,y0+dy,pw-68,46,12);c.fillStyle="#f1f3f5";c.fill();T_(s,px+48,y0+dy+23,18,"#9ca3af",500)});
+ rr(px+34,y0+310,pw-68,52,26);c.fillStyle=accFill(px,y0,pw,60);c.fill();T_("Sign in",px+pw/2,y0+337,20,ONA,700,"center");
+ rr(px+16,y0+420,pw-32,220,18);c.fillStyle="#fff";c.fill();T_("Your notes",px+34,y0+450,18,"#6b7280",600);
+ ["Buy fabric","Call the supplier","Send invoice"].forEach((s,i)=>{const y=y0+500+i*50;c.beginPath();c.arc(px+46,y,12,0,7);c.fillStyle="#e1f5ec";c.fill();ico("check",px+46,y,14,"#087f5b",3);T_(s,px+70,y+1,20,"#111114",500)});c.restore();c.restore();
+ ring(px+pw-52,y0+108,seg(t,3.4,4.1),520,ARGB);
+ c.restore();const tp=oe(seg(t,4,4.4));if(tp>0){c.save();c.globalAlpha*=tp;c.translate(0,(1-tp)*-24);rr(W/2-210,wy+78,420,56,28);c.fillStyle="#10281f";c.fill();c.lineWidth=2;c.strokeStyle=`rgb(${ARGB})`;c.stroke();T_("✓  Applied to 2 files",W/2,wy+106,22,K_,700,"center");c.restore()}
+ const cp=io(seg(t,2,2.7)),hv=io(seg(t,3.3,4.2));ptr(lerp(lerp(1700,apx+16,cp),px+150,hv),lerp(lerp(820,apy+12,cp),y0+330,hv),1.3,pr);ring(apx,apy,seg(t,2.75,3.15),90);c.restore()}
+// ---------- 7: one config, every project ----------
+function k7(t){flat(DRK);glow(W/2,H*.45,1100,"255,160,0",.2);glow(W*.25,H*.3,800,SRGB,.15);glow(W*.8,H*.7,800,ARGB,.12);
+ const cx=W/2,cy=430,N=[["Notes app",-1,-1],["Shop",1,-1],["Chat",-1,1],["Blog",1,1]];
+ N.forEach(([n,sx,sy],i)=>{const p=oe(seg(t,.5+i*.2,1.2+i*.2)),x=cx+sx*560,y=cy+sy*230;c.save();c.globalAlpha*=p;c.strokeStyle=`rgba(${ARGB},.4)`;c.lineWidth=3;c.setLineDash([10,12]);c.lineDashOffset=-t*40;c.beginPath();c.moveTo(cx,cy);c.lineTo(x,y);c.stroke();c.setLineDash([]);const q=(t*.6+i*.25)%1;c.beginPath();c.arc(lerp(cx,x,q),lerp(cy,y,q),8,0,7);c.fillStyle=`rgb(${ARGB})`;c.fill();c.restore()});
+ const fp=sp(seg(t,.1,.8));c.save();c.globalAlpha*=clamp(fp);c.beginPath();c.arc(cx,cy,170*Math.max(fp,0),0,7);c.fillStyle="rgba(255,255,255,.06)";c.fill();c.lineWidth=2;c.strokeStyle="rgba(255,180,0,.35)";c.stroke();c.restore();flame(cx,cy,230*Math.max(fp,0),fp*2);
+ N.forEach(([n,sx,sy],i)=>{const p=sp(seg(t,.5+i*.2,1.2+i*.2));if(p<=0)return;const x=cx+sx*560,y=cy+sy*230;c.save();c.globalAlpha*=clamp(p*1.5);c.translate(x,y+Math.sin(t*1.5+i)*8);c.scale(.8+.2*p,.8+.2*p);
+  c.shadowColor="rgba(0,0,0,.5)";c.shadowBlur=40;c.shadowOffsetY=18;rr(-210,-100,420,200,24);c.fillStyle="#151826";c.fill();c.shadowColor="transparent";c.lineWidth=2;c.strokeStyle="rgba(255,255,255,.1)";c.stroke();
+  ["#ff5f57","#febc2e","#28c840"].forEach((col,j)=>{c.beginPath();c.arc(-182+j*22,-72,6,0,7);c.fillStyle=col;c.fill()});T_(n,-186,-18,34,"#fff",700);
+  rr(-186,22,372,56,14);c.fillStyle="rgba(251,191,36,.1)";c.fill();ico("file",-160,50,26,"#fbbf24",2);T_("firebase-config.js",-134,51,21,"#e5e7eb",500,"left",MONO);c.beginPath();c.arc(156,50,14,0,7);c.fillStyle=`rgb(${ARGB2})`;c.fill();ico("check",156,50,16,"#fff",3);c.restore()});
+ [["users","Authentication"],["database","Realtime Database"],["cloud","Storage"]].forEach(([ic,s],i)=>{const p=oe(seg(t,1.8+i*.15,2.4+i*.15));if(p<=0)return;c.save();c.globalAlpha*=p;c.translate(W/2+(i-1)*430,850+(1-p)*20);rr(-190,-36,380,72,36);c.fillStyle="rgba(255,255,255,.07)";c.fill();c.lineWidth=2;c.strokeStyle=grad2(-190,380);c.stroke();ico(ic,-130,0,34,`rgb(${ARGB})`,2);T_(s,-98,2,26,"#fff",600);c.restore()});
+ maskLine("One config. Every project.",W/2,H-80,70,"#fff",oe(seg(t,2.2,3)))}
+// ---------- 8: call to action ----------
+function k8(t){const g=c.createLinearGradient(W*(.1+.1*Math.sin(t*.6)),0,W*(.9-.1*Math.sin(t*.6)),H);g.addColorStop(0,`rgb(${ARGB})`);g.addColorStop(.5,`rgb(${SRGB})`);g.addColorStop(1,"#a78bfa");c.fillStyle=g;c.fillRect(-W,-H,3*W,3*H);
+ glow(W*.25,H*.2,900,"255,255,255",.25+.05*Math.sin(t));glow(W*.8,H*.9,900,"236,72,153",.2);
+ const cp=sp(seg(t,.15,.85)),bx=960,by=720,press=clamp(seg(t,2.4,2.5))*(1-seg(t,2.5,2.65)),st=a=>oe(seg(t,a,a+.5)),rise=(p,f)=>{c.save();c.globalAlpha*=p;c.translate(0,(1-p)*24);f();c.restore()};
+ c.save();c.translate(W/2,H/2);c.scale(.9+.1*cp,.9+.1*cp);c.translate(-W/2,-H/2);c.globalAlpha*=clamp(cp*1.5);c.shadowColor="rgba(20,20,80,.35)";c.shadowBlur=90;c.shadowOffsetY=40;rr(510,215,900,650,56);c.fillStyle="rgba(255,255,255,.86)";c.fill();c.shadowColor="transparent";
+ rise(st(.5),()=>{codeMark(880,340,110,1);T_("+",960,340,64,"#6b7280",300,"center");flame(1040,340,100)});
+ rise(st(.7),()=>T_("Connect Firebase in Settings",960,470,52,"#111114",800,"center",DISP));
+ rise(st(.9),()=>T_("Paste your config once. Every project gets a backend.",960,545,28,"#4b5563",500,"center"));
+ rise(st(1.1),()=>T_("Authentication · Realtime Database · Storage",960,602,26,"#087f5b",600,"center"));
+ rise(st(1.3),()=>{c.save();c.translate(bx,by);c.scale(1-.04*press,1-.04*press);rr(-190,-44,380,88,44);c.fillStyle="#111";c.fill();const sw=lerp(0,380,oc(seg(t,2.45,2.9)));if(sw>0){c.save();rr(-190,-44,380,88,44);c.clip();c.fillStyle=accFill(-190,-44,380,88);c.fillRect(-190,-44,sw,88);c.restore()}T_("Start coding",0,2,32,t>2.6?ONA:"#fff",700,"center");c.restore()});
+ c.restore();ring(bx,by,seg(t,2.45,2.95),160,"255,255,255");const p=io(seg(t,1.6,2.3));ptr(lerp(W+80,bx+40,p),lerp(H+80,by+20,p),1.5,press)}
 
-// ---------- Firebase (same project + habaAdVoice function as Haba Ads) ----------
-let fb = null;
-try {
-  const V = "https://www.gstatic.com/firebasejs/10.8.1/";
-  const [A, Au, Fn] = await Promise.all([import(V + "firebase-app.js"), import(V + "firebase-auth.js"), import(V + "firebase-functions.js")]);
-  const app = A.initializeApp({ apiKey: "AIzaSyBQSPwpVbGrdCuOoyitAeWQHIeipj2MgIY", authDomain: "newstart-64c43.firebaseapp.com", databaseURL: "https://newstart-64c43-default-rtdb.firebaseio.com", projectId: "newstart-64c43", storageBucket: "newstart-64c43.firebasestorage.app", messagingSenderId: "941619830061", appId: "1:941619830061:web:de9e0f791eb8f6eacf87a4" });
-  auth = Au.getAuth(app); voiceFn = Fn.httpsCallable(Fn.getFunctions(app), "habaAdVoice", { timeout: 90000 }); fb = Au;
-  fb.onAuthStateChanged(auth, u => { user = u; $("login").classList.toggle("hide", !!u); $("out").classList.toggle("hide", !u); $("vs").textContent = u ? "Voiceover ready" : "Sign in to use voiceover"; });
-  $("signin").onclick = () => fb.signInWithEmailAndPassword(auth, $("em").value.trim(), $("pw").value).catch(e => say(e.message, 1));
-  $("google").onclick = () => fb.signInWithPopup(auth, new fb.GoogleAuthProvider()).catch(e => say(e.message, 1));
-  $("out").onclick = () => fb.signOut(auth);
-  $("login").classList.remove("hide");
-} catch (e) { $("vs").textContent = "Voiceover unavailable (offline)"; }
+// ---------- compositor ----------
+const FN=[k1,k2,k3,k4,k5,k6,k7,k8],BASE=[3.4,3.2,3.6,3.4,5.9,5.6,4.2,3.8];let SC=[];
+(()=>{let s=0;SC=FN.map((f,i)=>{const r=[s,s+BASE[i],f];s+=BASE[i]-.5;return r});T=SC[SC.length-1][1]})();
+const CAMS=[(t,d)=>[1+.04*seg(t,0,d),W/2,H/2,0,0],(t,d)=>[lerp(1.12,1,oc(seg(t,0,.9))),W/2,H/2,0,0],(t,d)=>[1+.05*io(seg(t,0,d)),W/2,H/2,lerp(20,-20,seg(t,0,d)),0],
+ (t,d)=>[lerp(1,8,io(seg(t,2.2,3.2))),1330,540,0,0],(t,d)=>[lerp(1.06,1,oc(seg(t,0,1))),W/2,620,0,0],(t,d)=>[1+.1*io(seg(t,3,4.6)),W/2,H/2,lerp(0,-50,io(seg(t,3,4.6))),0],(t,d)=>[1+.04*seg(t,0,d),W/2,H/2,0,0],(t,d)=>[lerp(1.12,1,oc(seg(t,0,1.4))),W/2,H/2,0,0]];
+function frame(t){NOW=t;c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.filter="none";c.fillStyle="#000";c.fillRect(0,0,W,H);
+ SC.forEach(([a,b,f],i)=>{if(t<a||t>b)return;const lt=t-a,m=i?io(seg(lt,0,.6)):1,dur=b-a;c.save();
+  if(i&&m<1){c.beginPath();const ty=i%3;if(ty===1)c.arc(W/2,H/2,1150*oc(m),0,7);else if(ty===2)for(let k=0;k<8;k++)c.rect(0,k*135,W,136*m);else c.rect(0,H*(1-oc(m)),W,H);c.clip();if(ty===1){c.lineWidth=16;c.strokeStyle=`rgba(${ARGB},${1-m})`;c.stroke()}}
+  const cm=CAMS[i](lt,dur);c.translate(cm[1]+cm[3],cm[2]+cm[4]);c.scale(cm[0],cm[0]);c.translate(-cm[1],-cm[2]);f(lt);c.restore()});
+ c.fillStyle=`rgba(${ARGB},.9)`;c.fillRect(0,H-4,W*clamp(t/T),4)}
 
-async function ensureVoice() {
-  const v = "none";
-  if (v === "none" || !user || !voiceFn) { VO = []; retime(); if (v !== "none" && !user) say("Sign in to add the voiceover. Playing without voice.", 1); return; }
-  if (!cache[v]) {
-    say("Generating voiceover…");
-    try {
-      const chunks = []; for (let i = 0; i < LINES.length; i += 5) chunks.push(LINES.slice(i, i + 5));
-      const res = await Promise.all(chunks.map(l => voiceFn({ lines: l, voice: v }).then(r => l.map((_, k) => (r.data.clips || [])[k] || null))));
-      const dctx = new OfflineAudioContext(2, 44100, 44100);
-      cache[v] = await Promise.all(res.flat().map(b => (b ? dctx.decodeAudioData(Uint8Array.from(atob(b), ch => ch.charCodeAt(0)).buffer).catch(() => null) : null)));
-      say("");
-    } catch (e) { say("Voiceover failed: " + (e.message || "try again") + ". Playing without voice.", 1); cache[v] = null; }
-  }
-  VO = cache[v] || []; retime(VO.map(b => (b ? b.duration : 0)));
-}
-
-// ---------- sound effects (synthesised) ----------
-const hasVO = () => VO.some(Boolean), sfxOn = () => $("sfx").value === "on", hasAudio = () => hasVO() || sfxOn();
-const NZ = new WeakMap();
-const noise = ctx => { let b = NZ.get(ctx); if (!b) { b = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; NZ.set(ctx, b); } return b; };
-function sfx(ctx, out, type, at, g = 1) {
-  const G = ctx.createGain(); G.connect(out);
-  const env = (n, a, d, v) => { n.gain.setValueAtTime(.0001, at); n.gain.exponentialRampToValueAtTime(Math.max(v * g, .0002), at + a); n.gain.exponentialRampToValueAtTime(.0001, at + a + d); };
-  const osc = (wave, f0, f1, dur, vol, a = .004) => { const o = ctx.createOscillator(), e = ctx.createGain(); o.type = wave; o.frequency.setValueAtTime(f0, at); o.frequency.exponentialRampToValueAtTime(f1, at + dur); env(e, a, dur, vol); o.connect(e); e.connect(G); o.start(at); o.stop(at + dur + a + .05); };
-  const nz = (f0, f1, dur, vol, q = 1, a = .01, ft = "bandpass") => { const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), e = ctx.createGain(); s.buffer = noise(ctx); f.type = ft; f.Q.value = q; f.frequency.setValueAtTime(f0, at); f.frequency.exponentialRampToValueAtTime(f1, at + dur); env(e, a, dur, vol); s.connect(f); f.connect(e); e.connect(G); s.start(at, Math.random() * .4); s.stop(at + dur + a + .05); };
-  if (type === "pop") osc("sine", 640, 240, .1, .5);
-  else if (type === "tick") osc("triangle", 1900, 1100, .035, .22);
-  else if (type === "key") { nz(2200 + Math.random() * 1200, 3000, .03, .5, 2, .002); osc("square", 900, 500, .02, .05, .001); }
-  else if (type === "click") { osc("sine", 1300, 500, .05, .5, .002); nz(4200, 3000, .03, .4, 1.5, .002); }
-  else if (type === "swish") nz(700, 4200, .22, .35, 1.4, .06);
-  else if (type === "whoosh") { nz(250, 3800, .55, .55, 1.1, .22); nz(120, 900, .5, .2, .8, .2, "lowpass"); }
-  else if (type === "impact") { osc("sine", 110, 38, .5, .9, .003); nz(900, 200, .3, .4, .7, .003, "lowpass"); }
-  else if (type === "thump") osc("sine", 140, 55, .28, .6, .003);
-  else if (type.startsWith("note:")) { const f = +type.slice(5); osc("sine", f, f, .24, .32, .003); osc("triangle", f * 2, f * 2, .12, .06, .003); }
-  else if (type === "sent") { osc("sine", 520, 900, .09, .4, .003); nz(3500, 2500, .03, .2, 1.5, .002); }
-  else if (type === "dot") osc("sine", 760, 700, .05, .16, .002);
-  else if (type === "riser") { nz(300, 5200, .6, .5, 1.2, .4); osc("sine", 180, 760, .6, .12, .3); }
-  else if (type === "blind") { osc("triangle", 1500 + Math.random() * 500, 900, .03, .28, .001); nz(5000, 3000, .02, .22, 2, .001); }
-  else if (type === "chime") [880, 1320, 1760].forEach((f, k) => osc("sine", f, f * .998, .9 - k * .2, .18 / (k + 1), .005));
-}
-// every sound is tied to a scene start (ST), so it follows the timeline even when the voiceover stretches scenes
-function events() {
-  const E = [], a = (i, l, type, g = 1) => E.push([ST[i] + l, type, g]), ping = (i, l, g = 1) => { a(i, l, "note:988", .8 * g); a(i, l + .11, "note:1318", g); };
-  [1, 2, 3, 4, 5, 6, 7].forEach(i => { const ty = i % 3; if (ty === 1) { a(i, -.05, "riser", .5); a(i, .55, "thump", .45); } else if (ty === 2) { a(i, -.05, "swish", .4); for (let k = 0; k < 8; k++) a(i, k * .045, "blind", .4); } else { a(i, -.05, "whoosh", .6); a(i, .5, "thump", .45); } });
-  for (let k = 0; k < 27; k++) a(0, .25 + k / 15, "key", .35); a(0, .85, "whoosh", .6); a(0, 1.4, "thump", .5); a(0, 1.8, "swish", .5); a(0, 2.4, "pop", .6);
-  a(1, .1, "pop", .7); a(1, .15, "thump", .5); for (let k = 0; k < 12; k++) a(1, .5 + k / 13, "key", .35);
-  for (let k = 0; k < 28; k++) a(2, .2 + k / 16, "key", .35); a(2, 1.5, "swish", .5); a(2, 1.9, "thump", .5);
-  a(3, .15, "whoosh", .6); a(3, .2, "impact", .8); a(3, .25, "chime", .6); a(3, .55, "swish", .4); a(3, 2.2, "riser", .6);
-  a(4, .2, "whoosh", .5); for (let k = 0; k < 38; k++) a(4, .9 + k / 20, "key", .35); a(4, 2.7, "swish", .4); a(4, 3.4, "click", .8); a(4, 3.45, "chime", .5);
-  a(5, .1, "whoosh", .6); a(5, .5, "pop", .5); ping(5, 1.45, .55); a(5, 1.7, "pop", .5); a(5, 1.9, "pop", .5); a(5, 2.1, "pop", .5); a(5, 2.72, "click", .8);
-  for (let j = 0; j < 4; j++) for (let k = 0; k < 5; k++) a(5, 2.85 + j * .22 + k * .04, "tick", .3); a(5, 3.45, "swish", .5); ping(5, 4.0, .6);
-  a(6, .1, "whoosh", .5); for (let i = 0; i < 9; i++) a(6, .15 + i * .12, "pop", .25); a(6, 1.1, "swish", .4); a(6, 1.8, "swish", .5); a(6, 2.0, "chime", .4);
-  a(7, .15, "whoosh", .5); a(7, .5, "pop", .5); a(7, 1.3, "pop", .4); a(7, 2.4, "click", .8); a(7, 2.5, "chime", .7); ping(7, 2.9, .5); return E;
-}
-function mix(ctx, dest, base) {
-  const out = ctx.createGain(), bus = ctx.createGain(); out.connect(dest); bus.connect(out); bus.gain.value = .55;
-  VO.forEach((b, i) => { if (!b) return; const s = ctx.createBufferSource(), at = base + ST[i] + .2; s.buffer = b; s.connect(out); s.start(at); bus.gain.setTargetAtTime(.22, Math.max(base, at - .05), .05); bus.gain.setTargetAtTime(.55, at + b.duration, .2); });
-  if (sfxOn()) events().forEach(([t, type, g]) => sfx(ctx, bus, type, base + t, g));
-  return out;
-}
-function stopAudio() { if (outNode) { try { outNode.disconnect(); } catch (e) {} outNode = null; } }
-function playAudio() { stopAudio(); if (!hasAudio()) return; actx = actx || new AudioContext(); actx.resume(); outNode = mix(actx, actx.destination, actx.currentTime + .05); }
-async function restart() { stopAudio(); await ensureVoice(); audioMode = hasAudio(); t0 = performance.now(); playAudio(); }
-
-// ---------- export ----------
-const save = (blob, name) => { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click(); };
-async function exportMP4() {
-  const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.0/+esm");
-  const FPS = 30, SR = 44100, dur = T + .3; let ab = null, err = null;
-  if (hasAudio()) { const o = new OfflineAudioContext(2, Math.ceil(dur * SR), SR), m = o.createDynamicsCompressor(); m.connect(o.destination); mix(o, m, 0); ab = await o.startRendering(); }
-  const mux = new Muxer({ target: new ArrayBufferTarget(), video: { codec: "avc", width: CW, height: CH, frameRate: FPS }, ...(ab ? { audio: { codec: "aac", numberOfChannels: 2, sampleRate: SR } } : {}), fastStart: "in-memory" });
-  if (ab) {
-    const ae = new AudioEncoder({ output: (c, m) => mux.addAudioChunk(c, m), error: e => (err = e) }); ae.configure({ codec: "mp4a.40.2", sampleRate: SR, numberOfChannels: 2, bitrate: 128000 });
-    const L = ab.getChannelData(0), Rr = ab.getChannelData(1), CH = 4096;
-    for (let o = 0; o < L.length; o += CH) { const n = Math.min(CH, L.length - o), d = new Float32Array(n * 2); d.set(L.subarray(o, o + n), 0); d.set(Rr.subarray(o, o + n), n); const ad = new AudioData({ format: "f32-planar", sampleRate: SR, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round(o / SR * 1e6), data: d }); ae.encode(ad); ad.close(); }
-    await ae.flush(); ae.close();
-  }
-  const ve = new VideoEncoder({ output: (c, m) => mux.addVideoChunk(c, m), error: e => (err = e) }); ve.configure({ codec: "avc1.640028", width: CW, height: CH, bitrate: 8e6, framerate: FPS });
-  const N = Math.ceil(dur * FPS);
-  for (let i = 0; i < N; i++) {
-    frame(Math.min(i / FPS, T)); const f = new VideoFrame(cv, { timestamp: Math.round(i * 1e6 / FPS), duration: Math.round(1e6 / FPS) }); ve.encode(f, { keyFrame: i % FPS === 0 }); f.close();
-    while (ve.encodeQueueSize > 6) await new Promise(r => setTimeout(r, 8));
-    if (i % 10 === 0) { say(`Rendering video… ${Math.round(i / N * 100)}% (keep this tab open)`); await new Promise(r => setTimeout(r)); }
-  }
-  await ve.flush(); ve.close(); mux.finalize(); if (err) throw err;
-  save(new Blob([mux.target.buffer], { type: "video/mp4" }), "haba-code-ad.mp4");
-}
-async function exportRT() { // fallback without WebCodecs: real-time recording
-  const ac = new AudioContext(), dest = ac.createMediaStreamDestination(), stream = cv.captureStream(30); dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
-  const mime = ["video/mp4;codecs=avc1", "video/webm;codecs=vp9,opus", "video/webm"].find(m => MediaRecorder.isTypeSupported(m)) || "", ch = [];
-  const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 12e6 }), done = new Promise(r => (rec.onstop = r)); rec.ondataavailable = e => e.data.size && ch.push(e.data);
-  await ac.resume(); const base = ac.currentTime + .1; mix(ac, dest, base);
-  busy = false; recording = true; t0 = performance.now() + 100; rec.start(); await new Promise(r => setTimeout(r, (T + .5) * 1000)); rec.stop(); await done;
-  const type = (mime || "video/webm").split(";")[0]; save(new Blob(ch, { type }), "haba-code-ad." + (type.includes("mp4") ? "mp4" : "webm"));
-}
-
-// ---------- controls ----------
-$("replay").onclick = restart; $("voice").onchange = restart; $("sfx").onchange = restart;
-$("cp").onclick = async e => {
-  const txt = "Haba Code: your IDE in the browser. AI suggests the edits, you apply them. Free to start. #HabaCode #WebDev #BuildInPublic";
-  try { await navigator.clipboard.writeText(txt); e.target.textContent = "Copied ✓"; } catch (x) { e.target.textContent = "Copy failed"; }
-  setTimeout(() => (e.target.textContent = "Copy caption"), 1600);
-};
-$("dl").onclick = async e => {
-  const btn = e.target; btn.disabled = true; btn.textContent = "Rendering…"; stopAudio();
-  try {
-    await ensureVoice();
-    if (window.VideoEncoder && (window.AudioEncoder || !hasAudio())) { busy = true; await exportMP4(); }
-    else if (window.MediaRecorder && cv.captureStream) await exportRT();
-    else throw new Error("this browser can't export video. Try Chrome.");
-    say("Video saved" + (hasAudio() ? " with sound." : "."));
-  } catch (x) { say("Export failed: " + (x.message || x), 1); }
-  finally { busy = false; recording = false; btn.disabled = false; btn.textContent = "Download video"; t0 = performance.now(); }
-};
-function loop() {
-  const el = Math.max(0, (performance.now() - t0) / 1000);
-  if (!busy) frame(recording || audioMode ? Math.min(el, T) : Math.min(el % (T + .9), T));
-  requestAnimationFrame(loop);
-}
-Promise.race([Promise.all([document.fonts.load('600 100px "Inter"'), document.fonts.load('800 100px "Inter"'), document.fonts.load('700 100px "Sora"'), document.fonts.load('400 20px "JetBrains Mono"'), document.fonts.load('800 100px "Sora"')]), new Promise(r => setTimeout(r, 2500))]).finally(() => { t0 = performance.now(); loop(); });
+// ---------- controls + export ----------
+const $=id=>document.getElementById(id),say=s=>$("msg").textContent=s||"";let t0=performance.now(),busy=false;
+const save=(blob,name)=>{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click()};
+async function exportMP4(){const{Muxer,ArrayBufferTarget}=await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.0/+esm");const FPS=30,dur=T+.3;let err=null;
+ const mux=new Muxer({target:new ArrayBufferTarget(),video:{codec:"avc",width:W,height:H,frameRate:FPS},fastStart:"in-memory"});
+ const ve=new VideoEncoder({output:(ch,m)=>mux.addVideoChunk(ch,m),error:e=>(err=e)});ve.configure({codec:"avc1.640028",width:W,height:H,bitrate:8e6,framerate:FPS});const N=Math.ceil(dur*FPS);
+ for(let i=0;i<N;i++){frame(Math.min(i/FPS,T));const f=new VideoFrame(cv,{timestamp:Math.round(i*1e6/FPS),duration:Math.round(1e6/FPS)});ve.encode(f,{keyFrame:i%FPS===0});f.close();while(ve.encodeQueueSize>6)await new Promise(r=>setTimeout(r,8));if(i%10===0){say(`Rendering video… ${Math.round(i/N*100)}% (keep this tab open)`);await new Promise(r=>setTimeout(r))}}
+ await ve.flush();ve.close();mux.finalize();if(err)throw err;save(new Blob([mux.target.buffer],{type:"video/mp4"}),"haba-code-firebase-ad.mp4")}
+async function exportRT(){const stream=cv.captureStream(30),mime=["video/mp4;codecs=avc1","video/webm;codecs=vp9","video/webm"].find(m=>MediaRecorder.isTypeSupported(m))||"",ch=[];
+ const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:12e6}),done=new Promise(r=>(rec.onstop=r));rec.ondataavailable=e=>e.data.size&&ch.push(e.data);
+ busy=false;t0=performance.now()+100;rec.start();await new Promise(r=>setTimeout(r,(T+.5)*1000));rec.stop();await done;const type=(mime||"video/webm").split(";")[0];save(new Blob(ch,{type}),"haba-code-firebase-ad."+(type.includes("mp4")?"mp4":"webm"))}
+$("replay").onclick=()=>{t0=performance.now()};
+$("cp").onclick=async e=>{try{await navigator.clipboard.writeText("Haba Code: connect your Firebase backend in one paste. Test it, save it, and every project gets firebase-config.js. #HabaCode #Firebase #WebDev #BuildInPublic");e.target.textContent="Copied ✓"}catch(x){e.target.textContent="Copy failed"}setTimeout(()=>(e.target.textContent="Copy caption"),1600)};
+$("dl").onclick=async e=>{const b=e.target;b.disabled=true;b.textContent="Rendering…";
+ try{if(window.VideoEncoder){busy=true;await exportMP4()}else if(window.MediaRecorder&&cv.captureStream)await exportRT();else throw new Error("this browser can't export video. Try Chrome.");say("Video saved.")}
+ catch(x){say("Export failed: "+(x.message||x))}finally{busy=false;b.disabled=false;b.textContent="Download video";t0=performance.now()}};
+function loop(){const el=Math.max(0,(performance.now()-t0)/1000);if(!busy)frame(Math.min(el%(T+.9),T));requestAnimationFrame(loop)}
+Promise.race([Promise.all([document.fonts.load('600 100px "Inter"'),document.fonts.load('800 100px "Sora"'),document.fonts.load('400 20px "JetBrains Mono"')]),new Promise(r=>setTimeout(r,2500))]).finally(()=>{t0=performance.now();loop()});
 </script>
 </body>
 </html>
