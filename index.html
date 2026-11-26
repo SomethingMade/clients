@@ -6,20 +6,20 @@
 <title>Haba Shell · Ad</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0}
-html,body{height:100%;background:#000;color:#f4f4f5;font-family:"Inter",system-ui,sans-serif}
-body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:calc(env(safe-area-inset-top)+12px) 12px calc(env(safe-area-inset-bottom)+12px)}
+:root{--bg:#000;--fg:#f4f4f5;--ok:#6ee7b7}
+html,body{height:100%;background:var(--bg);color:var(--fg);font-family:"Inter",system-ui,sans-serif}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:calc(env(safe-area-inset-top,0px) + 12px) 12px calc(env(safe-area-inset-bottom,0px) + 12px)}
 .stage{width:min(100%,calc((100vh - 140px)*1.7778));aspect-ratio:16/9;border-radius:16px;overflow:hidden;box-shadow:0 0 0 1px #ffffff10,0 40px 100px #000c;background:#000}
 canvas{width:100%;height:100%;display:block}
 .bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 button{font:600 13px "Inter",system-ui,sans-serif;padding:11px 18px;border-radius:999px;border:1px solid #ffffff18;background:#ffffff08;color:#e5e5e5;cursor:pointer;transition:.2s}
 button:hover{background:#ffffff14}
 button.p{background:#fff;color:#000;border-color:#fff}
-button.p:hover{box-shadow:0 0 24px #34d39966}
 button:disabled{opacity:.45;cursor:wait}
-#msg{min-height:18px;font-size:12px;color:#6ee7b7;text-align:center}
+#msg{min-height:18px;font-size:12px;color:var(--ok);text-align:center}
 </style>
 </head>
 <body>
@@ -30,377 +30,110 @@ button:disabled{opacity:.45;cursor:wait}
   <button id="dl" class="p">Download video</button>
   <button id="cp">Copy caption</button>
 </div>
-
 <script>
 const W=1920,H=1080,cv=document.getElementById("cv"),c=cv.getContext("2d");
-let T=24.5,NOW=0;
-const HEAD='"Inter",system-ui,sans-serif',DISP='"Sora","Inter",system-ui,sans-serif',MONO='"JetBrains Mono",Menlo,monospace';
-const ACC="52,211,153",ACC2="16,185,129";
+const SANS='"Inter",system-ui,sans-serif',MONO='"JetBrains Mono",Menlo,monospace';
+const OR="255,74,28",ORH="#ff4a1c";
 const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),lerp=(a,b,t)=>a+(b-a)*t;
 const oc=t=>1-Math.pow(1-clamp(t),3),oe=t=>{t=clamp(t);return t>=1?1:1-Math.pow(2,-10*t)};
 const io=t=>{t=clamp(t);return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2};
-const sp=t=>{t=clamp(t);return t>=1?1:1-Math.exp(-7.5*t)*Math.cos(6.5*t)};
 const seg=(t,a,b)=>clamp((t-a)/(b-a));
 const rr=(x,y,w,h,r)=>{c.beginPath();c.roundRect?c.roundRect(x,y,w,h,r):c.rect(x,y,w,h)};
-const F=(w,s,fam=HEAD,ls=0)=>{c.font=`${w} ${s}px ${fam}`;c.letterSpacing=ls+"px"};
-const T_=(s,x,y,size,col,w=500,al="left",fam=HEAD)=>{F(w,size,fam,0);c.textAlign=al;c.textBaseline="middle";c.fillStyle=col;c.fillText(s,x,y)};
-function glow(x,y,r,rgb,a){if(a<=0)return;const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${rgb},${a})`);g.addColorStop(1,`rgba(${rgb},0)`);c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2)}
+const blur=px=>{try{c.filter=px>.3?`blur(${px}px)`:"none"}catch(e){}};
 
-// ---------- icons ----------
-const D={
-  terminal:["m4 17 6-6-6-6","M12 19h8"],
-  package:["M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z","M12 22V12","m3.3 7 8.7 5 8.7-5","m7.5 4.27 9 5.15"],
-  git:["M6 3v12","M18 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6","M6 18a3 3 0 1 0 0 6 3 3 0 0 0 0-6","M18 9a9 9 0 0 1-9 9"],
-  rocket:["M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z","m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z","M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0","M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"]
-};
-const ICO={};for(const k in D)ICO[k]=D[k].map(q=>new Path2D(q));
-function ico(n,x,y,s,col,lw=1.8){if(s<=0)return;c.save();c.translate(x-s/2,y-s/2);c.scale(s/24,s/24);c.strokeStyle=col;c.lineWidth=lw;c.lineCap=c.lineJoin="round";ICO[n].forEach(q=>c.stroke(q));c.restore()}
+// blur-in word line, centred. words=[[text,color]]
+function words(ws,cx,cy,size,t,t0,wt=500,gap=.22){
+  F(wt,size);const sp=size*.3,m=ws.map(([s])=>c.measureText(s).width),tot=m.reduce((a,b)=>a+b,0)+sp*(ws.length-1);
+  let x=cx-tot/2;
+  ws.forEach(([s,col],i)=>{const p=oe(seg(t,t0+i*gap,t0+i*gap+.7));
+    if(p>0){c.save();c.globalAlpha=p;blur((1-p)*16);c.fillStyle=col;F(wt,size);c.textAlign="left";c.textBaseline="middle";c.fillText(s,x,cy+(1-p)*size*.4);c.restore()}
+    x+=m[i]+sp});
+}
+function F(w,s,fam=SANS){c.font=`${w} ${s}px ${fam}`;c.letterSpacing=(-s*.02)+"px"}
+function txt(s,x,y,size,col,w=600,al="center",fam=SANS){F(w,size,fam);c.textAlign=al;c.textBaseline="middle";c.fillStyle=col;c.fillText(s,x,y)}
 
-// ---------- Haba mark ----------
-let SQN=4.2;
-function sq(x,y,s,n=SQN){const a=s/2,N=80;c.beginPath();for(let i=0;i<=N;i++){const th=i/N*Math.PI*2,ct=Math.cos(th),st=Math.sin(th);const px=x+a*Math.sign(ct)*Math.pow(Math.abs(ct),2/n),py=y+a*Math.sign(st)*Math.pow(Math.abs(st),2/n);i?c.lineTo(px,py):c.moveTo(px,py)}c.closePath()}
-function mark(x,y,s,a,lab=">_"){if(a<=0||s<=0)return;c.save();c.globalAlpha*=clamp(a);
-  c.shadowColor=`rgba(${ACC},.4)`;c.shadowBlur=s*.35;
-  sq(x,y,s);
-  const g=c.createLinearGradient(x-s/2,y-s/2,x+s/2,y+s/2);
-  g.addColorStop(0,`rgb(${ACC})`);g.addColorStop(1,`rgb(${ACC2})`);
-  c.fillStyle=g;c.fill();
-  c.shadowColor="transparent";
-  c.fillStyle="#000";F(700,s*.36,DISP,-s*.01);c.textAlign="center";c.textBaseline="middle";c.fillText(lab,x,y+s*.02);
+// ---------- mini card faces ----------
+function face(k,x,y,w,h){
+  c.save();rr(x,y,w,h,Math.min(w,h)*.06);c.clip();
+  if(k===0){c.fillStyle="#0b0b0f";c.fillRect(x,y,w,h);["#ff5f57","#febc2e","#28c840"].forEach((q,i)=>{c.fillStyle=q;c.beginPath();c.arc(x+w*.05+i*w*.035,y+h*.07,h*.016,0,7);c.fill()});
+    ["npm install express","haba run dev","✓ Compiled in 180ms"].forEach((s,i)=>txt(s,x+w*.06,y+h*(.26+i*.14),h*.06,i==2?"#34d399":"#e5e5e5",500,"left",MONO))}
+  else if(k===1){c.fillStyle="#fff";c.fillRect(x,y,w,h);txt("haba deploy",x+w/2,y+h*.42,h*.1,"#111",700);txt("→ my-app.web.app",x+w/2,y+h*.6,h*.06,ORH,500,"center",MONO)}
+  else if(k===2){const g=c.createLinearGradient(x,y,x+w,y+h);g.addColorStop(0,"#e8ecff");g.addColorStop(1,"#ffd9cc");c.fillStyle=g;c.fillRect(x,y,w,h);txt("git push",x+w/2,y+h/2,h*.13,"#111",700)}
+  else if(k===3){c.fillStyle="#111418";c.fillRect(x,y,w,h);c.fillStyle="#34d399";rr(x+w*.3,y+h*.4,w*.4,h*.2,h*.1);c.fill();txt("Haba Shell",x+w/2,y+h/2,h*.07,"#000",700)}
+  else if(k===4){c.fillStyle="#fff";c.fillRect(x,y,w,h);txt("npm i firebase",x+w/2,y+h/2,h*.09,"#111",600,"center",MONO)}
+  else{c.fillStyle="#d4121f";c.fillRect(x,y,w,h);txt("Run · Install · Commit",x+w/2,y+h/2,h*.08,"#fff",700)}
   c.restore()}
 
-// ---------- IDE (Cursor-style dark) ----------
-const KW="#7dd3fc",VR="#c4b5fd",FN_="#fde68a",ST="#fca5a5",PL="#e5e5e5",CM="#6b7280",GR="#34d399";
-const CODE=[
-  [["// server.js",CM]],
-  [["const ",KW],["express ",VR],["= ",PL],["require",FN_],["('express');",ST]],
-  [["const ",KW],["app ",VR],["= ",PL],["express",FN_],["();",PL]],
-  [],
-  [["app.",VR],["get",FN_],["('/', (req, res) => {",PL]],
-  [["  res.",VR],["send",FN_],["('Hello from Haba Shell');",ST]],
-  [["});",PL]],
-  [],
-  [["app.",VR],["listen",FN_],["(",PL],["3000",KW],[");",PL]]
-];
-function ide(x,y,w,h,t,L){
-  // body
-  c.save();c.shadowColor="rgba(0,0,0,.8)";c.shadowBlur=80;c.shadowOffsetY=30;
-  rr(x,y,w,h,14);c.fillStyle="#0a0a0a";c.fill();c.restore();
-  c.save();rr(x,y,w,h,14);c.clip();
+// ---------- scenes ----------
+function s1(t){c.fillStyle="#fff";c.fillRect(0,0,W,H);
+  const a=1-seg(t,3.6,4.1);c.globalAlpha=a;
+  if(t<1.5)words([["Welcome","#111"]],W/2,H/2,44,t,.1);
+  else if(t<2.5)words([["to","#111"],["the","#111"]],W/2,H/2,44,t,1.5);
+  else words([["to","#111"],["the","#111"],["Haba","#111"],["Shell",ORH]],W/2,H/2,44,t,2.5,500,.28);
+  c.globalAlpha=1}
 
-  // titlebar
-  c.fillStyle="#111";c.fillRect(x,y,w,42);
-  ["#ff5f57","#febc2e","#28c840"].forEach((col,i)=>{c.beginPath();c.arc(x+26+i*22,y+21,6,0,7);c.fillStyle=col;c.fill()});
-  T_("my-app — Haba Code",x+w/2,y+21,15,"#737373",500,"center");
+function wave(t,a=1,col=OR,lw=16){c.save();c.lineCap="round";c.strokeStyle=`rgba(${col},${a})`;c.lineWidth=lw;c.shadowColor=`rgba(${col},.9)`;c.shadowBlur=50;
+  c.beginPath();for(let x=-20;x<=W+20;x+=20){const y=H/2+Math.sin(x*.004+t*2.2)*55+Math.sin(x*.011-t*1.3)*22;x<0?c.moveTo(x,y):c.lineTo(x,y)}c.stroke();c.restore()}
 
-  // activity + sidebar
-  c.fillStyle="#0c0c0c";c.fillRect(x,y+42,52,h-68);
-  c.fillStyle="#111";c.fillRect(x+52,y+42,230,h-68);
-  ["terminal","package","git","rocket"].forEach((n,i)=>ico(n,x+26,y+90+i*54,22,i===0?"#e5e5e5":"#525252",1.6));
-  c.fillStyle=`rgb(${ACC})`;c.fillRect(x,y+72,2.5,36);
-  T_("EXPLORER",x+74,y+68,12,"#737373",600);
-
-  // files
-  [["index.html","#f97316"],["style.css","#38bdf8"],["server.js","#eab308"],["package.json","#4ade80"]].forEach(([n,col],i)=>{
-    const yy=y+104+i*32;
-    if(i===2){c.fillStyle="rgba(255,255,255,.06)";c.fillRect(x+52,yy-15,230,30)}
-    c.beginPath();c.arc(x+76,yy,4.5,0,7);c.fillStyle=col;c.fill();
-    T_(n,x+94,yy,15,i===2?"#fafafa":"#a3a3a3",500);
-  });
-
-  // editor
-  const ex=x+282,pt=y+h-310,ey=y+88,ew=w-282;
-  c.fillStyle="#111";c.fillRect(ex,y+42,ew,46);
-  c.fillStyle="#0a0a0a";c.fillRect(ex,y+42,180,46);
-  c.fillStyle=`rgb(${ACC})`;c.fillRect(ex,y+42,180,2);
-  c.beginPath();c.arc(ex+22,y+65,4.5,0,7);c.fillStyle="#eab308";c.fill();
-  T_("server.js",ex+36,y+65,15,"#fafafa",500);
-
-  // code lines
-  CODE.forEach((tk,j)=>{
-    const yy=ey+32+j*30;
-    const n=Math.floor((t-(.25+j*.12))*70);
-    if(n<=0)return;
-    T_(String(j+1),ex+42,yy,14,"#404040",400,"right",MONO);
-    tl(tk,ex+60,yy,n,17);
-  });
-
-  // terminal
-  c.fillStyle="#0c0c0c";c.fillRect(ex,pt,ew,284);
-  c.fillStyle="rgba(255,255,255,.05)";c.fillRect(ex,pt,ew,1);
-  T_("TERMINAL",ex+24,pt+24,12,"#a3a3a3",600);
-  c.fillStyle=`rgb(${ACC})`;c.fillRect(ex+24,pt+38,68,1.5);
-  T_("Haba Shell",ex+110,pt+24,12,"#737373",500);
-  tlines(L,ex+24,pt+78,t,20);
-
-  // status
-  c.fillStyle="#0f766e";c.fillRect(x,y+h-26,w,26);
-  T_("⎇ main",x+16,y+h-13,13,"#fff",500);
-  T_("Haba Shell · Ln 9, Col 18",x+w-16,y+h-13,13,"#fff",500,"right");
-
+function s2(t){c.fillStyle="#050505";c.fillRect(0,0,W,H);
+  const g=c.createRadialGradient(W/2,H/2,0,W/2,H/2,900);g.addColorStop(0,"rgba(255,74,28,.12)");g.addColorStop(1,"rgba(0,0,0,0)");c.fillStyle=g;c.fillRect(0,0,W,H);
+  wave(t,.95);
+  // dashed grid
+  c.save();c.setLineDash([10,10]);c.strokeStyle="rgba(255,255,255,.55)";c.lineWidth=2;
+  const gp=oe(seg(t,0,.7)),bx=lerp(780,330,io(seg(t,.5,1.4))),by=lerp(400,200,io(seg(t,.5,1.4)));
+  [bx,W-bx].forEach(x=>{c.beginPath();c.moveTo(x,0);c.lineTo(x,H*gp);c.stroke()});
+  [by,H-by].forEach(y=>{c.beginPath();c.moveTo(0,y);c.lineTo(W*gp,y);c.stroke()});c.restore();
+  // frame
+  const fx=bx,fy=by,fw=W-bx*2,fh=H-by*2,sl=io(seg(t,2.3,3.0))+io(seg(t,3.4,4.1))*1+io(seg(t,4.5,5.0)),pw=fw;
+  const sq=1+.04*Math.sin(Math.PI*clamp(sl%1));
+  c.save();rr(fx,fy,fw,fh,28);c.clip();
+  c.translate(-sl*pw,0);
+  // panel0 red collage
+  c.fillStyle="#d4121f";c.fillRect(fx,fy,fw,fh);
+  for(let i=0;i<9;i++){const p=oe(seg(t,.9+i*.08,1.6+i*.08)),px=fx+40+(i%5)*(fw/5.3),py=fy+(i<5?30:fh-250);c.save();c.globalAlpha=p;c.translate(0,(1-p)*40);face(i%6,px,py,150,200);c.restore()}
+  txt("Where do great ideas actually run?",fx+fw/2,fy+fh/2,36,"#fff",700);
+  // panel1 terminal
+  c.fillStyle="#0b0b0f";c.fillRect(fx+pw,fy,fw,fh);
+  [["❯ npm install express","#e5e5e5"],["added 58 packages in 2s","#737373"],["❯ haba run dev","#e5e5e5"],["▲ Server ready  http://localhost:3000","#34d399"],["✓ Compiled in 180ms","#34d399"]].forEach(([s,col],i)=>txt(s,fx+pw+70,fy+110+i*70,30,col,500,"left",MONO));
+  // panel2 white features
+  c.fillStyle="#fff";c.fillRect(fx+pw*2,fy,fw,fh);
+  ["Run","Install","Commit","Deploy"].forEach((s,i)=>{const x=fx+pw*2+fw*(.14+i*.24);rr(x-90,fy+fh/2-90,180,180,36);c.fillStyle=i==3?ORH:"#f3f3f3";c.fill();txt(s,x,fy+fh/2,34,i==3?"#fff":"#111",700)});
+  // panel3 deploy
+  c.fillStyle="#0b0b0f";c.fillRect(fx+pw*3,fy,fw,fh);txt("✓ Deployed in 4.1s",fx+pw*3+fw/2,fy+fh/2-30,56,"#34d399",700);txt("my-app.web.app",fx+pw*3+fw/2,fy+fh/2+50,34,"#e5e5e5",500,"center",MONO);
   c.restore();
-  rr(x,y,w,h,14);c.lineWidth=1.5;c.strokeStyle="rgba(255,255,255,.08)";c.stroke();
-}
+  c.save();c.setLineDash([10,10]);c.strokeStyle="rgba(255,255,255,.7)";c.lineWidth=2.5;rr(fx,fy,fw,fh,28);c.stroke();c.restore()}
 
-// ---------- terminal window ----------
-function term(x,y,w,h,title,L,t,size=24){
-  c.save();c.shadowColor="rgba(0,0,0,.7)";c.shadowBlur=70;c.shadowOffsetY=28;
-  rr(x,y,w,h,16);c.fillStyle="#0a0a0a";c.fill();c.restore();
-  rr(x,y,w,h,16);c.lineWidth=1.5;c.strokeStyle="rgba(255,255,255,.08)";c.stroke();
-  ["#ff5f57","#febc2e","#28c840"].forEach((col,i)=>{c.beginPath();c.arc(x+28+i*24,y+28,7,0,7);c.fillStyle=col;c.fill()});
-  T_(title,x+w/2,y+28,16,"#737373",500,"center");
-  c.fillStyle="rgba(255,255,255,.05)";c.fillRect(x,y+54,w,1);
-  let ex,ey;L.forEach(([s,tk,typed],i)=>{if(t<s)return;const n=typed?Math.floor((t-s)*28):999,yy=y+100+i*LH(size);ex=tl(tk,x+32,yy,n,size);ey=yy});
-  if(ex!==undefined&&Math.sin(t*8)>0){c.fillStyle=`rgb(${ACC})`;c.fillRect(ex+3,ey-size*.5,size*.45,size)}
-}
+function s3(t){c.fillStyle="#000";c.fillRect(0,0,W,H);
+  c.save();blur(70);c.globalAlpha=.55;c.fillStyle="#b9b2b0";c.translate(W/2,H/2);c.rotate(.55);c.fillRect(-90+Math.sin(t*1.2)*120,-900,220,1800);c.restore();
+  c.save();const a=oe(seg(t,.1,.8));words([["Got","#fff"],["a","#fff"],["command","#fff"],["in","#fff"],["mind?","#fff"]],W/2,H/2,46,t,.1,600,.16);c.restore()}
 
-// ---------- phone (minimal) ----------
-function appScreen(W0,H0){
-  c.fillStyle="#fafafa";c.fillRect(0,0,W0,H0);
-  // header
-  c.fillStyle="#0f766e";c.fillRect(0,0,W0,140);
-  T_("9:41",32,26,15,"#fff",600);
-  rr(W0-62,18,28,13,4);c.lineWidth=1.4;c.strokeStyle="#fff";c.stroke();
-  c.fillStyle="#fff";c.fillRect(W0-58,21,18,7);
-  T_("My app",22,98,32,"#fff",700);
+const BASE=[[-.5,-.3,0],[0,-.35,1],[.45,-.2,2],[-.4,.15,3],[.05,.1,4],[.5,.25,5],[-.1,.38,0],[.3,.4,1]];
+function s4(t){c.fillStyle="#000";c.fillRect(0,0,W,H);
+  const g=c.createRadialGradient(W*.7,H*.4,0,W*.7,H*.4,1100);g.addColorStop(0,"rgba(120,30,10,.55)");g.addColorStop(1,"rgba(0,0,0,0)");c.fillStyle=g;c.fillRect(0,0,W,H);
+  const z=1+.35*io(seg(t,0,5.5));
+  c.save();c.translate(W/2,H/2);c.scale(z,z);
+  BASE.forEach(([bx,by,k],i)=>{const p=oe(seg(t,i*.22,i*.22+.9));if(p<=0)return;
+    const w=520,h=300,x=bx*W*.85+Math.sin(t*.9+i)*30,y=by*H*.85+Math.cos(t*.8+i*2)*24+(1-p)*160;
+    c.save();c.globalAlpha=p;c.translate(x,y);c.transform(1,-.18,.12,1,0,0);c.rotate(Math.sin(t*.5+i)*.05);
+    c.shadowColor=`rgba(${OR},.95)`;c.shadowBlur=55;c.lineWidth=4;c.strokeStyle=ORH;rr(-w/2,-h/2,w,h,22);c.fillStyle="#111";c.fill();c.stroke();c.shadowBlur=0;
+    face(k,-w/2,-h/2,w,h);c.restore()});
+  c.restore()}
 
-  // card
-  rr(16,168,358,230,22);c.fillStyle="#fff";c.fill();
-  T_("Hello from Haba Shell",36,210,22,"#111",700);
-  rr(36,248,140,42,21);c.fillStyle="#d1fae5";c.fill();
-  T_("● Live",106,269,17,"#0f766e",600,"center");
-  rr(36,312,300,52,26);c.fillStyle="#0f766e";c.fill();
-  T_("Open",186,338,18,"#fff",600,"center");
+function s5(t){c.fillStyle="#fff";c.fillRect(0,0,W,H);
+  const a=1-seg(t,3.7,4.1);c.globalAlpha=a;
+  words([["Let’s","#111"],["bring","#111"],["your","#111"],["code","#111"],["to","#111"],["life",ORH]],W/2,H/2,48,t,.2,500,.3);c.globalAlpha=1}
 
-  // notes
-  rr(16,420,358,H0-420-100,22);c.fillStyle="#fff";c.fill();
-  T_("Your notes",36,458,16,"#737373",500);
-  ["Buy fabric","Call the supplier","Send invoice"].forEach((s,i)=>{
-    const y=510+i*54;
-    c.beginPath();c.arc(48,y,12,0,7);c.fillStyle="#d1fae5";c.fill();
-    T_("✓",48,y+1,13,"#0f766e",700,"center");
-    T_(s,72,y+1,17,"#111",500);
-  });
-
-  // nav
-  c.fillStyle="#fff";c.fillRect(0,H0-90,W0,90);
-  [0,1,2,3].forEach(i=>{c.beginPath();c.arc(70+i*82,H0-52,9,0,7);c.fillStyle=i===0?"#0f766e":"#d4d4d4";c.fill()});
-}
-function phone(cx,cy,h){
-  const w=h*.48,x=cx-w/2,y=cy-h/2,r=w*.16,b=w*.03,sx=x+b,sy=y+b,sw=w-2*b,sh=h-2*b;
-  c.save();c.shadowColor="rgba(0,0,0,.7)";c.shadowBlur=80;c.shadowOffsetY=30;
-  rr(x,y,w,h,r);c.fillStyle="#1a1a1a";c.fill();c.restore();
-  c.fillStyle="#2a2a2a";c.fillRect(x-3,y+h*.22,3,h*.05);c.fillRect(x-3,y+h*.3,3,h*.08);c.fillRect(x+w,y+h*.26,3,h*.12);
-  c.save();rr(sx,sy,sw,sh,r-b);c.clip();
-  c.translate(sx,sy);const s=sw/390;c.scale(s,s);appScreen(390,sh/s);
-  c.restore();
-  c.fillStyle="#000";rr(cx-w*.16,sy+h*.012,w*.32,h*.032,h*.016);c.fill();
-  c.fillStyle="rgba(255,255,255,.4)";rr(cx-w*.15,sy+sh-h*.018,w*.3,h*.005,h*.002);c.fill();
-  rr(x,y,w,h,r);c.lineWidth=1.5;c.strokeStyle="rgba(255,255,255,.12)";c.stroke();
-}
-
-// ---------- helpers ----------
-const S_="#7dd3fc",P_="#a3a3a3",K_="#34d399",G_="#737373",WH="#e5e5e5",PR=`rgb(${ACC})`;
-const PROMPT=[["~/my-app ",K_],["❯ ",PR]],LH=s=>s*1.65;
-function tl(tk,x,y,max,size){F(500,size,MONO,0);c.textAlign="left";c.textBaseline="middle";let left=max;for(const[s,col]of tk){if(left<=0)break;const sub=s.slice(0,left);left-=s.length;c.fillStyle=col;c.fillText(sub,x,y);x+=c.measureText(sub).width}return x}
-function tlines(L,x,y,t,size){let ex,ey;L.forEach(([s,tk,typed],i)=>{if(t<s)return;const n=typed?Math.floor((t-s)*28):999,yy=y+i*LH(size);ex=tl(tk,x,yy,n,size);ey=yy});if(ex!==undefined&&Math.sin(t*8)>0){c.fillStyle=PR;c.fillRect(ex+3,ey-size*.5,size*.45,size)}}
-function typeLine(segs,y,size,n,col){F(600,size,HEAD,-size*.02);const total=segs.reduce((a,[s])=>a+s.length,0);let left=Math.floor(n),x=W/2;const ws=segs.map(([s])=>c.measureText(s).width);const tot=ws.reduce((a,b)=>a+b,0);x=W/2-tot/2;let ex=x;
-  segs.forEach(([s,fill],i)=>{const k=Math.min(s.length,Math.max(0,left));left-=s.length;if(k>0){const sub=s.slice(0,k);c.fillStyle=fill||col;c.fillText(sub,x,y);ex=x+c.measureText(sub).width;x+=ws[i]}});
-  if(n>0&&(n<total||Math.sin(NOW*8)>0)){c.fillStyle=`rgb(${ACC})`;c.fillRect(ex+5,y-size*.5,5,size)}}
-
-// ---------- scenes (Cursor style: black + white) ----------
-function k1(t){ // problem
-  c.fillStyle="#000";c.fillRect(0,0,W,H);
-  const p=oe(seg(t,.2,1.1));
-  c.save();c.globalAlpha=p;
-  typeLine([["Your IDE needed a ",null],["shell.",`rgb(${ACC})`]],H/2-20,92,(t-.3)*14,"#fafafa");
-  c.restore();
-  // four icons
-  [["terminal",.22,.38],["package",.78,.38],["git",.22,.72],["rocket",.78,.72]].forEach(([n,fx,fy],i)=>{
-    const q=sp(seg(t,1.1+i*.15,1.7+i*.15));
-    if(q<=0)return;
-    c.save();c.globalAlpha*=q;c.translate(W*fx,H*fy);
-    c.beginPath();c.arc(0,0,78,0,7);c.fillStyle="#111";c.fill();
-    c.strokeStyle="rgba(255,255,255,.08)";c.lineWidth=1.5;c.stroke();
-    ico(n,0,0,72,`rgb(${ACC})`,1.8);
-    c.restore();
-  });
-}
-
-function k2(t){ // logo reveal
-  c.fillStyle="#000";c.fillRect(0,0,W,H);
-  glow(W/2,H*.65,900,ACC,.12);
-  const ip=sp(seg(t,.1,.8));
-  const y=H/2-40;
-  c.save();c.translate(W/2-180,y);c.scale(ip,ip);
-  mark(0,0,140,1);c.restore();
-  const wp=oe(seg(t,.55,1.3));
-  if(wp>0){
-    c.save();c.globalAlpha=wp;
-    F(700,110,DISP,-3);c.textAlign="left";c.textBaseline="middle";
-    c.fillStyle="#fafafa";c.fillText("Haba Shell",W/2-20,y+8);
-    c.restore();
-  }
-  const sp2=oe(seg(t,1.4,2.0));
-  if(sp2>0){
-    c.save();c.globalAlpha=sp2;
-    T_("A real terminal. Right inside Haba Code.",W/2,y+140,36,"#a3a3a3",500,"center");
-    c.restore();
-  }
-}
-
-function k3(t){ // IDE + phone
-  c.fillStyle="#000";c.fillRect(0,0,W,H);
-  const wi=sp(seg(t,0,.6));
-  c.save();c.globalAlpha=wi;c.translate(0,(1-wi)*80);
-  ide(120,110,1520,780,t,[
-    [.5,[...PROMPT,["npm install express",WH]],1],
-    [1.5,[["added 58 packages in 2s",G_]],0],
-    [2.0,[...PROMPT,["haba run dev",WH]],1],
-    [2.9,[["▲ Server ready  ",K_],["http://localhost:3000",S_]],0],
-    [3.3,[["✓ Compiled in 180ms",K_]],0],
-    [3.9,[...PROMPT],0]
-  ],t);
-  c.restore();
-
-  const pp=sp(seg(t,3.2,4.0));
-  if(pp>0){
-    c.save();c.globalAlpha=pp;c.translate(0,(1-pp)*160);
-    phone(1620,540,680);
-    c.restore();
-  }
-  const badge=oe(seg(t,3.0,3.5));
-  if(badge>0){
-    c.save();c.globalAlpha=badge;
-    rr(W/2-170,36,340,48,24);c.fillStyle="#0a0a0a";c.fill();
-    c.strokeStyle=`rgb(${ACC})`;c.lineWidth=1.5;c.stroke();
-    T_("✓  Running in your browser",W/2,60,18,K_,600,"center");
-    c.restore();
-  }
-}
-
-function k4(t){ // features
-  c.fillStyle="#000";c.fillRect(0,0,W,H);
-  const tp=oe(seg(t,.15,.7));
-  c.save();c.globalAlpha=tp;
-  T_("Run. Install. Commit.",W/2,110,64,"#fafafa",700,"center",DISP);
-  c.restore();
-
-  [["terminal","Run anything","node · npm · your scripts"],
-   ["package","Install packages","one command, instantly"],
-   ["git","Git built-in","commit & push from the shell"]].forEach(([ic,h,s],i)=>{
-    const p=sp(seg(t,.4+i*.22,1.1+i*.22));
-    if(p<=0)return;
-    const x=W/2+(i-1)*520;
-    c.save();c.globalAlpha=p;c.translate(0,(1-p)*60);
-    // card
-    rr(x-210,220,420,420,28);c.fillStyle="#0c0c0c";c.fill();
-    c.strokeStyle="rgba(255,255,255,.07)";c.lineWidth=1.5;c.stroke();
-    // icon circle
-    c.beginPath();c.arc(x,320,64,0,7);c.fillStyle="#111";c.fill();
-    c.strokeStyle=`rgba(${ACC},.4)`;c.lineWidth=1.5;c.stroke();
-    ico(ic,x,320,56,`rgb(${ACC})`,1.8);
-    T_(h,x,420,28,"#fafafa",600,"center");
-    T_(s,x,470,18,"#737373",500,"center");
-    // command chip
-    rr(x-140,530,280,48,24);c.fillStyle="#111";c.fill();
-    T_("❯ "+(i===0?"haba run dev":i===1?"npm i firebase":"git push"),x,554,16,K_,500,"center",MONO);
-    c.restore();
-  });
-}
-
-function k5(t){ // deploy
-  c.fillStyle="#000";c.fillRect(0,0,W,H);
-  const wi=sp(seg(t,0,.55));
-  c.save();c.globalAlpha=wi;c.translate(0,(1-wi)*70);
-  term(100,200,1080,560,"my-app — Haba Shell",[
-    [.4,[...PROMPT,["haba deploy",WH]],1],
-    [1.2,[["Building project…",G_]],0],
-    [1.6,[["Uploading",P_]],0],
-    [2.9,[["✓ Deployed in 4.1s",K_]],0],
-    [3.3,[["→ ",P_],["https://my-app.web.app",S_]],0]
-  ],t,26);
-
-  // progress bar
-  if(t>1.6){
-    const pr=seg(t,1.7,2.9);
-    const yy=200+100+2*LH(26);
-    rr(320,yy-8,520,14,7);c.fillStyle="#1a1a1a";c.fill();
-    if(pr>0){rr(320,yy-8,520*pr,14,7);c.fillStyle=`rgb(${ACC})`;c.fill()}
-    T_(Math.round(pr*100)+"%",860,yy,18,K_,500,"left",MONO);
-  }
-  c.restore();
-
-  const pp=sp(seg(t,3.0,3.8));
-  if(pp>0){
-    c.save();c.globalAlpha=pp;c.translate(0,(1-pp)*140);
-    phone(1520,540,760);
-    // url badge
-    rr(1520-170,540-430,340,46,23);c.fillStyle="#0a0a0a";c.fill();
-    c.strokeStyle=`rgb(${ACC})`;c.lineWidth=1.5;c.stroke();
-    c.beginPath();c.arc(1520-140,540-407,7,0,7);c.fillStyle=`rgb(${ACC})`;c.fill();
-    T_("my-app.web.app",1520-120,540-407,17,K_,500,"left",MONO);
-    c.restore();
-  }
-}
-
-function k6(t){ // CTA
-  c.fillStyle="#000";c.fillRect(0,0,W,H);
-  glow(W/2,H/2,1100,ACC,.08);
-  const cp=sp(seg(t,.1,.7));
-  c.save();c.globalAlpha=cp;c.translate(W/2,H/2);c.scale(.92+.08*cp,.92+.08*cp);c.translate(-W/2,-H/2);
-
-  // card
-  rr(460,160,1000,720,36);c.fillStyle="#0c0c0c";c.fill();
-  c.strokeStyle="rgba(255,255,255,.07)";c.lineWidth=1.5;c.stroke();
-
-  // mark
-  const mp=oe(seg(t,.4,.9));
-  if(mp>0){c.save();c.globalAlpha=mp;mark(W/2,310,110,1);c.restore()}
-
-  const t1=oe(seg(t,.6,1.1));
-  if(t1>0){c.save();c.globalAlpha=t1;T_("Type. Run. Ship.",W/2,430,56,"#fafafa",700,"center",DISP);c.restore()}
-
-  const t2=oe(seg(t,.8,1.3));
-  if(t2>0){c.save();c.globalAlpha=t2;T_("A real terminal in every Haba Code project.",W/2,505,26,"#a3a3a3",500,"center");c.restore()}
-
-  const t3=oe(seg(t,1.0,1.5));
-  if(t3>0){c.save();c.globalAlpha=t3;T_("Run  ·  Install  ·  Commit  ·  Deploy",W/2,560,22,K_,500,"center");c.restore()}
-
-  // button
-  const bp=oe(seg(t,1.2,1.7));
-  if(bp>0){
-    c.save();c.globalAlpha=bp;
-    const press=clamp(seg(t,2.3,2.4))*(1-seg(t,2.4,2.55));
-    c.translate(W/2,680);c.scale(1-.05*press,1-.05*press);
-    rr(-200,-40,400,80,40);c.fillStyle="#fafafa";c.fill();
-    // fill animation
-    const sw=lerp(0,400,oc(seg(t,2.35,2.8)));
-    if(sw>0){c.save();rr(-200,-40,400,80,40);c.clip();c.fillStyle=`rgb(${ACC})`;c.fillRect(-200,-40,sw,80);c.restore()}
-    T_("Open Haba Shell",0,2,26,t>2.5?"#000":"#000",600,"center");
-    c.restore();
-  }
-  c.restore();
-}
+function s6(t){c.fillStyle="#000";c.fillRect(0,0,W,H);
+  const p=oe(seg(t,.2,1.1)),y=lerp(H/2-70,H/2,io(seg(t,1.6,2.4)));
+  c.save();c.globalAlpha=p;c.shadowColor="rgba(255,255,255,.9)";c.shadowBlur=40*p;blur((1-p)*14);txt("Haba Shell.",W/2,y,84,"#fff",700);c.restore();
+  const q=oe(seg(t,2.2,2.9));if(q>0){c.save();c.globalAlpha=q;txt("A real terminal. Right inside Haba Code.",W/2,y+80,26,"#8a8a8a",500);c.restore()}}
 
 // ---------- compositor ----------
-const FN=[k1,k2,k3,k4,k5,k6],BASE=[3.2,3.0,5.4,3.8,5.2,3.6];
-let SC=[];(()=>{let s=0;SC=FN.map((f,i)=>{const r=[s,s+BASE[i],f];s+=BASE[i]-.45;return r});T=SC[SC.length-1][1]})();
-const CAMS=[
-  (t,d)=>[1,W/2,H/2,0,0],
-  (t,d)=>[lerp(1.08,1,oc(seg(t,0,.8))),W/2,H/2,0,0],
-  (t,d)=>[1+.04*io(seg(t,0,d)),W/2,H/2,0,0],
-  (t,d)=>[1,W/2,H/2,0,0],
-  (t,d)=>[1+.05*io(seg(t,2.8,4.5)),1050,540,0,0],
-  (t,d)=>[lerp(1.06,1,oc(seg(t,0,1.2))),W/2,H/2,0,0]
-];
-function frame(t){NOW=t;c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.fillStyle="#000";c.fillRect(0,0,W,H);
-  SC.forEach(([a,b,f],i)=>{if(t<a||t>b)return;const lt=t-a,m=i?io(seg(lt,0,.5)):1,dur=b-a;c.save();
-    if(i&&m<1){c.beginPath();c.rect(0,0,W,H*oc(m));c.clip()}
-    const cm=CAMS[i](lt,dur);c.translate(cm[1]+cm[3],cm[2]+cm[4]);c.scale(cm[0],cm[0]);c.translate(-cm[1],-cm[2]);f(lt);c.restore()});
-  // progress
-  c.fillStyle=`rgba(${ACC},.85)`;c.fillRect(0,H-3,W*clamp(t/T),3);
-}
+const SC=[[s1,4.2],[s2,5.4],[s3,3.2],[s4,5.8],[s5,4.2],[s6,3.8]];
+let T=0;const ST=SC.map(([f,d])=>{const s=T;T+=d;return[s,T,f]});
+function frame(t){c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;blur(0);c.fillStyle="#000";c.fillRect(0,0,W,H);
+  for(const[a,b,f]of ST)if(t>=a&&t<=b){f(t-a);break}
+  c.globalAlpha=1;blur(0);c.letterSpacing="0px"}
 
 // ---------- controls ----------
 const $=id=>document.getElementById(id),say=s=>$("msg").textContent=s||"";
@@ -410,7 +143,7 @@ async function exportMP4(){const{Muxer,ArrayBufferTarget}=await import("https://
   const mux=new Muxer({target:new ArrayBufferTarget(),video:{codec:"avc",width:W,height:H,frameRate:FPS},fastStart:"in-memory"});
   const ve=new VideoEncoder({output:(ch,m)=>mux.addVideoChunk(ch,m),error:e=>(err=e)});ve.configure({codec:"avc1.640028",width:W,height:H,bitrate:8e6,framerate:FPS});
   const N=Math.ceil(dur*FPS);
-  for(let i=0;i<N;i++){frame(Math.min(i/FPS,T));const f=new VideoFrame(cv,{timestamp:Math.round(i*1e6/FPS),duration:Math.round(1e6/FPS)});ve.encode(f,{keyFrame:i%FPS===0});f.close();while(ve.encodeQueueSize>6)await new Promise(r=>setTimeout(r,6));if(i%12===0){say(`Rendering… ${Math.round(i/N*100)}%`);await new Promise(r=>setTimeout(r))}}
+  for(let i=0;i<N;i++){frame(Math.min(i/FPS,T-.001));const f=new VideoFrame(cv,{timestamp:Math.round(i*1e6/FPS),duration:Math.round(1e6/FPS)});ve.encode(f,{keyFrame:i%FPS===0});f.close();while(ve.encodeQueueSize>6)await new Promise(r=>setTimeout(r,6));if(i%12===0){say(`Rendering… ${Math.round(i/N*100)}%`);await new Promise(r=>setTimeout(r))}}
   await ve.flush();ve.close();mux.finalize();if(err)throw err;save(new Blob([mux.target.buffer],{type:"video/mp4"}),"haba-shell-ad.mp4")}
 async function exportRT(){const stream=cv.captureStream(30),mime=["video/mp4;codecs=avc1","video/webm;codecs=vp9","video/webm"].find(m=>MediaRecorder.isTypeSupported(m))||"",ch=[];
   const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:10e6}),done=new Promise(r=>(rec.onstop=r));rec.ondataavailable=e=>e.data.size&&ch.push(e.data);
@@ -421,8 +154,8 @@ $("cp").onclick=async e=>{try{await navigator.clipboard.writeText("Haba Shell �
 $("dl").onclick=async e=>{const b=e.target;b.disabled=true;b.textContent="Rendering…";
   try{if(window.VideoEncoder){busy=true;await exportMP4()}else if(window.MediaRecorder&&cv.captureStream)await exportRT();else throw new Error("Use Chrome for best results");say("Video saved.")}
   catch(x){say("Export failed: "+(x.message||x))}finally{busy=false;b.disabled=false;b.textContent="Download video";t0=performance.now()}};
-function loop(){const el=Math.max(0,(performance.now()-t0)/1000);if(!busy)frame(Math.min(el%(T+.8),T));requestAnimationFrame(loop)}
-Promise.race([Promise.all([document.fonts.load('600 80px "Inter"'),document.fonts.load('700 80px "Sora"'),document.fonts.load('400 18px "JetBrains Mono"')]),new Promise(r=>setTimeout(r,2000))]).finally(()=>{t0=performance.now();loop()});
+function loop(){const el=Math.max(0,(performance.now()-t0)/1000);if(!busy)frame(Math.min(el%(T+.8),T-.001));requestAnimationFrame(loop)}
+Promise.race([Promise.all([document.fonts.load('500 44px "Inter"'),document.fonts.load('700 84px "Inter"'),document.fonts.load('500 20px "JetBrains Mono"')]),new Promise(r=>setTimeout(r,2000))]).finally(()=>{t0=performance.now();loop()});
 </script>
 </body>
 </html>
