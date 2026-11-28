@@ -206,14 +206,14 @@ function s7(t){aurora(t);
     txt("Join Vuzora",0,3,38,"#fff",800);c.restore()}}
 
 // ---------- compositor ----------
-const SC=[[s1,3.8],[s2,3.2],[s3,5.6],[s4,6.2],[s5,5.4],[s6,3.2],[s7,4.4]];
-let T=0;const ST=SC.map(([f,d])=>{const s=T;T+=d;return[s,T,f]}),TB=ST.slice(1).map(x=>x[0]);
+const SC=[[s1,2.5,1.5],[s3,3.0,1.7],[s4,3.8,1.65],[s5,3.2,1.65],[s7,2.5,1.4]];
+let T=0;const ST=SC.map(([f,d,k])=>{const s=T;T+=d;return[s,T,f,k]}),TB=ST.slice(1).map(x=>x[0]);
 function wipe(q){const sk=260;c.save();const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,"#4c1d95");g.addColorStop(.55,PU);g.addColorStop(1,PK);c.fillStyle=g;c.beginPath();
   if(q<.5){const e=lerp(-sk,W+sk,io(q*2));c.moveTo(0,0);c.lineTo(e+sk,0);c.lineTo(e-sk,H);c.lineTo(0,H)}
   else{const e=lerp(-sk,W+sk,io((q-.5)*2));c.moveTo(e+sk,0);c.lineTo(W,0);c.lineTo(W,H);c.lineTo(e-sk,H)}
   c.closePath();c.fill();c.restore()}
 function frame(t){c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;blur(0);c.fillStyle="#000";c.fillRect(0,0,W,H);
-  for(const[a,b,f]of ST)if(t>=a&&t<=b){f(t-a-.2);break}
+  for(const[a,b,f,k]of ST)if(t>=a&&t<=b){f((t-a-.12)*k);break}
   c.globalAlpha=1;blur(0);c.letterSpacing="0px";
   for(const tb of TB){const q=(t-tb+.3)/.6;if(q>0&&q<1)wipe(q)}}
 
